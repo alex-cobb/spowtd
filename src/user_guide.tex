@@ -1,0 +1,42 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{pslatex}
+\usepackage{inconsolata}
+\usepackage[square,numbers]{natbib}
+\usepackage[includehead,top=2.5cm,bottom=2.5cm,
+            left=3cm,right=3cm]{geometry}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{color}
+\definecolor{bluish}{rgb}{0.20,0.29,0.46}
+% *always \use this last*
+\usepackage[colorlinks,breaklinks,pdftex,bookmarks=true,
+            linkcolor=bluish,citecolor=bluish,urlcolor=bluish]{hyperref}
+
+% Bold face for vectors
+\renewcommand{\vec}[1]{\mathbf{#1}}
+
+% Sublist style for drafting
+\renewcommand\labelenumii{\theenumii.}
+\renewcommand\theenumii{\arabic{enumii}}
+\renewcommand\theenumiii{\arabic{enumiii}}
+
+\begin{document}
+
+{\huge User Guide for Spowtd v0.0.0}\\[1ex]
+
+\renewcommand{\baselinestretch}{1.18}\normalsize
+
+This is the user guide for Spowtd, which implements the scalar
+parameterization of water table dynamics described in
+\citet{Cobb_et_al_2017}.
+
+\section{A section}
+Some text\ldots
+
+\bibliographystyle{unsrtnat}
+\bibliography{user_guide.bib}
+
+\end{document}

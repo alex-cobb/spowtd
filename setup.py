@@ -17,15 +17,12 @@ with open('README.txt') as readme_file:
     del readme_file
 
 
-def build_man_pages():
-    """Build manual pages for package
+def build_docs():
+    """Build docs for package
 
     """
-    man_sources = glob.glob('doc/*.1.txt')
-    for source in man_sources:
-        subprocess.check_call(['a2x', '-f', 'manpage', source])
-        del source
-    return [name[:-4] for name in man_sources]
+    subprocess.check_call(['scons', '-f', 'src/SConstruct'])
+    return ['doc/spowtd.1', 'doc/user_guide.pdf']
 
 
 def get_version():
@@ -53,5 +50,5 @@ setup(name='spowtd',
       long_description=LONG_DESCRIPTION,
       packages=['spowtd',
                 'spowtd/test'],
-      data_files=[('/usr/share/man/man1', build_man_pages())],
+      data_files=[('/usr/share/man/man1', build_docs())],
       scripts=SCRIPTS)

@@ -1,5 +1,8 @@
 include *.txt
-include doc/*.1.txt
+include src/*.1.txt
+include src/*.tex
+include src/*.bib
+include src/SConstruct
 include pylintrc
 include *.sh
 recursive-include spowtd/test *.txt

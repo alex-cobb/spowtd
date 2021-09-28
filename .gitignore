@@ -9,3 +9,5 @@ dist
 htmlcov/
 *.1
 .ropeproject
+.sconsign.dblite
+doc/

@@ -28,11 +28,16 @@ python3 setup.py install
 
 Spowtd is built for Python 3.
 
+Use of the spowtd command-line tool or library requires:
+ - python3
+
 The following packages are required for the build and tests:
+ - asciidoc
+ - pdflatex
  - python3
  - pylint-3 (python3-pylint)
  - pytest-3 (python3-pytest)
- - python3-psycopg2
+ - python3-scons
 
 For development, you may additionally want:
  - python3-pycodestyle
