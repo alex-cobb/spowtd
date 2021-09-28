@@ -1,0 +1,2 @@
+--ignore-directory=is:.ropeproject
+--ignore-file=match:/_flymake.py$/

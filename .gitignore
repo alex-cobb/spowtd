@@ -1,0 +1,11 @@
+*~
+build
+MANIFEST
+dist
+.pytest_cache/
+*.pyc
+*_flymake*
+.coverage
+htmlcov/
+*.1
+.ropeproject

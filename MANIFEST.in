@@ -1,0 +1,5 @@
+include *.txt
+include doc/*.1.txt
+include pylintrc
+include *.sh
+recursive-include spowtd/test *.txt

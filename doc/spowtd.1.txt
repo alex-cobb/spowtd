@@ -1,0 +1,55 @@
+= PGBUILD(1) =
+:doctype: manpage
+:man source:  spowtd
+:man manual: spowtd Manual
+
+
+== NAME ==
+spowtd - scalar parameterization of water table dynamics
+
+
+== SYNOPSIS ==
+*spowtd* 'DB' ['OPTIONS']
+
+
+== DESCRIPTION ==
+
+The *spowtd* script ...
+
+
+== ARGUMENTS ==
+
+DB::
+  The path to the working database, e.g., foo.sqlite3
+
+
+== OPTIONS ==
+*-h, --help*::
+
+  Show help message and exit.
+
+*-o, --output*::
+
+  Write output to the specified file, instead of standard output.
+
+
+== BUGS ==
+
+ - None known.
+
+
+== EXAMPLES ==
+
+`spowtd foo.sqlite3`::
+
+  Do something with the working database `foo`...
+
+
+== SEE ALSO ==
+
+*sqlite3*(1)
+
+
+== HISTORY ==
+
+2021 -- Originally written by Alex Cobb (alex.cobb@smart.mit.edu).
