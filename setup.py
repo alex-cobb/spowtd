@@ -29,8 +29,10 @@ def get_version():
     """Get project version
 
     """
-    version_file_path = os.path.join(os.path.dirname(__file__),
-                                     'VERSION.txt')
+    version_file_path = os.path.join(
+        os.path.dirname(__file__),
+        'spowtd',
+        'VERSION.txt')
     with open(version_file_path) as version_file:
         version_string = version_file.read().strip()
     version_string_re = re.compile('[0-9.]+')
@@ -50,5 +52,7 @@ setup(name='spowtd',
       long_description=LONG_DESCRIPTION,
       packages=['spowtd',
                 'spowtd/test'],
+      package_data={'spowtd': ['VERSION.txt', 'schema.sql'],
+                    'spowtd.test': ['sample_data/*.txt']},
       data_files=[('/usr/share/man/man1', build_docs())],
       scripts=SCRIPTS)

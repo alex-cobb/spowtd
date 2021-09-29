@@ -4,7 +4,12 @@
 
 import argparse
 import logging
+import os
+import sqlite3
 import sys
+
+import spowtd.load as load_mod
+
 
 LEVELS = [logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG]
 
@@ -15,9 +20,21 @@ def main(argv):
     """
     parser = argparse.ArgumentParser(
         description='Scalar parameterization of water table dynamics')
+    parser.add_argument(
+        '--version',
+        help='Print version string and exit',
+        action='store_true')
     subparsers = parser.add_subparsers(help='sub-command help',
                                        dest='task')
+    load_parser = subparsers.add_parser(
+        'load',
+        help='Load water level, precipitation and evapotranspiration data')
+    add_load_args(load_parser)
+    add_shared_args(load_parser)
     args = parser.parse_args(argv)
+    if args.version:
+        print(get_version())
+        sys.exit(0)
     loglevel, is_clipped = get_verbosity(args.verbosity)
     for handler in logging.root.handlers[:]:
         # Per SO post:
@@ -30,8 +47,10 @@ def main(argv):
     if is_clipped:
         log = logging.getLogger('spowtd.user_interface')
         log.warning('maximum verbosity exceeded, ignoring flag')
-    if args.task is None:
-        pass
+    if args.task == 'load':
+        with sqlite3.connect(args.db) as connection:
+            load_mod.load_data(
+                connection=connection)
     else:
         raise AssertionError('Bad task {}'.format(args.task))
     return 0
@@ -51,6 +70,14 @@ def add_shared_args(parser):
         type=argparse.FileType('wt'),
         default=sys.stderr,
         help='File to write status messages, default stderr')
+
+
+def add_load_args(parser):
+    """Add arguments for spowtd load parser
+
+    """
+    parser.add_argument(
+        'db', metavar='DB', help='Spowtd SQLite3 data file')
 
 
 def get_verbosity(level_index):
@@ -73,3 +100,14 @@ def get_verbosity(level_index):
         level = LEVELS[level_index]
         is_clipped = False
     return (level, is_clipped)
+
+
+def get_version():
+    """Get project version
+
+    """
+    version_file_path = os.path.join(
+        os.path.dirname(__file__),
+        'VERSION.txt')
+    with open(version_file_path) as version_file:
+        return version_file.read().strip()

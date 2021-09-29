@@ -5,4 +5,3 @@ include src/*.bib
 include src/SConstruct
 include pylintrc
 include *.sh
-recursive-include spowtd/test *.txt
