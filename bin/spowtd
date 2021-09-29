@@ -1,0 +1,12 @@
+#!/usr/bin/python3
+
+"""CLI for spowtd
+
+"""
+
+import sys
+
+from spowtd.user_interface import main as main_script
+
+
+sys.exit(main_script(sys.argv[1:]))
