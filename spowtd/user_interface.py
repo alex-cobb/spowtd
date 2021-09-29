@@ -50,7 +50,10 @@ def main(argv):
     if args.task == 'load':
         with sqlite3.connect(args.db) as connection:
             load_mod.load_data(
-                connection=connection)
+                connection=connection,
+                precipitation_data_file=args.precipitation,
+                evapotranspiration_data_file=args.evapotranspiration,
+                water_level_data_file=args.water_level)
     else:
         raise AssertionError('Bad task {}'.format(args.task))
     return 0
@@ -78,6 +81,18 @@ def add_load_args(parser):
     """
     parser.add_argument(
         'db', metavar='DB', help='Spowtd SQLite3 data file')
+    parser.add_argument(
+        '-p', '--precipitation', help='Precipitation data file',
+        type=argparse.FileType('rt'),
+        required=True)
+    parser.add_argument(
+        '-e', '--evapotranspiration', help='Evapotranspiration data file',
+        type=argparse.FileType('rt'),
+        required=True)
+    parser.add_argument(
+        '-z', '--water-level', help='Water level data file',
+        type=argparse.FileType('rt'),
+        required=True)
 
 
 def get_verbosity(level_index):
