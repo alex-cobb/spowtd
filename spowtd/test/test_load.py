@@ -37,13 +37,16 @@ def test_load_sample_data():
             connection=connection,
             precipitation_data_file=open(
                 get_sample_file_path(
-                    'precipitation', sample), 'rt'),
+                    'precipitation', sample),
+                'rt', encoding='utf-8-sig'),
             evapotranspiration_data_file=open(
                 get_sample_file_path(
-                    'evapotranspiration', sample), 'rt'),
+                    'evapotranspiration', sample),
+                'rt', encoding='utf-8-sig'),
             water_level_data_file=open(
                 get_sample_file_path(
-                    'water_level', sample), 'rt'))
+                    'water_level', sample),
+                'rt', encoding='utf-8-sig'))
 
 
 def get_sample_file_path(file_type, sample):

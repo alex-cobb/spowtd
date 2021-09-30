@@ -83,15 +83,15 @@ def add_load_args(parser):
         'db', metavar='DB', help='Spowtd SQLite3 data file')
     parser.add_argument(
         '-p', '--precipitation', help='Precipitation data file',
-        type=argparse.FileType('rt'),
+        type=argparse.FileType('rt', encoding='utf-8-sig'),
         required=True)
     parser.add_argument(
         '-e', '--evapotranspiration', help='Evapotranspiration data file',
-        type=argparse.FileType('rt'),
+        type=argparse.FileType('rt', encoding='utf-8-sig'),
         required=True)
     parser.add_argument(
         '-z', '--water-level', help='Water level data file',
-        type=argparse.FileType('rt'),
+        type=argparse.FileType('rt', encoding='utf-8-sig'),
         required=True)
 
 
