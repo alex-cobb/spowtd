@@ -2,8 +2,6 @@
 
 """
 
-import os
-
 
 def test_load_sample_data(loaded_connection):
     """Spowtd correctly loads sample data

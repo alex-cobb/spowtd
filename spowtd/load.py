@@ -115,6 +115,9 @@ def populate_grid_time(cursor):
             .format(delta_t))
     time_step = int(delta_t[0])
     del delta_t
+    cursor.execute("""
+    INSERT INTO time_grid (time_step_s)
+    VALUES (?)""", (time_step,))
     # Add a grid time for the end of the last rainfall interval
     time_grid.append(
         time_grid[-1] + time_step)

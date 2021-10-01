@@ -23,6 +23,15 @@ CREATE TABLE evapotranspiration_staging (
 
 -- Gridded tables
 
+CREATE TABLE time_grid (
+  time_step_s integer NOT NULL,
+  -- Singleton
+  is_valid integer NOT NULL PRIMARY KEY
+    CHECK (is_valid = 1)
+    DEFAULT 1
+);
+
+
 CREATE TABLE grid_time (
   epoch integer NOT NULL PRIMARY KEY
 );
