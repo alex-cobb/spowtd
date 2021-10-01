@@ -1,25 +1,16 @@
- - [X] Put staging tables in schema
-   - This will allow the generation of troubleshooting plots
- - Downsampling the water table might be the more defensible choice;
-   so then I would do everything on the precipitation grid.
-   - Maybe there's a way of avoiding regridding entirely; you could
-     still match up storms to rising intervals.  But this would be
-     new, and it's not "the simplest thing that could possibly work."
- - [ ] Add timezone argument on load;
-   - Store in db?
-   - Maybe this should be called "create" or "init" or something
-     if this always makes something from nothing?
-   - Should we fail / bail if the db file exists?
- - [X] Add pytz to dependencies
-   - python3-pytz
- - [X] Add numpy to dependencies
+ - [ ] Consider calling "load" instead "create" or "init" or something
+ - [ ] Fail / bail if the db file exists
  - [ ] Convert sample data from cm to mm
- - [X] Add logging in load.py
  - [ ] Add grid_interval_mm to interface when initing / loading data
-
- - [X] Sebastian: semantics of datetimes for rainfall intensity
- - [X] Sebastian: ET is given in "mm".  Is this cumulative ET over the
-   3-hour interval, or mm / h (or somesuch)?
 
  - [ ] Simpler unit tests to verify functions
  - [ ] Graphical output
+ - [ ] Add flags (is_raining, is_storm, is_jump...) to data model and
+   populate
+   - These will be useful for plots
+
+ - [ ] Add arguments for, and store, these configuration variables:
+   - Time zone
+   - Interval for zeta_grid
+   - Rising jump threshold
+   - Rain storm threshold
