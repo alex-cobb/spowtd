@@ -10,13 +10,16 @@
    - Maybe this should be called "create" or "init" or something
      if this always makes something from nothing?
    - Should we fail / bail if the db file exists?
- - [ ] Add pytz to dependencies
+ - [X] Add pytz to dependencies
    - python3-pytz
- - [ ] Add numpy to dependencies
+ - [X] Add numpy to dependencies
  - [ ] Convert sample data from cm to mm
- - [ ] Add logging in load.py
+ - [X] Add logging in load.py
  - [ ] Add grid_interval_mm to interface when initing / loading data
 
  - [X] Sebastian: semantics of datetimes for rainfall intensity
  - [X] Sebastian: ET is given in "mm".  Is this cumulative ET over the
    3-hour interval, or mm / h (or somesuch)?
+
+ - [ ] Simpler unit tests to verify functions
+ - [ ] Graphical output
