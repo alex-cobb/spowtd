@@ -5,6 +5,7 @@
 import os
 import sqlite3
 
+import spowtd.classify as classify_mod
 import spowtd.load as load_mod
 
 import pytest
@@ -54,6 +55,18 @@ def loaded_connection(request, connection):
                 'water_level', sample),
             'rt', encoding='utf-8-sig'))
     yield connection
+
+
+@pytest.fixture(scope="function")
+def classified_connection(loaded_connection):
+    """Connection to in-memory database with classified data
+
+    """
+    classify_mod.classify_intervals(
+        loaded_connection,
+        storm_rain_threshold_mm_h=4.0,
+        rising_jump_threshold_mm_h=8.0)
+    yield loaded_connection
 
 
 def get_sample_file_path(file_type, sample):

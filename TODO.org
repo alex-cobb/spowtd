@@ -1,7 +1,7 @@
  - [ ] Consider calling "load" instead "create" or "init" or something
  - [ ] Fail / bail if the db file exists
  - [ ] Convert sample data from cm to mm
- - [ ] Add grid_interval_mm to interface when initing / loading data
+ - [ ] Add grid_interval_mm to interface
 
  - [ ] Simpler unit tests to verify functions
  - [ ] Graphical output

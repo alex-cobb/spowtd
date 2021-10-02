@@ -3,7 +3,6 @@
 """
 
 import logging
-import math
 
 import numpy as np
 
@@ -13,46 +12,19 @@ LOG = logging.getLogger('spowtd.classify')
 
 def classify_intervals(
         connection,
-        grid_interval_mm=1.0,
         storm_rain_threshold_mm_h=4.0,
         rising_jump_threshold_mm_h=8.0):
     """Classify data into storm and interstorm intervals
 
     """
     cursor = connection.cursor()
-
-    populate_zeta_grid(cursor, grid_interval_mm)
-
     populate_zeta_interval(
         cursor,
         storm_rain_threshold_mm_h,
         rising_jump_threshold_mm_h)
-
     cursor.close()
 
 
-# XXX Move
-# XXX Only do this when we construct the master curves
-def populate_zeta_grid(cursor, grid_interval_mm):
-    """Populate uniform grid on zeta
-
-    """
-    cursor.execute("""
-    INSERT INTO zeta_grid (grid_interval_mm) VALUES (?)
-    """, (grid_interval_mm,))
-    cursor.execute("""
-    SELECT min(zeta_mm), max(zeta_mm)
-    FROM water_level""")
-    zeta_bounds = cursor.fetchone()
-    cursor.executemany("""
-    INSERT INTO discrete_zeta (zeta_number)
-    VALUES (?)""", [(zn,) for zn in range(
-        int(math.floor(zeta_bounds[0] / grid_interval_mm)),
-        int(math.ceil(zeta_bounds[1] / grid_interval_mm)))])
-
-
-# XXX Move
-# XXX Only do this when we construct the master curves
 def populate_zeta_interval(
         cursor,
         storm_rain_threshold_mm_h,
