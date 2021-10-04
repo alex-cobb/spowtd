@@ -27,7 +27,7 @@ def compute_offsets(cursor, reference_zeta_mm):
     """Compute time offsets to populate recession_zeta
 
     If a reference zeta is provided, the crossing-time of this water
-    level is used as the orign of the axis.  Otherwise, the highest
+    level is used as the origin of the axis.  Otherwise, the highest
     water level in the longest assembled recession is used.
 
     """
