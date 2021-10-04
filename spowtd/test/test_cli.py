@@ -3,9 +3,11 @@
 """
 
 import os
+import tempfile
 
 import pytest
 
+import spowtd.test.conftest as conftest
 import spowtd.user_interface as cli_mod
 
 
@@ -27,6 +29,16 @@ def test_get_version(capfd):
     assert out == version
 
 
+def test_help():
+    """Invoking spowtd --help exits with code 0
+
+    """
+    with pytest.raises(SystemExit) as exception:
+        cli_mod.main(['--help'])
+    assert exception.type == SystemExit
+    assert exception.value.code == 0
+
+
 def test_load_help():
     """Invoking spowtd load --help exits with code 0
 
@@ -35,3 +47,24 @@ def test_load_help():
         cli_mod.main(['load', '--help'])
     assert exception.type == SystemExit
     assert exception.value.code == 0
+
+
+def test_load():
+    """'spowtd load' exits without error
+
+    """
+    paths = {
+        key: os.path.join(
+            conftest.SAMPLE_DATA_DIR,
+            '{}_1.txt'.format(key))
+        for key in ('evapotranspiration',
+                    'precipitation',
+                    'water_level')}
+    with tempfile.NamedTemporaryFile(
+            suffix='.sqlite3') as db_file:
+        cli_mod.main([
+            'load',
+            db_file.name,
+            '--precipitation', paths['precipitation'],
+            '--evapotranspiration', paths['evapotranspiration'],
+            '--water-level', paths['water_level']])
