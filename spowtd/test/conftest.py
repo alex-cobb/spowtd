@@ -7,6 +7,7 @@ import sqlite3
 
 import spowtd.classify as classify_mod
 import spowtd.load as load_mod
+import spowtd.zeta_grid as zeta_grid_mod
 
 import pytest
 
@@ -66,6 +67,9 @@ def classified_connection(loaded_connection):
         loaded_connection,
         storm_rain_threshold_mm_h=4.0,
         rising_jump_threshold_mm_h=8.0)
+    zeta_grid_mod.populate_zeta_grid(
+        loaded_connection,
+        grid_interval_mm=1.0)
     yield loaded_connection
 
 

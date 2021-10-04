@@ -10,5 +10,4 @@ def test_recession(classified_connection):
 
     """
     recession_mod.find_recession_offsets(
-        classified_connection,
-        delta_z_mm=1.0)
+        classified_connection)

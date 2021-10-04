@@ -2,7 +2,6 @@
 
 """
 
-import math
 import logging
 
 import numpy as np
@@ -15,37 +14,17 @@ LOG = logging.getLogger('spowtd.recession')
 
 def find_recession_offsets(
         connection,
-        delta_z_mm=1.0,
         reference_zeta_mm=None):
     """Determine recession curves
 
     """
     cursor = connection.cursor()
-    populate_zeta_grid(cursor, delta_z_mm)
     compute_offsets(cursor, reference_zeta_mm)
     cursor.close()
 
 
-def populate_zeta_grid(cursor, grid_interval_mm):
-    """Populate uniform grid on zeta
-
-    """
-    cursor.execute("""
-    INSERT INTO zeta_grid (grid_interval_mm) VALUES (?)
-    """, (grid_interval_mm,))
-    cursor.execute("""
-    SELECT min(zeta_mm), max(zeta_mm)
-    FROM water_level""")
-    zeta_bounds = cursor.fetchone()
-    cursor.executemany("""
-    INSERT INTO discrete_zeta (zeta_number)
-    VALUES (?)""", [(zn,) for zn in range(
-        int(math.floor(zeta_bounds[0] / grid_interval_mm)),
-        int(math.ceil(zeta_bounds[1] / grid_interval_mm)))])
-
-
 def compute_offsets(cursor, reference_zeta_mm):
-    """Compute time offsets to populate recession_zeta for location
+    """Compute time offsets to populate recession_zeta
 
     If a reference zeta is provided, the crossing-time of this water
     level is used as the orign of the axis.  Otherwise, the highest
@@ -78,9 +57,14 @@ def compute_offsets(cursor, reference_zeta_mm):
         del indices
         del i, interval_start_epoch, interval_thru_epoch
 
-    delta_z_mm = cursor.execute("""
-    SELECT (grid_interval_mm) FROM zeta_grid
-    """).fetchone()[0]
+    try:
+        delta_z_mm = cursor.execute("""
+        SELECT (grid_interval_mm) FROM zeta_grid
+        """).fetchone()[0]
+    except TypeError:
+        raise ValueError(
+            "Discrete water level interval not yet set")
+
     (indices,
      offsets,
      head_mapping) = get_series_time_offsets(
@@ -100,8 +84,8 @@ def compute_offsets(cursor, reference_zeta_mm):
         reference_index = max(head_mapping.keys())
 
     mean_zero_crossing_time_s = np.array(
-        [offsets[indices.index(series_id)] + time_mean_min
-         for series_id, time_mean_min
+        [offsets[indices.index(series_id)] + time_mean_s
+         for series_id, time_mean_s
          in head_mapping[reference_index]]).mean()
 
     for i in range(len(indices)):
