@@ -111,7 +111,7 @@ CREATE TABLE rising_interval (
     REFERENCES zeta_interval_storm (interval_start_epoch),
   interval_type text NOT NULL DEFAULT 'storm'
     CHECK (interval_type = 'storm'),
-  rain_depth_offset_m double precision NOT NULL
+  rain_depth_offset_mm double precision NOT NULL
 );
 
 
@@ -129,7 +129,7 @@ CREATE TABLE rising_interval_zeta (
   start_epoch integer NOT NULL
     REFERENCES rising_interval (start_epoch),
   zeta_number integer NOT NULL REFERENCES discrete_zeta(zeta_number),
-  mean_crossing_depth_m double precision NOT NULL,
+  mean_crossing_depth_mm double precision NOT NULL,
   PRIMARY KEY (start_epoch, zeta_number)
 );
 
@@ -144,3 +144,15 @@ CREATE TABLE recession_interval_zeta (
 
 
 -- Views
+
+CREATE VIEW storm_total_rain_depth AS
+SELECT s.start_epoch AS storm_start_epoch,
+       SUM(ri.rainfall_intensity_mm_h *
+           (ri.thru_epoch - ri.from_epoch)
+	   / 3600.
+           ) AS total_depth_mm
+FROM storm AS s
+JOIN rainfall_intensity AS ri
+  ON ri.from_epoch >= s.start_epoch
+  AND ri.thru_epoch <= s.thru_epoch
+GROUP BY s.start_epoch;
