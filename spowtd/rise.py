@@ -21,6 +21,7 @@ def find_rise_offsets(
     cursor = connection.cursor()
     compute_rise_offsets(cursor, reference_zeta_mm)
     cursor.close()
+    connection.commit()
 
 
 def compute_rise_offsets(cursor,

@@ -23,6 +23,7 @@ def classify_intervals(
         storm_rain_threshold_mm_h,
         rising_jump_threshold_mm_h)
     cursor.close()
+    connection.commit()
 
 
 def populate_zeta_interval(
@@ -143,6 +144,18 @@ def match_storms(rain, head, rain_threshold, jump_threshold):
 
     """
     is_raining = rain > rain_threshold
+    rain_masks = list(get_true_interval_masks(is_raining))
+    LOG.info(
+        '%s intervals of rain above threshold %s mm / h',
+        len(rain_masks), rain_threshold)
+    # initialize to -1; this will indicate interstorms
+    storm_indices = np.zeros(len(is_raining), np.int64) - 1
+    rain_mask = None
+    for i, rain_mask in enumerate(rain_masks):
+        storm_indices[rain_mask] = i
+    del rain_mask
+    assert ((storm_indices != -1) == is_raining).all()
+
     # Semantics: is_jump is True on an interval if the head was higher
     # at the end of the interval than it was at the beginning.
     # In other words, in the sequence [0, 1, 2, 2],
@@ -160,15 +173,10 @@ def match_storms(rain, head, rain_threshold, jump_threshold):
     # from rain on the time interval (t0, t2]
     head_increments = np.diff(head)
     is_jump = head_increments > jump_threshold
-    rain_masks = list(get_true_interval_masks(is_raining))
-    # initialize to -1; this will indicate interstorms
-    storm_indices = np.zeros(len(is_raining), np.int64) - 1
-    rain_mask = None
-    for i, rain_mask in enumerate(rain_masks):
-        storm_indices[rain_mask] = i
-    del rain_mask
-    assert ((storm_indices != -1) == is_raining).all()
     jump_masks = list(get_true_interval_masks(is_jump))
+    LOG.info(
+        '%s intervals of water level increment above threshold %s mm',
+        len(jump_masks), jump_threshold)
     rain_intervals = []
     head_intervals = []
     for i, jump_mask in enumerate(jump_masks):

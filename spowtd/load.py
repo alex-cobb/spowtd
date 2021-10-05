@@ -72,6 +72,7 @@ def load_data(connection,
     populate_rainfall_intensity(cursor, time_grid, time_step)
     populate_water_level(cursor, time_grid, time_step)
     cursor.close()
+    connection.commit()
 
 
 def populate_water_level(cursor, time_grid, time_step):

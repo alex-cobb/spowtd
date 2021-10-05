@@ -68,3 +68,13 @@ def test_load():
             '--precipitation', paths['precipitation'],
             '--evapotranspiration', paths['evapotranspiration'],
             '--water-level', paths['water_level']])
+
+
+def test_classify_help():
+    """Invoking spowtd classify --help exits with code 0
+
+    """
+    with pytest.raises(SystemExit) as exception:
+        cli_mod.main(['classify', '--help'])
+    assert exception.type == SystemExit
+    assert exception.value.code == 0

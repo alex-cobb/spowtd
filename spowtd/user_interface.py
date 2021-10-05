@@ -8,6 +8,7 @@ import os
 import sqlite3
 import sys
 
+import spowtd.classify as classify_mod
 import spowtd.load as load_mod
 
 
@@ -31,6 +32,13 @@ def main(argv):
         help='Load water level, precipitation and evapotranspiration data')
     add_load_args(load_parser)
     add_shared_args(load_parser)
+    del load_parser
+    classify_parser = subparsers.add_parser(
+        'classify',
+        help='Classify data into storm and interstorm intervals')
+    add_classify_args(classify_parser)
+    add_shared_args(classify_parser)
+    del classify_parser
     args = parser.parse_args(argv)
     if args.version:
         print(get_version())
@@ -54,6 +62,12 @@ def main(argv):
                 precipitation_data_file=args.precipitation,
                 evapotranspiration_data_file=args.evapotranspiration,
                 water_level_data_file=args.water_level)
+    elif args.task == 'classify':
+        with sqlite3.connect(args.db) as connection:
+            classify_mod.classify_intervals(
+                connection=connection,
+                storm_rain_threshold_mm_h=args.storm_rain_threshold_mm_h,
+                rising_jump_threshold_mm_h=args.rising_jump_threshold_mm_h)
     else:
         raise AssertionError('Bad task {}'.format(args.task))
     return 0
@@ -93,6 +107,22 @@ def add_load_args(parser):
         '-z', '--water-level', help='Water level data file',
         type=argparse.FileType('rt', encoding='utf-8-sig'),
         required=True)
+
+
+def add_classify_args(parser):
+    """Add arguments for spowtd classify parser
+
+    """
+    parser.add_argument(
+        'db', metavar='DB', help='Spowtd SQLite3 data file')
+    parser.add_argument(
+        '-s', '--storm-rain-threshold-mm-h',
+        help='Rainfall intensity threshold for storms',
+        type=float, required=True)
+    parser.add_argument(
+        '-j', '--rising-jump-threshold-mm-h',
+        help='Threshold rate of increase in water level for storms',
+        type=float, required=True)
 
 
 def get_verbosity(level_index):

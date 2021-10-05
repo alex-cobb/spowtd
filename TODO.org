@@ -1,16 +1,19 @@
- - [ ] Consider calling "load" instead "create" or "init" or something
- - [ ] Fail / bail if the db file exists
  - [ ] Convert sample data from cm to mm
- - [ ] Add grid_interval_mm to interface
-
  - [ ] Simpler unit tests to verify functions
  - [ ] Graphical output
  - [ ] Add flags (is_raining, is_storm, is_jump...) to data model and
    populate
-   - These will be useful for plots
-
+   - These will be useful for plots and reassurance that everything is
+     working right
+ - [ ] Store thresholds / configuration used (for example, to
+   designate storms and interstorms) in database
  - [ ] Add arguments for, and store, these configuration variables:
    - Time zone
    - Interval for zeta_grid
    - Rising jump threshold
    - Rain storm threshold
+
+ - [ ] Consider calling "load" instead "create" or "init" or something
+ - [ ] Fail / bail if the db file exists
+ - [ ] Add grid_interval_mm to interface
+

@@ -21,6 +21,7 @@ def find_recession_offsets(
     cursor = connection.cursor()
     compute_offsets(cursor, reference_zeta_mm)
     cursor.close()
+    connection.commit()
 
 
 def compute_offsets(cursor, reference_zeta_mm):
