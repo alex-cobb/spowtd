@@ -10,4 +10,3 @@
 
  - [ ] Consider calling "load" instead "create" or "init" or something
  - [ ] Fail / bail if the db file exists
- - [X] Add grid_interval_mm to interface
