@@ -37,6 +37,16 @@ CREATE TABLE grid_time (
 );
 
 
+CREATE TABLE grid_time_flags (
+  start_epoch integer NOT NULL PRIMARY KEY
+    REFERENCES grid_time(epoch),
+  is_raining boolean NOT NULL,
+  is_jump boolean NOT NULL,
+  is_mystery_jump boolean NOT NULL,
+  is_interstorm boolean NOT NULL
+);
+
+
 CREATE TABLE rainfall_intensity (
   from_epoch integer NOT NULL
     REFERENCES grid_time (epoch)

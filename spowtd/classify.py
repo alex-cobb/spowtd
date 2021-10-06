@@ -33,7 +33,7 @@ def populate_zeta_interval(
     """Identify storm and interstorm intervals
 
     """
-    build_master_recession_curve(
+    classify_interstorms(
         cursor,
         rising_jump_threshold_mm_h)
     match_all_storms(
@@ -240,7 +240,7 @@ def match_storms(rain, head, rain_threshold, jump_threshold):
     return (rain_intervals, head_intervals)
 
 
-def build_master_recession_curve(
+def classify_interstorms(
         cursor,
         rising_jump_threshold_mm_h):
     (epoch,
@@ -267,12 +267,20 @@ def build_master_recession_curve(
          (hour[1:] - hour[:-1])))
     is_jump = (rates > rising_jump_threshold_mm_h).astype(bool)
     is_mystery_jump = get_mystery_jump_mask(is_jump, is_raining)
-    del is_jump
-
     is_interstorm = (~is_mystery_jump) & (~is_raining)
-    del is_mystery_jump, is_raining
     interval_mask = is_interstorm
-    del is_interstorm
+
+    cursor.executemany("""
+    INSERT INTO grid_time_flags
+      (start_epoch, is_raining, is_jump, is_mystery_jump, is_interstorm)
+    VALUES
+      (?, ?, ?, ?, ?)""", zip(
+          (int(t) for t in epoch),
+          (int(b) for b in is_raining),
+          (int(b) for b in is_jump),
+          (int(b) for b in is_mystery_jump),
+          (int(b) for b in is_interstorm)))
+    del is_raining, is_jump, is_mystery_jump, is_interstorm
 
     masks = get_true_interval_masks(interval_mask)
 
