@@ -194,3 +194,30 @@ JOIN discrete_zeta AS dz
 JOIN zeta_grid AS zg
   ON zg.id = dz.zeta_grid
 GROUP BY zeta_number, grid_interval_mm;
+
+
+CREATE VIEW storm_total_rise AS
+SELECT zis.storm_start_epoch,
+       zis.interval_start_epoch,
+       iz.zeta_mm AS initial_zeta_mm,
+       fz.zeta_mm AS final_zeta_mm
+FROM zeta_interval_storm AS zis
+JOIN zeta_interval AS zi
+  ON zis.interval_start_epoch = zi.start_epoch
+JOIN water_level AS iz
+  ON iz.epoch = zi.start_epoch
+JOIN water_level AS fz
+  ON fz.epoch = zi.thru_epoch;
+
+
+CREATE VIEW rising_curve_line_segment AS
+SELECT interval_start_epoch,
+       ri.rain_depth_offset_mm,
+       total_depth_mm AS rain_total_depth_mm,
+       initial_zeta_mm,
+       final_zeta_mm
+FROM storm_total_rise AS str
+JOIN storm_total_rain_depth AS strd
+  USING (storm_start_epoch)
+JOIN rising_interval AS ri
+  ON ri.start_epoch = str.interval_start_epoch;
