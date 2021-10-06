@@ -10,6 +10,9 @@ import sys
 
 import spowtd.classify as classify_mod
 import spowtd.load as load_mod
+import spowtd.recession as recession_mod
+import spowtd.rise as rise_mod
+import spowtd.zeta_grid as zeta_grid_mod
 
 
 LEVELS = [logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG]
@@ -33,12 +36,35 @@ def main(argv):
     add_load_args(load_parser)
     add_shared_args(load_parser)
     del load_parser
+
     classify_parser = subparsers.add_parser(
         'classify',
         help='Classify data into storm and interstorm intervals')
     add_classify_args(classify_parser)
     add_shared_args(classify_parser)
     del classify_parser
+
+    zeta_grid_parser = subparsers.add_parser(
+        'set-zeta-grid',
+        help='Set up water level grid for master curves')
+    add_zeta_grid_args(zeta_grid_parser)
+    add_shared_args(zeta_grid_parser)
+    del zeta_grid_parser
+
+    recession_parser = subparsers.add_parser(
+        'recession',
+        help='Assemble recession curve')
+    add_recession_args(recession_parser)
+    add_shared_args(recession_parser)
+    del recession_parser
+
+    rise_parser = subparsers.add_parser(
+        'rise',
+        help='Assemble rise curve')
+    add_rise_args(rise_parser)
+    add_shared_args(rise_parser)
+    del rise_parser
+
     args = parser.parse_args(argv)
     if args.version:
         print(get_version())
@@ -68,6 +94,21 @@ def main(argv):
                 connection=connection,
                 storm_rain_threshold_mm_h=args.storm_rain_threshold_mm_h,
                 rising_jump_threshold_mm_h=args.rising_jump_threshold_mm_h)
+    elif args.task == 'set-zeta-grid':
+        with sqlite3.connect(args.db) as connection:
+            zeta_grid_mod.populate_zeta_grid(
+                connection=connection,
+                grid_interval_mm=args.water_level_step_mm)
+    elif args.task == 'recession':
+        with sqlite3.connect(args.db) as connection:
+            recession_mod.find_recession_offsets(
+                connection=connection,
+                reference_zeta_mm=args.reference_zeta_mm)
+    elif args.task == 'rise':
+        with sqlite3.connect(args.db) as connection:
+            rise_mod.find_rise_offsets(
+                connection=connection,
+                reference_zeta_mm=args.reference_zeta_mm)
     else:
         raise AssertionError('Bad task {}'.format(args.task))
     return 0
@@ -123,6 +164,42 @@ def add_classify_args(parser):
         '-j', '--rising-jump-threshold-mm-h',
         help='Threshold rate of increase in water level for storms',
         type=float, required=True)
+
+
+def add_zeta_grid_args(parser):
+    """Add arguments to establish water level grid
+
+    """
+    parser.add_argument(
+        'db', metavar='DB', help='Spowtd SQLite3 data file')
+    parser.add_argument(
+        '-d', '--water-level-step-mm',
+        help='Water level discretization interval',
+        type=float, default=1.0)
+
+
+def add_recession_args(parser):
+    """Add arguments for spowtd recession parser
+
+    """
+    parser.add_argument(
+        'db', metavar='DB', help='Spowtd SQLite3 data file')
+    parser.add_argument(
+        '-r', '--reference-zeta-mm',
+        help='Water level used to determine origin of time axis',
+        type=float, default=None)
+
+
+def add_rise_args(parser):
+    """Add arguments for spowtd rise parser
+
+    """
+    parser.add_argument(
+        'db', metavar='DB', help='Spowtd SQLite3 data file')
+    parser.add_argument(
+        '-r', '--reference-zeta-mm',
+        help='Water level used to determine origin of storage axis',
+        type=float, default=None)
 
 
 def get_verbosity(level_index):

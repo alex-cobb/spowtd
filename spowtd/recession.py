@@ -103,7 +103,7 @@ def compute_offsets(cursor, reference_zeta_mm):
         assert fk_exists, interval_epoch[0]
         cursor.execute("""
         INSERT INTO recession_interval (
-          start_epoch, time_offset)
+          start_epoch, time_offset_s)
         SELECT :start_epoch,
                :time_offset_s""",
                        {'start_epoch': interval_epoch[0],

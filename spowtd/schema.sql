@@ -129,7 +129,7 @@ CREATE TABLE recession_interval (
   start_epoch integer NOT NULL PRIMARY KEY,
   interval_type text NOT NULL DEFAULT 'interstorm'
     CHECK (interval_type = 'interstorm'),
-  time_offset interval NOT NULL,
+  time_offset_s double precision NOT NULL,
   FOREIGN KEY (start_epoch, interval_type)
     REFERENCES zeta_interval (start_epoch, interval_type)
 );
@@ -166,3 +166,31 @@ JOIN rainfall_intensity AS ri
   ON ri.from_epoch >= s.start_epoch
   AND ri.thru_epoch <= s.thru_epoch
 GROUP BY s.start_epoch;
+
+
+CREATE VIEW average_recession_time AS
+SELECT zeta_number * zg.grid_interval_mm AS zeta_mm,
+       AVG(time_offset_s + mean_crossing_time)
+	 AS elapsed_time_s
+FROM recession_interval AS ri
+JOIN recession_interval_zeta
+  USING (start_epoch)
+JOIN discrete_zeta AS dz
+  USING (zeta_number)
+JOIN zeta_grid AS zg
+  ON zg.id = dz.zeta_grid
+GROUP BY zeta_number, grid_interval_mm;
+
+
+CREATE VIEW average_rising_depth AS
+SELECT zeta_number * zg.grid_interval_mm AS zeta_mm,
+       AVG(rain_depth_offset_mm + mean_crossing_depth_mm)
+	 AS mean_crossing_depth_mm
+FROM rising_interval AS ri
+JOIN rising_interval_zeta
+  USING (start_epoch)
+JOIN discrete_zeta AS dz
+  USING (zeta_number)
+JOIN zeta_grid AS zg
+  ON zg.id = dz.zeta_grid
+GROUP BY zeta_number, grid_interval_mm;
