@@ -12,6 +12,9 @@ import spowtd.classify as classify_mod
 import spowtd.load as load_mod
 import spowtd.recession as recession_mod
 import spowtd.rise as rise_mod
+import spowtd.plot_recession as recession_plot_mod
+import spowtd.plot_rise as rise_plot_mod
+import spowtd.plot_time_series as time_series_plot_mod
 import spowtd.zeta_grid as zeta_grid_mod
 
 
@@ -22,12 +25,69 @@ def main(argv):
     """CLI for Spowtd
 
     """
+    parser, plot_parser = create_parsers()
+
+    args = parser.parse_args(argv)
+    if args.version:
+        print(get_version())
+        parser.exit()
+    if args.task is None:
+        parser.print_help()
+        parser.exit()
+
+    set_up_logging(args.logfile, args.verbosity)
+
+    if args.task == 'load':
+        with sqlite3.connect(args.db) as connection:
+            load_mod.load_data(
+                connection=connection,
+                precipitation_data_file=args.precipitation,
+                evapotranspiration_data_file=args.evapotranspiration,
+                water_level_data_file=args.water_level)
+    elif args.task == 'classify':
+        with sqlite3.connect(args.db) as connection:
+            classify_mod.classify_intervals(
+                connection=connection,
+                storm_rain_threshold_mm_h=args.storm_rain_threshold_mm_h,
+                rising_jump_threshold_mm_h=args.rising_jump_threshold_mm_h)
+    elif args.task == 'set-zeta-grid':
+        with sqlite3.connect(args.db) as connection:
+            zeta_grid_mod.populate_zeta_grid(
+                connection=connection,
+                grid_interval_mm=args.water_level_step_mm)
+    elif args.task == 'recession':
+        with sqlite3.connect(args.db) as connection:
+            recession_mod.find_recession_offsets(
+                connection=connection,
+                reference_zeta_mm=args.reference_zeta_mm)
+    elif args.task == 'rise':
+        with sqlite3.connect(args.db) as connection:
+            rise_mod.find_rise_offsets(
+                connection=connection,
+                reference_zeta_mm=args.reference_zeta_mm)
+    elif args.task == 'plot':
+        if args.subtask is None:
+            plot_parser.print_help()
+            plot_parser.exit()
+        with sqlite3.connect(args.db) as connection:
+            plot(connection=connection,
+                 args=args)
+    else:
+        raise AssertionError('Bad task {}'.format(args.task))
+    return 0
+
+
+def create_parsers():
+    """Create spowtd command-line parser and subparsers
+
+    """
     parser = argparse.ArgumentParser(
         description='Scalar parameterization of water table dynamics')
     parser.add_argument(
         '--version',
         help='Print version string and exit',
         action='store_true')
+
     subparsers = parser.add_subparsers(help='sub-command help',
                                        dest='task')
     load_parser = subparsers.add_parser(
@@ -65,53 +125,53 @@ def main(argv):
     add_shared_args(rise_parser)
     del rise_parser
 
-    args = parser.parse_args(argv)
-    if args.version:
-        print(get_version())
-        sys.exit(0)
-    loglevel, is_clipped = get_verbosity(args.verbosity)
+    plot_parser = subparsers.add_parser(
+        'plot',
+        help='Plot data')
+    add_plot_args(plot_parser)
+    add_shared_args(plot_parser)
+
+    return parser, plot_parser
+
+
+def set_up_logging(logfile, verbosity):
+    """Configure logging for spowtd
+
+    """
+    loglevel, is_clipped = get_verbosity(verbosity)
     for handler in logging.root.handlers[:]:
         # Per SO post:
         # https://stackoverflow.com/questions/35898160/\
         #  logging-module-not-writing-to-file?rq=1
         # This is opaque to me, but seems to be necessary.
         logging.root.removeHandler(handler)
-    logging.basicConfig(stream=args.logfile,
+    logging.basicConfig(stream=logfile,
                         level=loglevel)
     if is_clipped:
         log = logging.getLogger('spowtd.user_interface')
         log.warning('maximum verbosity exceeded, ignoring flag')
-    if args.task == 'load':
-        with sqlite3.connect(args.db) as connection:
-            load_mod.load_data(
-                connection=connection,
-                precipitation_data_file=args.precipitation,
-                evapotranspiration_data_file=args.evapotranspiration,
-                water_level_data_file=args.water_level)
-    elif args.task == 'classify':
-        with sqlite3.connect(args.db) as connection:
-            classify_mod.classify_intervals(
-                connection=connection,
-                storm_rain_threshold_mm_h=args.storm_rain_threshold_mm_h,
-                rising_jump_threshold_mm_h=args.rising_jump_threshold_mm_h)
-    elif args.task == 'set-zeta-grid':
-        with sqlite3.connect(args.db) as connection:
-            zeta_grid_mod.populate_zeta_grid(
-                connection=connection,
-                grid_interval_mm=args.water_level_step_mm)
-    elif args.task == 'recession':
-        with sqlite3.connect(args.db) as connection:
-            recession_mod.find_recession_offsets(
-                connection=connection,
-                reference_zeta_mm=args.reference_zeta_mm)
-    elif args.task == 'rise':
-        with sqlite3.connect(args.db) as connection:
-            rise_mod.find_rise_offsets(
-                connection=connection,
-                reference_zeta_mm=args.reference_zeta_mm)
+
+
+def plot(connection, args):
+    """Dispatch to plotting scripts
+
+    """
+    if args.subtask == 'time-series':
+        colors = time_series_plot_mod.DEFAULT_COLORS.copy()
+        time_series_plot_mod.plot_time_series(
+            connection=connection,
+            show_accents=args.flags,
+            colors=colors,
+            accent_width=args.highlight_weight)
+    elif args.subtask == 'recession':
+        recession_plot_mod.plot_recession(
+            connection=connection)
+    elif args.subtask == 'rise':
+        rise_plot_mod.plot_rise(
+            connection=connection)
     else:
-        raise AssertionError('Bad task {}'.format(args.task))
-    return 0
+        raise AssertionError(
+            'Bad plot task {}'.format(args.subtask))
 
 
 def add_shared_args(parser):
@@ -200,6 +260,44 @@ def add_rise_args(parser):
         '-r', '--reference-zeta-mm',
         help='Water level used to determine origin of storage axis',
         type=float, default=None)
+
+
+def add_plot_args(parser):
+    """Add arguments for spowtd rise parser
+
+    """
+    plot_subparsers = parser.add_subparsers(
+        help='plotting sub-command help',
+        dest='subtask')
+    time_series_plot_parser = plot_subparsers.add_parser(
+        'time-series',
+        help='Plot water level and precipitation time series')
+    time_series_plot_parser.add_argument(
+        'db', metavar='SQLITE',
+        help='Path to SQLite database')
+    time_series_plot_parser.add_argument(
+        '-f', '--flags', action='store_true',
+        help='Highlight time intervals flagged for storm matching')
+    time_series_plot_parser.add_argument(
+        '-w', '--highlight-weight', type=float, default=3.0,
+        help='Highlight line weight')
+    del time_series_plot_parser
+
+    recession_plot_parser = plot_subparsers.add_parser(
+        'recession',
+        help='Plot master rise curve')
+    recession_plot_parser.add_argument(
+        'db', metavar='SQLITE',
+        help='Path to SQLite database')
+    del recession_plot_parser
+
+    rise_plot_parser = plot_subparsers.add_parser(
+        'rise',
+        help='Plot master rise curve')
+    rise_plot_parser.add_argument(
+        'db', metavar='SQLITE',
+        help='Path to SQLite database')
+    del rise_plot_parser
 
 
 def get_verbosity(level_index):

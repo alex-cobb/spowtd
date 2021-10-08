@@ -8,5 +8,12 @@
    - Rising jump threshold
    - Rain storm threshold
 
+ - [ ] When highlighting rain, better highlight when rain is above
+   storm threshold; highlighting nonzero values is not very
+   useful
+ - [ ] Convert to local time in plots (via Matplotlib), and / or
+   indicate more clearly that datetimes are UTC
+
  - [ ] Consider calling "load" instead "create" or "init" or something
  - [ ] Fail / bail if the db file exists
+ - [ ] Trim water level etc time series to short intervals
