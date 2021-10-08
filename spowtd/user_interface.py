@@ -293,7 +293,7 @@ def add_plot_args(parser):
 
     recession_plot_parser = plot_subparsers.add_parser(
         'recession',
-        help='Plot master rise curve')
+        help='Plot master recession curve')
     recession_plot_parser.add_argument(
         'db', metavar='SQLITE',
         help='Path to SQLite database')
