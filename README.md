@@ -1,18 +1,26 @@
-====================== README for python-spowtd ======================
+# spowtd: Scalar parameterization of water table dynamics
 
-spowtd: scalar parameterization of water table dynamics
+Spowtd provides a Python module and script to analyze water table time
+series in settings where the behavior of the water table is
+essentially determined by the current precipitation and
+evapotranspiration.
 
-Spowtd provides a Python module and script to....
+## Docs
+
+For now, see the PDF user guide in Docs.  For usage hints, just type:
+```console
+$ spowtd
+```
+
+## Bugs
+
+ - Currently the script does not check if the previous steps required
+   to do a new step have been completed or not.  So, you may get a
+   cryptic error message if, for example, you try to plot the
+   recession curve if the recession curve has not been assembled yet.
 
 
-
-
-================================ Bugs ===================================
-
- - ...
-
-
-========================= Build and install =============================
+## Build and install
 
 Build:
 python3 setup.py build
@@ -24,7 +32,7 @@ Install:
 python3 setup.py install
 
 
-========================= Build dependencies ============================
+## Build dependencies
 
 Spowtd is built for Python 3.
 
@@ -48,12 +56,13 @@ For development, you may additionally want:
  - python3-pytest-cov
 
 
-========================== Revision history =============================
+## Revision history
 
-Version 0.0.0 - 2021-09-28:  Initial commit.
+Version 0.1.0 - 2021-10-08:
+ - Initial packaging.
 
 
-======================== Contact information ============================
+## Contact information
 
 Alex Cobb
 Singapore-MIT Alliance for Research and Technology

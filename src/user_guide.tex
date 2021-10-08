@@ -5,6 +5,7 @@
 \usepackage[square,numbers]{natbib}
 \usepackage[includehead,top=2.5cm,bottom=2.5cm,
             left=3cm,right=3cm]{geometry}
+\usepackage{listings}
 \usepackage{parskip}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -14,6 +15,33 @@
 % *always \use this last*
 \usepackage[colorlinks,breaklinks,pdftex,bookmarks=true,
             linkcolor=bluish,citecolor=bluish,urlcolor=bluish]{hyperref}
+
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+
+\lstset{style=mystyle}
 
 \usepackage{enumitem}
 \setlist{topsep=0ex,itemsep=2pt,partopsep=0pt,parsep=0pt,leftmargin=7.5mm}
@@ -27,14 +55,16 @@
 \renewcommand\theenumiii{\arabic{enumiii}}
 
 \begin{document}
+\lstset{language=bash}
 
-{\huge User Guide for Spowtd v0.0.0}\\[1ex]
+{\huge User Guide for Spowtd v0.1.0}\\[2ex]
+{\large Alex Cobb}\\[0ex]
 
 \renewcommand{\baselinestretch}{1.18}\normalsize
 
 This is the user guide for Spowtd, which implements the scalar
 parameterization of water table dynamics described in
-\citet{Cobb_et_al_2017}.
+\citet{Cobb_et_al_2017} and \citet{Cobb_and_Harvey_2019}.
 
 \section{The steps of scalar parameterization}
 Scalar parameterization involves these essential steps:
@@ -50,16 +80,113 @@ Scalar parameterization involves these essential steps:
   transmissivity) function to the master rising and recession curves.
 \end{enumerate}
 
+Steps 6 and 7 are not implemented yet.
+
 \section{The spowtd script}
 The \texttt{spowtd} script provides a command-line interface to
-perform calculations with Spowtd.  It has these subcommands:
+perform calculations with Spowtd.
+
+\subsection{Dependencies}
+Running the script requires Python 3 and the Python packages
+\href{https://matplotlib.org/}{Matplotlib},
+\href{https://numpy.org/}{Numpy}, and
+\href{https://pypi.org/project/pytz/}{Pytz}.
+
+\subsection{Using the script}
+The \texttt{spowtd} script has these subcommands (typically run in
+this order):
 \begin{itemize}
-\item \texttt{spowtd load}\ldots
-\item \texttt{spowtd classify}\ldots
-\item \texttt{spowtd recession}\ldots
-\item \texttt{spowtd rise}\ldots
-\item \texttt{spowtd simulate}\ldots
+\item \texttt{spowtd load}: Load water level, precipitation and
+  evapotranspiration data
+\item \texttt{spowtd classify}: Classify data into storm and
+  interstorm intervals
+\item \texttt{spowtd set-zeta-grid}: Set up water level grid for
+  master curves
+\item \texttt{spowtd recession}: Assemble recession curve
+\item \texttt{spowtd rise}: Assemble rise curve
+\item \texttt{spowtd plot}: Plot data
 \end{itemize}
+
+The first step is to load the precipitation, evapotranspiration and
+water level data.  The input text files must be in an UTF-8-compatible
+encoding (ASCII is fine).  The time zone is stored with the dataset
+and will be used in plots (all times are stored internally as UNIX
+timestamps).  For example, to load data into a new dataset file called
+\texttt{ekolongouma.sqlite3}:
+\begin{lstlisting}[frame=single]
+spowtd load ekolongouma.sqlite3 \
+  -vvv \
+  --precipitation src/precipitation_Ekolongouma.txt \
+  --evapotranspiration src/evapotranspiration_Ekolongouma.txt \
+  --water-level src/waterlevel_Ekolongouma.txt \
+  --timezone Africa/Lagos
+\end{lstlisting}
+The verbosity flags (\texttt{-vvv}) are not required; they cause the
+script to report more on what is being done.
+
+Next, classify the water level and precipitation time series into
+storm and interstorm intervals based on thresholds for rainfall
+intensity and rates of increase in water level.  For example, this
+command classifies intervals with precipitation of at least 4~mm / h
+as storms, and intervals in which the water level is increasing at a
+rate of least 8~mm / h as storm response.
+\begin{lstlisting}[frame=single]
+spowtd classify ekolongouma.sqlite3 \
+  -vvv \
+  --storm-rain-threshold-mm-h 4.0 \
+  --rising-jump-threshold-mm-h 8.0
+\end{lstlisting}
+
+At this stage the classification can be plotted.  A basic interactive
+plot showing the classified water level and precipitation time series
+can be produced with:
+\begin{lstlisting}[frame=single]
+spowtd plot time-series ekolongouma.sqlite3
+\end{lstlisting}
+The parts of the water level time series marked as interstorms are on
+a light red background, and the parts of the water level time series
+marked as storm response are on a light green background.  The parts
+of the precipitation time series marked as storms are on a light blue
+background.  You can pan in the plot with the right mouse button and
+zoom with a left mouse button, or use the magnifying glass to zoom in.
+You can revert to earlier zoom and pan values with the arrow buttons.
+
+Adding \texttt{-f} or \texttt{--flags} highlights the parts of the
+water level time series that have been classified as storm response
+and interstorms, and the parts of the precipitation time series
+\begin{lstlisting}[frame=single]
+spowtd plot time-series ekolongouma.sqlite3  -f
+\end{lstlisting}
+The rising intervals are highlighted in blue, intervals with rising
+intervals that could not be matched to rain storms are highlighted in
+magenta, and rain storms are highlighted in red.
+
+The next step is to establish a uniform grid for water levels.  This
+grid is used when storm and interstorm intervals are assembled into
+rising and recession curves.
+\begin{lstlisting}[frame=single]
+spowtd set-zeta-grid -vvv ekolongouma.sqlite3
+\end{lstlisting}
+
+The next two steps assemble the recession and rise curves:
+\begin{lstlisting}[frame=single]
+spowtd recession -vvv ekolongouma.sqlite3
+\end{lstlisting}
+
+\begin{lstlisting}[frame=single]
+spowtd rise -vvv ekolongouma.sqlite3
+\end{lstlisting}
+
+The recession and rise curves are now assembled, and can be plotted.
+\begin{lstlisting}[frame=single]
+spowtd plot recession ekolongouma.sqlite3
+\end{lstlisting}
+
+\begin{lstlisting}[frame=single]
+spowtd plot rise ekolongouma.sqlite3
+\end{lstlisting}
+These plots can be interacted with in the same way: left mouse button
+to pan, right mouse button to zoom, disk icon to save.
 
 \bibliographystyle{unsrtnat}
 \bibliography{user_guide.bib}
