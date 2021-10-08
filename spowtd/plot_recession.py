@@ -4,25 +4,9 @@
 
 """
 
-import argparse
 import itertools
-import sqlite3
 
 import matplotlib.pyplot as plt
-
-
-def main(argv):
-    """CLI to plot master recession curve
-
-    """
-    parser = argparse.ArgumentParser(
-        description='Plot master recession curve')
-    parser.add_argument('db', metavar='SQLITE',
-                        help='Path to SQLite database')
-    args = parser.parse_args(argv)
-    with sqlite3.connect(args.db) as connection:
-        return plot_recession(
-            connection=connection)
 
 
 def plot_recession(connection):
@@ -68,8 +52,3 @@ def plot_recession(connection):
     cursor.close()
     plt.show()
     return 0
-
-
-if __name__ == '__main__':
-    import sys
-    sys.exit(main(sys.argv[1:]))

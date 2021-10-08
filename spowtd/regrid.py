@@ -35,7 +35,7 @@ def regrid(x, y, y_step, interpolant='linear'):
                          '{} != {}'.format(len(x), len(y)))
     # Don't use "if x" here, this is an ndarray
     if len(x) == 0:  # pylint: disable=len-as-condition
-        raise StopIteration
+        return
     if not np.alltrue(np.isfinite(y)):
         raise ValueError('non-finite values in y vector')
     Y = y / y_step
@@ -48,7 +48,7 @@ def regrid(x, y, y_step, interpolant='linear'):
         else:
             targets = reversed(list(range(stop, start)))
         for y_target in targets:
-            x_target = brentq(lambda x: spline(x) - y_target,
+            x_target = brentq(lambda x, y=y_target: spline(x) - y,
                               x[i], x[i + 1])
             yield (y_target, x_target)
 

@@ -4,9 +4,6 @@
 
 """
 
-import argparse
-import sqlite3
-
 import matplotlib.dates as dates_mod
 import matplotlib.pyplot as plt
 
@@ -20,31 +17,6 @@ DEFAULT_COLORS = {
     'rain': '#ff0000ff',
     'jump': '#0000ffff',
     'mystery_jump': '#ff00ffff'}
-
-
-def main(argv):
-    """CLI to plot water level and precipitation time series
-
-    """
-    parser = argparse.ArgumentParser(
-        description='Plot water level and precipitation time series')
-    parser.add_argument(
-        'db', metavar='SQLITE',
-        help='Path to SQLite database')
-    parser.add_argument(
-        '-f', '--flags', action='store_true',
-        help='Highlight time intervals flagged for storm matching')
-    parser.add_argument(
-        '-w', '--highlight-weight', type=float, default=3.0,
-        help='Highlight line weight')
-    args = parser.parse_args(argv)
-    colors = DEFAULT_COLORS.copy()
-    with sqlite3.connect(args.db) as connection:
-        return plot_time_series(
-            connection=connection,
-            show_accents=args.flags,
-            colors=colors,
-            accent_width=args.highlight_weight)
 
 
 def plot_time_series(
@@ -165,8 +137,3 @@ def plot_time_series(
     cursor.close()
     plt.show()
     return 0
-
-
-if __name__ == '__main__':
-    import sys
-    sys.exit(main(sys.argv[1:]))

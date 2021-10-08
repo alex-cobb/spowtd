@@ -188,7 +188,7 @@ def match_storms(rain, head, rain_threshold, jump_threshold):
         assert -1 not in matching_storms, matching_storms
         if len(matching_storms) == 0:  # pylint: disable=len-as-condition
             continue
-        elif len(matching_storms) == 1:
+        if len(matching_storms) == 1:
             storm_index = matching_storms.pop()
         elif len(matching_storms) > 1:
             print('multiple matching storms {}'.format(matching_storms))
@@ -229,20 +229,23 @@ def match_storms(rain, head, rain_threshold, jump_threshold):
         assert jump_stop - jump_start >= 2
         rain_intervals.append((rain_start, rain_stop))
         head_intervals.append((jump_start, jump_stop))
-        LOG.info('Rain {} cell(s) before jump'
-                 .format(head_intervals[-1][0] -
-                         rain_intervals[-1][0]))
-        LOG.info('  and {} time step(s) shorter'
-                 .format((rain_intervals[-1][1] -
-                          rain_intervals[-1][0]) -
-                         (head_intervals[-1][1] -
-                          head_intervals[-1][0] - 1)))
+        LOG.info('Rain %s cell(s) before jump',
+                 (head_intervals[-1][0] -
+                  rain_intervals[-1][0]))
+        LOG.info('  and %s time step(s) shorter',
+                 ((rain_intervals[-1][1] -
+                   rain_intervals[-1][0]) -
+                  (head_intervals[-1][1] -
+                   head_intervals[-1][0] - 1)))
     return (rain_intervals, head_intervals)
 
 
 def classify_interstorms(
         cursor,
         rising_jump_threshold_mm_h):
+    """Populate interstorm intervals
+
+    """
     (epoch,
      zeta_mm,
      is_raining) = (
@@ -292,7 +295,7 @@ def classify_interstorms(
                       if len(indices) > 1]
     del indices
 
-    LOG.info('{} series found'.format(len(series_indices)))
+    LOG.info('%s series found', len(series_indices))
 
     for indices in series_indices:
         cursor.execute("""

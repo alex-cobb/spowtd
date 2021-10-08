@@ -5,11 +5,11 @@
 import os
 import sqlite3
 
+import pytest
+
 import spowtd.classify as classify_mod
 import spowtd.load as load_mod
 import spowtd.zeta_grid as zeta_grid_mod
-
-import pytest
 
 
 SAMPLE_DATA_DIR = os.path.join(
@@ -41,21 +41,24 @@ def loaded_connection(request, connection):
 
     """
     sample = request.param
-    load_mod.load_data(
-        connection=connection,
-        precipitation_data_file=open(
+    with open(
             get_sample_file_path(
                 'precipitation', sample),
-            'rt', encoding='utf-8-sig'),
-        evapotranspiration_data_file=open(
-            get_sample_file_path(
-                'evapotranspiration', sample),
-            'rt', encoding='utf-8-sig'),
-        water_level_data_file=open(
-            get_sample_file_path(
-                'water_level', sample),
-            'rt', encoding='utf-8-sig'))
-    yield connection
+            'rt', encoding='utf-8-sig') as precip_f, \
+            open(
+                get_sample_file_path(
+                    'evapotranspiration', sample),
+                'rt', encoding='utf-8-sig') as et_f, \
+                open(
+                    get_sample_file_path(
+                        'water_level', sample),
+                    'rt', encoding='utf-8-sig') as zeta_f:
+        load_mod.load_data(
+            connection=connection,
+            precipitation_data_file=precip_f,
+            evapotranspiration_data_file=et_f,
+            water_level_data_file=zeta_f)
+        yield connection
 
 
 @pytest.fixture(scope="function")

@@ -59,11 +59,11 @@ def get_series_time_offsets(series_list, head_step):
     connected_components = get_connected_components(series_at_head)
     if len(connected_components) > 1:
         LOG.info(
-            '{} connected sets of head of sizes '
-            '{}; will keep only largest component.'
-            .format(len(connected_components),
-                    tuple(len(cc) for cc in
-                          connected_components)))
+            '%s connected sets of head of sizes '
+            '%s; will keep only largest component.',
+            len(connected_components),
+            tuple(len(cc) for cc in
+                  connected_components))
 
     head_mappings = split_mapping_by_keys(head_mapping,
                                           connected_components[:1])
@@ -99,10 +99,10 @@ def build_head_mapping(series, head_step=1):
     for series_id, (t, H) in enumerate(series):
         # take averages of t at distinct H
         all_times = {}
-        for head_id, t in regrid_mod.regrid(t, H, head_step):
-            all_times.setdefault(head_id, []).append(t)
-        for head_id, t in list(all_times.items()):
-            t_mean = np.mean(t)
+        for head_id, time in regrid_mod.regrid(t, H, head_step):
+            all_times.setdefault(head_id, []).append(time)
+        for head_id, time in list(all_times.items()):
+            t_mean = np.mean(time)
             head_mapping.setdefault(head_id, []).append((series_id,
                                                          t_mean))
     return head_mapping
@@ -143,12 +143,12 @@ def find_offsets(head_mapping):
     # Reference series corresponds to the highest series id; it
     #   has the largest initial head, because we sorted them
     reference_index = max(series_ids)
-    LOG.info('Reference index: {}'.format(reference_index))
+    LOG.info('Reference index: %s', reference_index)
     number_of_equations = sum(len(series_at_head) for series_at_head
                               in list(head_mapping.values()))
     number_of_unknowns = len(series_indices) - 1
-    LOG.info('{} equations, {} unknowns'.format(number_of_equations,
-                                                number_of_unknowns))
+    LOG.info('%s equations, %s unknowns',
+             number_of_equations, number_of_unknowns)
     A = np.zeros((number_of_equations, number_of_unknowns))
     b = np.zeros((number_of_equations,))
     row_template = np.zeros((number_of_unknowns,))

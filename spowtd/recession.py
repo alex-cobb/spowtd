@@ -63,7 +63,7 @@ def compute_offsets(cursor, reference_zeta_mm):
         SELECT (grid_interval_mm) FROM zeta_grid
         """).fetchone()[0]
     except TypeError:
-        raise ValueError(
+        raise ValueError(  # pylint:disable=raise-missing-from
             "Discrete water level interval not yet set")
 
     (indices,
@@ -89,8 +89,7 @@ def compute_offsets(cursor, reference_zeta_mm):
          for series_id, time_mean_s
          in head_mapping[reference_index]]).mean()
 
-    for i in range(len(indices)):
-        series_id = indices[i]
+    for i, series_id in enumerate(indices):
         interval_epoch = series[series_id][0]
         del series_id
         cursor.execute("""

@@ -4,25 +4,9 @@
 
 """
 
-import argparse
 import itertools
-import sqlite3
 
 import matplotlib.pyplot as plt
-
-
-def main(argv):
-    """CLI to plot master rise curve
-
-    """
-    parser = argparse.ArgumentParser(
-        description='Plot master rise curve')
-    parser.add_argument('db', metavar='SQLITE',
-                        help='Path to SQLite database')
-    args = parser.parse_args(argv)
-    with sqlite3.connect(args.db) as connection:
-        return plot_rise(
-            connection=connection)
 
 
 def plot_rise(connection):
@@ -66,8 +50,3 @@ def plot_rise(connection):
     cursor.close()
     plt.show()
     return 0
-
-
-if __name__ == '__main__':
-    import sys
-    sys.exit(main(sys.argv[1:]))

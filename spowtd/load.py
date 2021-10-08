@@ -70,12 +70,12 @@ def load_data(connection,
                                                 time_zone))
     time_grid, time_step = populate_grid_time(cursor)
     populate_rainfall_intensity(cursor, time_grid, time_step)
-    populate_water_level(cursor, time_grid, time_step)
+    populate_water_level(cursor, time_grid)
     cursor.close()
     connection.commit()
 
 
-def populate_water_level(cursor, time_grid, time_step):
+def populate_water_level(cursor, time_grid):
     """Interpolate water level onto precipitation time grid
 
     """

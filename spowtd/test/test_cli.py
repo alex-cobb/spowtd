@@ -7,7 +7,7 @@ import tempfile
 
 import pytest
 
-import spowtd.test.conftest as conftest
+from spowtd.test import conftest
 import spowtd.user_interface as cli_mod
 
 

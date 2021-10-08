@@ -8,4 +8,4 @@ def test_classify(classified_connection):
 
     """
     # XXX Check tables
-    pass
+    del classified_connection

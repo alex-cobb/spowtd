@@ -91,7 +91,7 @@ def compute_rise_offsets(cursor,
         SELECT (grid_interval_mm) FROM zeta_grid
         """).fetchone()[0]
     except TypeError:
-        raise ValueError(
+        raise ValueError(  # pylint: disable=raise-missing-from
             "Discrete water level interval not yet set")
 
     # Solve for offsets

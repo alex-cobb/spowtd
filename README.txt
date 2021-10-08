@@ -30,6 +30,7 @@ Spowtd is built for Python 3.
 
 Use of the spowtd command-line tool or library requires:
  - python3
+ - python3-matplotlib
  - python3-numpy
  - python3-pytz
 
