@@ -25,6 +25,7 @@ CREATE TABLE evapotranspiration_staging (
 
 CREATE TABLE time_grid (
   time_step_s integer NOT NULL,
+  source_time_zone text NOT NULL,
   -- Singleton
   is_valid integer NOT NULL PRIMARY KEY
     CHECK (is_valid = 1)

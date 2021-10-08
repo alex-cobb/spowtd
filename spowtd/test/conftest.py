@@ -45,19 +45,20 @@ def loaded_connection(request, connection):
             get_sample_file_path(
                 'precipitation', sample),
             'rt', encoding='utf-8-sig') as precip_f, \
-            open(
-                get_sample_file_path(
-                    'evapotranspiration', sample),
-                'rt', encoding='utf-8-sig') as et_f, \
-                open(
-                    get_sample_file_path(
-                        'water_level', sample),
-                    'rt', encoding='utf-8-sig') as zeta_f:
+        open(
+            get_sample_file_path(
+                'evapotranspiration', sample),
+            'rt', encoding='utf-8-sig') as et_f, \
+        open(
+            get_sample_file_path(
+                'water_level', sample),
+            'rt', encoding='utf-8-sig') as zeta_f:
         load_mod.load_data(
             connection=connection,
             precipitation_data_file=precip_f,
             evapotranspiration_data_file=et_f,
-            water_level_data_file=zeta_f)
+            water_level_data_file=zeta_f,
+            time_zone_name='Africa/Lagos')
         yield connection
 
 

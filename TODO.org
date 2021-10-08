@@ -1,9 +1,9 @@
  - [ ] Simpler unit tests to verify functions
- - [ ] Add arguments for, and store, these configuration variables:
-   - Time zone
-   - Interval for zeta_grid
-   - Rising jump threshold
-   - Rain storm threshold
+ - [-] Add arguments for, and store, these configuration variables:
+   - [X] Time zone
+   - [X] Interval for zeta_grid
+   - [ ] Rising jump threshold
+   - [ ] Rain storm threshold
 
  - [ ] When highlighting rain, better highlight when rain is above
    storm threshold; highlighting nonzero values is not very
@@ -13,4 +13,4 @@
 
  - [ ] Consider calling "load" instead "create" or "init" or something
  - [ ] Fail / bail if the db file exists
- - [ ] Trim water level etc time series to short intervals
+ - [ ] Trim test time series to short intervals

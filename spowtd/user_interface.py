@@ -43,7 +43,8 @@ def main(argv):
                 connection=connection,
                 precipitation_data_file=args.precipitation,
                 evapotranspiration_data_file=args.evapotranspiration,
-                water_level_data_file=args.water_level)
+                water_level_data_file=args.water_level,
+                time_zone_name=args.timezone)
     elif args.task == 'classify':
         with sqlite3.connect(args.db) as connection:
             classify_mod.classify_intervals(
@@ -162,7 +163,8 @@ def plot(connection, args):
             connection=connection,
             show_accents=args.flags,
             colors=colors,
-            accent_width=args.highlight_weight)
+            accent_width=args.highlight_weight,
+            time_zone_name=args.timezone)
     elif args.subtask == 'recession':
         recession_plot_mod.plot_recession(
             connection=connection)
@@ -207,6 +209,9 @@ def add_load_args(parser):
     parser.add_argument(
         '-z', '--water-level', help='Water level data file',
         type=argparse.FileType('rt', encoding='utf-8-sig'),
+        required=True)
+    parser.add_argument(
+        '--timezone', help='Timezone of time in data files',
         required=True)
 
 
@@ -281,6 +286,9 @@ def add_plot_args(parser):
     time_series_plot_parser.add_argument(
         '-w', '--highlight-weight', type=float, default=3.0,
         help='Highlight line weight')
+    time_series_plot_parser.add_argument(
+        '--timezone',
+        help='Timezone for time axis, default is original timezone')
     del time_series_plot_parser
 
     recession_plot_parser = plot_subparsers.add_parser(

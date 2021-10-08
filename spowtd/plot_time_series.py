@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
+import pytz
+
 
 DEFAULT_COLORS = {
     'interstorm': '#ff000022',
@@ -23,16 +25,25 @@ def plot_time_series(
         connection,
         show_accents,
         colors,
-        accent_width):
+        accent_width,
+        time_zone_name=None):
     """Plot water level and precipitation time series
 
     """
     cursor = connection.cursor()
 
+    if time_zone_name is None:
+        cursor.execute(
+            "SELECT source_time_zone FROM time_grid")
+        time_zone_name = cursor.fetchone()[0]
+    time_zone = pytz.timezone(time_zone_name)
+
     fig = plt.figure()
     zeta_axes = fig.add_subplot(2, 1, 1)
+    zeta_axes.xaxis_date(tz=time_zone)
     zeta_axes.set_ylabel('Water level, cm')
     rain_axes = fig.add_subplot(2, 1, 2, sharex=zeta_axes)
+    rain_axes.xaxis_date(tz=time_zone)
     rain_axes.set_ylabel('Rainfall intensity, mm / h')
 
     cursor.execute("""

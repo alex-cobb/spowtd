@@ -22,7 +22,7 @@ def load_data(connection,
               precipitation_data_file,
               evapotranspiration_data_file,
               water_level_data_file,
-              time_zone_name='Africa/Lagos'):
+              time_zone_name):
     """Load data into Spowtd data file
 
     """
@@ -68,7 +68,7 @@ def load_data(connection,
       (epoch, zeta_mm)
     VALUES (?, ?)""", generate_timestamped_rows(water_level_csv,
                                                 time_zone))
-    time_grid, time_step = populate_grid_time(cursor)
+    time_grid, time_step = populate_grid_time(cursor, time_zone_name)
     populate_rainfall_intensity(cursor, time_grid, time_step)
     populate_water_level(cursor, time_grid)
     cursor.close()
@@ -89,7 +89,7 @@ def populate_water_level(cursor, time_grid):
     VALUES (?, ?)""", zip(time_grid[:-1], zeta_on_grid))
 
 
-def populate_grid_time(cursor):
+def populate_grid_time(cursor, time_zone_name):
     """Determine and populate grid_time
 
     Identifies interval with both precipitation and water level data,
@@ -117,8 +117,8 @@ def populate_grid_time(cursor):
     time_step = int(delta_t[0])
     del delta_t
     cursor.execute("""
-    INSERT INTO time_grid (time_step_s)
-    VALUES (?)""", (time_step,))
+    INSERT INTO time_grid (source_time_zone, time_step_s)
+    VALUES (?, ?)""", (time_zone_name, time_step))
     # Add a grid time for the end of the last rainfall interval
     time_grid.append(
         time_grid[-1] + time_step)

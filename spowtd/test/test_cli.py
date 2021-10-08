@@ -67,7 +67,8 @@ def test_load():
             db_file.name,
             '--precipitation', paths['precipitation'],
             '--evapotranspiration', paths['evapotranspiration'],
-            '--water-level', paths['water_level']])
+            '--water-level', paths['water_level'],
+            '--timezone', 'Africa/Lagos'])
 
 
 def test_classify_help():
