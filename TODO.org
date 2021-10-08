@@ -1,16 +1,14 @@
- - [ ] Simpler unit tests to verify functions
+ - [ ] Fail / bail on load if the db file exists
  - [-] Add arguments for, and store, these configuration variables:
    - [X] Time zone
    - [X] Interval for zeta_grid
    - [ ] Rising jump threshold
    - [ ] Rain storm threshold
-
- - [ ] When highlighting rain, better highlight when rain is above
-   storm threshold; highlighting nonzero values is not very
-   useful
- - [ ] Convert to local time in plots (via Matplotlib), and / or
+ - [X] Convert to local time in plots (via Matplotlib), and / or
    indicate more clearly that datetimes are UTC
 
- - [ ] Consider calling "load" instead "create" or "init" or something
- - [ ] Fail / bail if the db file exists
+ - [ ] When highlighting rain, highlight when rain is above storm
+   threshold; highlighting nonzero values is not very useful
+
+ - [ ] Simpler unit tests to verify functions
  - [ ] Trim test time series to short intervals
