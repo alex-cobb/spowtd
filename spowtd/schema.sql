@@ -38,10 +38,19 @@ CREATE TABLE grid_time (
 );
 
 
+CREATE TABLE thresholds (
+  storm_rain_threshold_mm_h double precision NOT NULL,
+  rising_jump_threshold_mm_h double precision NOT NULL,
+  -- Singleton
+  is_valid integer NOT NULL PRIMARY KEY
+    CHECK (is_valid = 1)
+    DEFAULT 1
+);
+
+
 CREATE TABLE grid_time_flags (
   start_epoch integer NOT NULL PRIMARY KEY
     REFERENCES grid_time(epoch),
-  is_raining boolean NOT NULL,
   is_jump boolean NOT NULL,
   is_mystery_jump boolean NOT NULL,
   is_interstorm boolean NOT NULL

@@ -18,6 +18,15 @@ def classify_intervals(
 
     """
     cursor = connection.cursor()
+    cursor.execute("""
+    INSERT INTO thresholds
+      (storm_rain_threshold_mm_h, rising_jump_threshold_mm_h)
+    VALUES
+      (:storm_rain_threshold_mm_h, :rising_jump_threshold_mm_h)""",
+                   {'storm_rain_threshold_mm_h':
+                    storm_rain_threshold_mm_h,
+                    'rising_jump_threshold_mm_h':
+                    rising_jump_threshold_mm_h})
     populate_zeta_interval(
         cursor,
         storm_rain_threshold_mm_h,
@@ -272,18 +281,18 @@ def classify_interstorms(
     is_mystery_jump = get_mystery_jump_mask(is_jump, is_raining)
     is_interstorm = (~is_mystery_jump) & (~is_raining)
     interval_mask = is_interstorm
+    del is_raining
 
     cursor.executemany("""
     INSERT INTO grid_time_flags
-      (start_epoch, is_raining, is_jump, is_mystery_jump, is_interstorm)
+      (start_epoch, is_jump, is_mystery_jump, is_interstorm)
     VALUES
-      (?, ?, ?, ?, ?)""", zip(
+      (?, ?, ?, ?)""", zip(
           (int(t) for t in epoch),
-          (int(b) for b in is_raining),
           (int(b) for b in is_jump),
           (int(b) for b in is_mystery_jump),
           (int(b) for b in is_interstorm)))
-    del is_raining, is_jump, is_mystery_jump, is_interstorm
+    del is_jump, is_mystery_jump, is_interstorm
 
     masks = get_true_interval_masks(interval_mask)
 

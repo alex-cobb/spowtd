@@ -50,7 +50,6 @@ def plot_time_series(
     SELECT epoch,
            zeta_mm / 10 AS zeta_cm,
            rainfall_intensity_mm_h,
-           is_raining,
            is_jump,
            is_mystery_jump,
            is_interstorm
@@ -63,7 +62,6 @@ def plot_time_series(
     (epoch,
      zeta_cm,
      rain_mm_h,
-     is_raining,
      is_jump,
      is_mystery_jump,
      is_interstorm) = zip(*cursor)
@@ -117,12 +115,10 @@ def plot_time_series(
                           facecolor=colors['rain_storm'])
 
     if show_accents:
-        (is_raining,
-         is_jump,
+        (is_jump,
          is_mystery_jump,
          is_interstorm) = (np.array(v).astype(bool)
-                           for v in (is_raining,
-                                     is_jump,
+                           for v in (is_jump,
                                      is_mystery_jump,
                                      is_interstorm))
         jumps = zeta_cm[:]
@@ -138,9 +134,12 @@ def plot_time_series(
                             color=colors['mystery_jump'],
                             linewidth=accent_width)
 
-        raining = rain_mm_h[:]
-        raining[~is_raining] = np.NaN
-        rain_axes.plot_date(mpl_time, rain_mm_h, '-',
+        storm_threshold_mm_h = cursor.execute("""
+        SELECT storm_rain_threshold_mm_h
+        FROM thresholds""").fetchone()[0]
+        storm_rain = rain_mm_h[:]
+        storm_rain[rain_mm_h < storm_threshold_mm_h] = np.NaN
+        rain_axes.plot_date(mpl_time, storm_rain, '-',
                             color=colors['rain'],
                             linewidth=accent_width,
                             drawstyle='steps-post')
