@@ -1,7 +1,4 @@
- - [ ] Use executemany instead of loops for insertions
-
  - [ ] Simpler unit tests to verify functions
- - [ ] Graphical output
  - [ ] Add arguments for, and store, these configuration variables:
    - Time zone
    - Interval for zeta_grid
