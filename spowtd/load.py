@@ -30,6 +30,15 @@ def load_data(connection,
 
     connection.execute("PRAGMA foreign_keys = 1")
     cursor = connection.cursor()
+
+    # Error out if database is populated
+    tables = [row[0] for row in
+              cursor.execute(
+                  "SELECT name FROM sqlite_master WHERE type='table'")]
+    if tables:
+        raise ValueError(
+            'Database already populated; remove before loading')
+
     with open(SCHEMA_PATH, 'rt') as schema_file:
         cursor.executescript(schema_file.read())
     # Format: Datetime, precipitation intensity (mm / h)

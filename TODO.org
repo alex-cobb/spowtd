@@ -1,4 +1,4 @@
- - [ ] Fail / bail on load if the db file exists
+ - [X] Fail / bail on load if the db file exists
  - [-] Add arguments for, and store, these configuration variables:
    - [X] Time zone
    - [X] Interval for zeta_grid
