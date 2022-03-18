@@ -93,7 +93,7 @@ def match_all_storms(
             # XXX Convert to datetime for error message?
             .format(epoch[rain_start], epoch[rain_stop - 1]))
         jump_start, jump_stop = jump_intervals[i]
-        assert (np.diff(zeta_mm[jump_start:jump_stop]) >=
+        assert (np.diff(zeta_mm[jump_start:jump_stop]) >
                 jump_delta_threshold).all()
 
         # Times associated with rainfall intensities are *start* times
@@ -216,20 +216,24 @@ def match_storms(rain, head, rain_threshold, jump_threshold):
         jump_indices = np.nonzero(jump_mask)[0]
         jump_start = jump_indices[0]
         jump_stop = jump_indices[-1] + 2
-        assert (np.diff(head[jump_start:jump_stop]) >=
+        assert (np.diff(head[jump_start:jump_stop]) >
                 jump_threshold).all(), (
-                    'Heads [{}, {}) meets jump threshold {} mm'
+                    'Head pair [{}, {}) meets jump threshold {} mm'
                     .format(jump_start,
                             jump_stop,
                             jump_threshold))
-        assert jump_start == 0 or (head[jump_start] -
-                                   head[jump_start - 1]
-                                   < jump_threshold), (
-                                       'Jump starts at jump_start')
-        assert jump_stop == len(head) or (head[jump_stop] -
-                                          head[jump_stop - 1] <
-                                          jump_threshold), (
-                                              'Jump ends at jump_stop')
+        assert jump_start == 0 or (
+            head[jump_start] - head[jump_start - 1] <= jump_threshold), (
+                'Jump <= {} starts at jump_start: {}, {}'
+                .format(jump_threshold,
+                        jump_start,
+                        head[jump_start] - head[jump_start - 1]))
+        assert jump_stop == len(head) or (
+            head[jump_stop] - head[jump_stop - 1] <= jump_threshold), (
+                'Jump > {} ends at jump_stop: {}, {}'
+                .format(jump_threshold,
+                        jump_stop,
+                        head[jump_stop] - head[jump_stop - 1]))
 
         # At a minimum, all intervals include 1 rainfall intensity
         # value and 2 head values (note that these correspond to the

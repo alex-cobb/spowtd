@@ -1,2 +1,6 @@
+ - [ ] Write a test to expose issues created by data gaps
+ - [ ] Fix issues created by data gaps
+ - [ ] Code to invert rise curve for preliminary Sy
+ - [ ] Code to jointly fit rise and recession curves (using PEST)
  - [ ] Simpler unit tests to verify functions
  - [ ] Trim test time series to short intervals
