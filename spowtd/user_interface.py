@@ -223,11 +223,11 @@ def add_classify_args(parser):
         'db', metavar='DB', help='Spowtd SQLite3 data file')
     parser.add_argument(
         '-s', '--storm-rain-threshold-mm-h',
-        help='Rainfall intensity threshold for storms',
+        help='Rainfall intensity > threshold considered a storm',
         type=float, required=True)
     parser.add_argument(
         '-j', '--rising-jump-threshold-mm-h',
-        help='Threshold rate of increase in water level for storms',
+        help='Rate of water level increase > threshold considered a storm',
         type=float, required=True)
 
 

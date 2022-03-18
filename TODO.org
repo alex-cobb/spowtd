@@ -1,4 +1,4 @@
- - [ ] Fix bug with Itanga data and 5 mm / h water level rise
+ - [X] Fix bug with Itanga data and 5 mm / h water level rise
    threshold
    - AssertionError: Jump ends at jump_stop
  - [ ] Simpler unit tests to verify functions
