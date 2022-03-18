@@ -69,8 +69,8 @@ def classified_connection(loaded_connection):
     """
     classify_mod.classify_intervals(
         loaded_connection,
-        storm_rain_threshold_mm_h=4.0,
-        rising_jump_threshold_mm_h=8.0)
+        storm_rain_threshold_mm_h=8.0,
+        rising_jump_threshold_mm_h=5.0)
     zeta_grid_mod.populate_zeta_grid(
         loaded_connection,
         grid_interval_mm=1.0)
