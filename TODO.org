@@ -1,5 +1,12 @@
+ - [ ] Change 'Storm depth, cm' to 'Dynamic storage, cm' in
+   plot_rise.py
  - [ ] Write a test to expose issues created by data gaps
+   - Delete some water level time points
  - [ ] Fix issues created by data gaps
+   - grid_time -> data_interval
+     - A distinct integer for each valid data interval
+     - Start with a simple O(n) iteration through the data
+       (make it right before making it fast)
  - [ ] Code to invert rise curve for preliminary Sy
  - [ ] Code to jointly fit rise and recession curves (using PEST)
  - [ ] Simpler unit tests to verify functions
