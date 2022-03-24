@@ -17,7 +17,7 @@ def plot_rise(connection):
 
     fig = plt.figure()
     axes = fig.add_subplot(1, 1, 1)
-    axes.set_xlabel('Storm depth, cm')
+    axes.set_xlabel('Dynamic storage, cm')
     axes.set_ylabel('Water level, cm')
 
     cursor.execute("""
