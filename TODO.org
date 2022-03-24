@@ -1,6 +1,3 @@
- - [X] Change 'Storm depth, cm' to 'Dynamic storage, cm' in
-   plot_rise.py
- - [X] Fix issues created by data gaps
  - [ ] Write a test to expose issues created by data gaps
    - Delete some water level time points
  - [ ] Check for possible off-by-one or short-by-one error in
