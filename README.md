@@ -58,6 +58,11 @@ For development, you may additionally want:
 
 ## Revision history
 
+Version 0.2.0 - 2022-03-24:
+ - Accommodate gaps in water level time series
+ - Better axis label in plot_rise
+ - Fix inequality error in classification assertion
+
 Version 0.1.0 - 2021-10-08:
  - Initial packaging.
 
