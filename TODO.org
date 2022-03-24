@@ -1,6 +1,14 @@
+ - [X] Change 'Storm depth, cm' to 'Dynamic storage, cm' in
+   plot_rise.py
+ - [X] Fix issues created by data gaps
  - [ ] Write a test to expose issues created by data gaps
- - [ ] Fix issues created by data gaps
+   - Delete some water level time points
+ - [ ] Check for possible off-by-one or short-by-one error in
+   identifying jumps
+   - Only revealed at certain thresholds
+   - See screenshot
  - [ ] Code to invert rise curve for preliminary Sy
+   - See peatflux-hydraulic-parameter-data
  - [ ] Code to jointly fit rise and recession curves (using PEST)
  - [ ] Simpler unit tests to verify functions
  - [ ] Trim test time series to short intervals

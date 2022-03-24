@@ -88,14 +88,49 @@ def populate_water_level(cursor, time_grid):
     """Interpolate water level onto precipitation time grid
 
     """
+    time_grid = np.asarray(time_grid)
     cursor.execute("""
     SELECT epoch, zeta_mm
     FROM water_level_staging""")
     zeta_t, zeta_mm = zip(*cursor.fetchall())
+    # Label times in the time grid with valid data intervals, starting
+    # from 1.  Invalid times are left with a NULL data interval.
+    zeta_t = np.array(zeta_t)
+    # Epoch is an integer
+    assert np.issubdtype(time_grid.dtype, np.integer), time_grid.dtype
+    assert np.issubdtype(zeta_t.dtype, np.integer), zeta_t.dtype
+    # Find gaps in the input time series
+    time_steps = np.diff(zeta_t)
+    gap_i = np.nonzero(time_steps != time_steps.min())[0]
+    assert ((zeta_t[gap_i + 1] - zeta_t[gap_i]) > time_steps.min()).all(), (
+        zeta_t[gap_i + 1] - zeta_t[gap_i])
+    valid_boundaries = [time_grid[0]] + sum(
+        (list(pair) for pair in
+         zip(zeta_t[gap_i], zeta_t[gap_i + 1])),
+        []) + [time_grid[-1]]
+    assert len(valid_boundaries) % 2 == 0
+    valid_intervals = [(valid_boundaries[i],
+                        valid_boundaries[i + 1],
+                        i // 2 + 1)
+                       for i in range(0, len(valid_boundaries), 2)]
+    data_intervals = np.empty((len(time_grid),), dtype='int64')
+    data_intervals[:] = -1
+    for start, through, label in valid_intervals:
+        data_intervals[(time_grid >= start) &
+                       (time_grid <= through)] = label
+    valid_mask = data_intervals != -1
+    cursor.executemany("""
+    UPDATE grid_time
+    SET data_interval = ?
+    WHERE epoch = ?""", zip(data_intervals[valid_mask].tolist(),
+                            time_grid[valid_mask].tolist()))
+
+    # Interpolate
     zeta_on_grid = np.interp(time_grid[:-1], zeta_t, zeta_mm)
     cursor.executemany("""
     INSERT INTO water_level (epoch, zeta_mm)
-    VALUES (?, ?)""", zip(time_grid[:-1], zeta_on_grid))
+    VALUES (?, ?)""", zip(time_grid[valid_mask].tolist(),
+                          zeta_on_grid[valid_mask[:-1]].tolist()))
 
 
 def populate_grid_time(cursor, time_zone_name):

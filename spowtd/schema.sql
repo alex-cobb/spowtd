@@ -34,7 +34,8 @@ CREATE TABLE time_grid (
 
 
 CREATE TABLE grid_time (
-  epoch integer NOT NULL PRIMARY KEY
+  epoch integer NOT NULL PRIMARY KEY,
+  data_interval integer NULL
 );
 
 

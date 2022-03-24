@@ -27,16 +27,27 @@ def classify_intervals(
                     storm_rain_threshold_mm_h,
                     'rising_jump_threshold_mm_h':
                     rising_jump_threshold_mm_h})
-    populate_zeta_interval(
-        cursor,
-        storm_rain_threshold_mm_h,
-        rising_jump_threshold_mm_h)
+    cursor.execute("""
+    SELECT DISTINCT data_interval
+    FROM grid_time
+    WHERE data_interval IS NOT NULL
+    ORDER BY data_interval""")
+    data_intervals = [row[0] for row in cursor.fetchall()]
+    if not data_intervals:
+        raise ValueError('No valid data intervals found')
+    for data_interval in data_intervals:
+        populate_zeta_interval(
+            cursor,
+            data_interval,
+            storm_rain_threshold_mm_h,
+            rising_jump_threshold_mm_h)
     cursor.close()
     connection.commit()
 
 
 def populate_zeta_interval(
         cursor,
+        data_interval,
         storm_rain_threshold_mm_h,
         rising_jump_threshold_mm_h):
     """Identify storm and interstorm intervals
@@ -44,15 +55,94 @@ def populate_zeta_interval(
     """
     classify_interstorms(
         cursor,
+        data_interval,
         rising_jump_threshold_mm_h)
     match_all_storms(
         cursor,
+        data_interval,
         storm_rain_threshold_mm_h,
         rising_jump_threshold_mm_h)
 
 
+def classify_interstorms(
+        cursor,
+        data_interval,
+        rising_jump_threshold_mm_h):
+    """Populate interstorm intervals
+
+    """
+    (epoch,
+     zeta_mm,
+     is_raining) = (
+         np.array(v) for v in
+         zip(*cursor.execute("""
+         SELECT water_level.epoch,
+                zeta_mm,
+                rainfall_intensity_mm_h > 0 AS is_raining
+         FROM grid_time
+         JOIN rainfall_intensity
+           ON rainfall_intensity.from_epoch = grid_time.epoch
+           AND grid_time.data_interval = ?
+         JOIN water_level
+           ON rainfall_intensity.from_epoch = water_level.epoch
+         ORDER BY from_epoch""", (data_interval,))))
+    assert len(epoch), epoch.shape
+    check_for_uniform_time_steps(epoch)
+    hour = epoch / 3600.
+    is_raining = is_raining.astype(bool)
+    assert np.isfinite(zeta_mm).all()
+    # Look for jumps in head much bigger than noise, which could
+    # indicate the onset of rain, and mark everything after the jump
+    # until the next rain as a "mystery jump".
+    rates = np.concatenate(
+        ([0],
+         (zeta_mm[1:] - zeta_mm[:-1]) /
+         (hour[1:] - hour[:-1])))
+    is_jump = (rates > rising_jump_threshold_mm_h).astype(bool)
+    is_mystery_jump = get_mystery_jump_mask(is_jump, is_raining)
+    is_interstorm = (~is_mystery_jump) & (~is_raining)
+    interval_mask = is_interstorm
+    del is_raining
+
+    cursor.executemany("""
+    INSERT INTO grid_time_flags
+      (start_epoch, is_jump, is_mystery_jump, is_interstorm)
+    VALUES
+      (?, ?, ?, ?)""", zip(
+          (int(t) for t in epoch),
+          (int(b) for b in is_jump),
+          (int(b) for b in is_mystery_jump),
+          (int(b) for b in is_interstorm)))
+    del is_jump, is_mystery_jump, is_interstorm
+
+    masks = get_true_interval_masks(interval_mask)
+
+    mask = None
+    series_indices = [np.nonzero(mask)[0] for mask in masks]
+    del mask, masks
+    indices = None
+    series_indices = [indices for indices in series_indices
+                      if len(indices) > 1]
+    del indices
+
+    LOG.info('%s series found', len(series_indices))
+
+    for indices in series_indices:
+        cursor.execute("""
+        INSERT INTO zeta_interval
+          (start_epoch, interval_type, thru_epoch)
+        SELECT
+          :start_epoch, :interval_type, :thru_epoch""",
+                       {'interval_type': 'interstorm',
+                        'start_epoch': int(epoch[indices[0]]),
+                        'thru_epoch': int(epoch[indices[-1]])})
+    del hour, zeta_mm
+    del series_indices
+
+
 def match_all_storms(
         cursor,
+        data_interval,
         storm_rain_threshold_mm_h,
         rising_jump_threshold_mm_h):
     """Match intervals of increasing head with rainstorms
@@ -70,10 +160,14 @@ def match_all_storms(
          SELECT water_level.epoch,
                 zeta_mm,
                 rainfall_intensity_mm_h
-         FROM rainfall_intensity
+         FROM grid_time
+         JOIN rainfall_intensity
+           ON rainfall_intensity.from_epoch = grid_time.epoch
+           AND grid_time.data_interval = ?
          JOIN water_level
            ON rainfall_intensity.from_epoch = water_level.epoch
-         ORDER BY from_epoch""")))
+         ORDER BY from_epoch""", (data_interval,))))
+    check_for_uniform_time_steps(epoch)
     time_step_h, = cursor.execute("""
     SELECT CAST(time_step_s AS double precision) / 3600.
     FROM time_grid""").fetchone()
@@ -200,7 +294,8 @@ def match_storms(rain, head, rain_threshold, jump_threshold):
         if len(matching_storms) == 1:
             storm_index = matching_storms.pop()
         elif len(matching_storms) > 1:
-            print('multiple matching storms {}'.format(matching_storms))
+            LOG.info(
+                'multiple matching storms {}'.format(matching_storms))
             storms_by_size = sorted(matching_storms,
                                     key=lambda j: sum(rain[rain_masks[j]]))
             storm_index = storms_by_size[-1]
@@ -253,74 +348,21 @@ def match_storms(rain, head, rain_threshold, jump_threshold):
     return (rain_intervals, head_intervals)
 
 
-def classify_interstorms(
-        cursor,
-        rising_jump_threshold_mm_h):
-    """Populate interstorm intervals
+def check_for_uniform_time_steps(epoch):
+    """Verify that time steps are uniform
+
+    Checks that time steps in sorted array epoch are uniform,
+    otherwise raising ValueError.
+
+    Note that this may not work as expected for inexact datatypes
+    (floats).
 
     """
-    (epoch,
-     zeta_mm,
-     is_raining) = (
-         np.array(v) for v in
-         zip(*cursor.execute("""
-         SELECT water_level.epoch,
-                zeta_mm,
-                rainfall_intensity_mm_h > 0 AS is_raining
-         FROM rainfall_intensity
-         JOIN water_level
-           ON rainfall_intensity.from_epoch = water_level.epoch
-         ORDER BY from_epoch""")))
-    hour = epoch / 3600.
-    is_raining = is_raining.astype(bool)
-    assert np.isfinite(zeta_mm).all()
-    # Look for jumps in head much bigger than noise, which could
-    # indicate the onset of rain, and mark everything after the jump
-    # until the next rain as a "mystery jump".
-    rates = np.concatenate(
-        ([0],
-         (zeta_mm[1:] - zeta_mm[:-1]) /
-         (hour[1:] - hour[:-1])))
-    is_jump = (rates > rising_jump_threshold_mm_h).astype(bool)
-    is_mystery_jump = get_mystery_jump_mask(is_jump, is_raining)
-    is_interstorm = (~is_mystery_jump) & (~is_raining)
-    interval_mask = is_interstorm
-    del is_raining
-
-    cursor.executemany("""
-    INSERT INTO grid_time_flags
-      (start_epoch, is_jump, is_mystery_jump, is_interstorm)
-    VALUES
-      (?, ?, ?, ?)""", zip(
-          (int(t) for t in epoch),
-          (int(b) for b in is_jump),
-          (int(b) for b in is_mystery_jump),
-          (int(b) for b in is_interstorm)))
-    del is_jump, is_mystery_jump, is_interstorm
-
-    masks = get_true_interval_masks(interval_mask)
-
-    mask = None
-    series_indices = [np.nonzero(mask)[0] for mask in masks]
-    del mask, masks
-    indices = None
-    series_indices = [indices for indices in series_indices
-                      if len(indices) > 1]
-    del indices
-
-    LOG.info('%s series found', len(series_indices))
-
-    for indices in series_indices:
-        cursor.execute("""
-        INSERT INTO zeta_interval
-          (start_epoch, interval_type, thru_epoch)
-        SELECT
-          :start_epoch, :interval_type, :thru_epoch""",
-                       {'interval_type': 'interstorm',
-                        'start_epoch': int(epoch[indices[0]]),
-                        'thru_epoch': int(epoch[indices[-1]])})
-    del hour, zeta_mm
-    del series_indices
+    delta_t = np.diff(epoch)
+    if delta_t.min() != delta_t.max():
+        raise ValueError(
+            'Nonuniform time steps in {}'
+            .format(sorted(set(delta_t))))
 
 
 def get_mystery_jump_mask(is_jump, is_raining):
