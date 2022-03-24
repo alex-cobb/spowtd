@@ -4,6 +4,8 @@
 
 """
 
+from dataclasses import dataclass
+
 import matplotlib.dates as dates_mod
 import matplotlib.pyplot as plt
 
@@ -19,6 +21,19 @@ DEFAULT_COLORS = {
     'rain': '#ff0000ff',
     'jump': '#0000ffff',
     'mystery_jump': '#ff00ffff'}
+
+
+@dataclass
+class DataInterval:
+    """A contiguous interval of water level and rainfall data
+
+    """
+    mpl_time: np.ndarray
+    zeta_cm: np.ndarray
+    rain_mm_h: np.ndarray
+    is_jump: list
+    is_mystery_jump: list
+    is_interstorm: list
 
 
 def plot_time_series(
@@ -47,28 +62,43 @@ def plot_time_series(
     rain_axes.set_ylabel('Rainfall intensity, mm / h')
 
     cursor.execute("""
-    SELECT epoch,
-           zeta_mm / 10 AS zeta_cm,
-           rainfall_intensity_mm_h,
-           is_jump,
-           is_mystery_jump,
-           is_interstorm
-    FROM water_level AS wl
-    JOIN rainfall_intensity AS ri
-      ON wl.epoch = ri.from_epoch
-    JOIN grid_time_flags AS gtf
-      ON gtf.start_epoch = wl.epoch
-    ORDER BY epoch""")
-    (epoch,
-     zeta_cm,
-     rain_mm_h,
-     is_jump,
-     is_mystery_jump,
-     is_interstorm) = zip(*cursor)
-    (zeta_cm,
-     rain_mm_h) = (np.array(v) for v in (zeta_cm,
-                                         rain_mm_h))
-    mpl_time = dates_mod.epoch2num(epoch)
+    SELECT DISTINCT data_interval
+    FROM grid_time
+    WHERE data_interval IS NOT NULL
+    ORDER BY data_interval""")
+    data_interval_labels = [row[0] for row in cursor.fetchall()]
+    if not data_interval_labels:
+        raise ValueError('No valid data intervals found')
+    data_intervals = []
+    for label in data_interval_labels:
+        cursor.execute("""
+        SELECT wl.epoch,
+               zeta_mm / 10 AS zeta_cm,
+               rainfall_intensity_mm_h,
+               is_jump,
+               is_mystery_jump,
+               is_interstorm
+        FROM grid_time AS gt
+        JOIN water_level AS wl
+          ON gt.epoch = wl.epoch
+          AND gt.data_interval = ?
+        JOIN rainfall_intensity AS ri
+          ON wl.epoch = ri.from_epoch
+        JOIN grid_time_flags AS gtf
+          ON gtf.start_epoch = wl.epoch
+        ORDER BY wl.epoch""", (label,))
+        columns = tuple(zip(*cursor))
+        data_intervals.append(
+            DataInterval(
+                mpl_time=dates_mod.epoch2num(columns[0]),
+                zeta_cm=np.array(columns[1]),
+                rain_mm_h=np.array(columns[2]),
+                is_jump=columns[3],
+                is_mystery_jump=columns[4],
+                is_interstorm=columns[5]
+            )
+        )
+        del columns
 
     cursor.execute("""
     SELECT start_epoch,
@@ -94,7 +124,12 @@ def plot_time_series(
         dates_mod.epoch2num(v)
         for v in zip(*cursor)]
 
-    zeta_axes.plot_date(mpl_time, zeta_cm, 'k-')
+    for series in data_intervals:
+        zeta_axes.plot_date(series.mpl_time,
+                            series.zeta_cm,
+                            'k-')
+        del series
+
     for interval in zip(*zeta_interstorm_intervals):
         zeta_axes.axvspan(xmin=interval[0],
                           xmax=interval[1],
@@ -106,8 +141,12 @@ def plot_time_series(
                           edgecolor='#ffffff00',
                           facecolor=colors['zeta_storm'])
 
-    rain_axes.plot_date(mpl_time, rain_mm_h, 'k-',
-                        drawstyle='steps-post')
+    for series in data_intervals:
+        rain_axes.plot_date(series.mpl_time,
+                            series.rain_mm_h,
+                            'k-',
+                            drawstyle='steps-post')
+        del series
     for interval in zip(*rain_storm_intervals):
         rain_axes.axvspan(xmin=interval[0],
                           xmax=interval[1],
@@ -115,35 +154,52 @@ def plot_time_series(
                           facecolor=colors['rain_storm'])
 
     if show_accents:
-        (is_jump,
-         is_mystery_jump,
-         is_interstorm) = (np.array(v).astype(bool)
-                           for v in (is_jump,
-                                     is_mystery_jump,
-                                     is_interstorm))
-        jumps = zeta_cm[:]
-        jumps[~is_jump] = np.NaN
-        zeta_axes.plot_date(mpl_time, jumps,
-                            '-',
-                            color=colors['jump'],
-                            linewidth=accent_width)
-        mystery_jumps = zeta_cm[:]
-        mystery_jumps[~is_mystery_jump] = np.NaN
-        zeta_axes.plot_date(mpl_time, mystery_jumps,
-                            '-',
-                            color=colors['mystery_jump'],
-                            linewidth=accent_width)
+        for series in data_intervals:
+            jumps = mask_from_list(
+                series.zeta_cm,
+                np.array(series.is_jump).astype(bool))
+            zeta_axes.plot_date(series.mpl_time,
+                                jumps,
+                                '-',
+                                color=colors['jump'],
+                                linewidth=accent_width)
+            mystery_jumps = mask_from_list(
+                series.zeta_cm,
+                np.array(series.is_mystery_jump).astype(bool))
+            zeta_axes.plot_date(series.mpl_time,
+                                mystery_jumps,
+                                '-',
+                                color=colors['mystery_jump'],
+                                linewidth=accent_width)
 
-        storm_threshold_mm_h = cursor.execute("""
-        SELECT storm_rain_threshold_mm_h
-        FROM thresholds""").fetchone()[0]
-        storm_rain = rain_mm_h[:]
-        storm_rain[rain_mm_h < storm_threshold_mm_h] = np.NaN
-        rain_axes.plot_date(mpl_time, storm_rain, '-',
-                            color=colors['rain'],
-                            linewidth=accent_width,
-                            drawstyle='steps-post')
+            storm_threshold_mm_h = cursor.execute("""
+            SELECT storm_rain_threshold_mm_h
+            FROM thresholds""").fetchone()[0]
+            storm_rain = mask_from_list(
+                series.rain_mm_h,
+                series.rain_mm_h >= storm_threshold_mm_h)
+            rain_axes.plot_date(series.mpl_time,
+                                storm_rain,
+                                '-',
+                                color=colors['rain'],
+                                linewidth=accent_width,
+                                drawstyle='steps-post')
+            del series
 
     cursor.close()
     plt.show()
     return 0
+
+
+def mask_from_list(array_to_mask, mask):
+    """Mask a float array by setting value to NaN according to mask
+
+    mask is a boolean array, used to set values in array_to_mask to
+    NaN wherever mask_list is False.
+
+    array_to_mask is unaltered; a copy is returned.
+
+    """
+    masked = array_to_mask[:]
+    masked[~mask] = np.NaN
+    return masked
