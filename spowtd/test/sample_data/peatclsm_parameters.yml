@@ -1,0 +1,11 @@
+specific_yield:
+  type: peatclsm
+  sd: 0.162  # standard deviation of microtopographic distribution, m
+  theta_s: 0.88  # saturated moisture content, mˆ3/mˆ3
+  b: 7.4  # shape parameter, dimensionless
+  psi_s: -0.024  # air entry pressure, m
+transmissivity:
+  type: peatclsm
+  Ksmacz0: 7.3  # m/s
+  alpha: 3  # dimensionless
+  c: 1.5 e -5  # mˆ-1
