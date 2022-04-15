@@ -1,4 +1,4 @@
-"""Test code for specific yield modules
+"""Test code for specific yield classes
 
 """
 
