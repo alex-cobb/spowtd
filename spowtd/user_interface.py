@@ -16,6 +16,7 @@ import spowtd.plot_recession as recession_plot_mod
 import spowtd.plot_rise as rise_plot_mod
 import spowtd.plot_specific_yield as specific_yield_plot_mod
 import spowtd.plot_time_series as time_series_plot_mod
+import spowtd.plot_transmissivity as transmissivity_plot_mod
 import spowtd.zeta_grid as zeta_grid_mod
 
 
@@ -71,9 +72,15 @@ def main(argv):
         if args.subtask is None:
             plot_parser.print_help()
             plot_parser.exit()
-        with sqlite3.connect(args.db) as connection:
-            plot(connection=connection,
+        if args.subtask in (
+                'specific-yield', 'conductivity', 'transmissivity'):
+            # No db, no connection
+            plot(connection=None,
                  args=args)
+        else:
+            with sqlite3.connect(args.db) as connection:
+                plot(connection=connection,
+                     args=args)
     else:
         raise AssertionError('Bad task {}'.format(args.task))
     return 0
@@ -173,7 +180,7 @@ def plot(connection, args):
         rise_plot_mod.plot_rise(
             connection=connection)
     elif args.subtask == 'specific-yield':
-        if args.dump:
+        if args.dump is not None:
             specific_yield_plot_mod.dump_specific_yield(
                 parameters=args.parameters,
                 water_level_min_cm=args.water_level_min_cm,
@@ -182,6 +189,22 @@ def plot(connection, args):
                 outfile=args.dump)
         else:
             specific_yield_plot_mod.plot_specific_yield(
+                parameters=args.parameters,
+                water_level_min_cm=args.water_level_min_cm,
+                water_level_max_cm=args.water_level_max_cm,
+                n_points=args.n_points)
+    elif args.subtask == 'conductivity':
+        raise NotImplementedError
+    elif args.subtask == 'transmissivity':
+        if args.dump is not None:
+            transmissivity_plot_mod.dump_transmissivity(
+                parameters=args.parameters,
+                water_level_min_cm=args.water_level_min_cm,
+                water_level_max_cm=args.water_level_max_cm,
+                n_points=args.n_points,
+                outfile=args.dump)
+        else:
+            transmissivity_plot_mod.plot_transmissivity(
                 parameters=args.parameters,
                 water_level_min_cm=args.water_level_min_cm,
                 water_level_max_cm=args.water_level_max_cm,
@@ -293,42 +316,39 @@ def add_plot_args(parser):
     specific_yield_plot_parser = plot_subparsers.add_parser(
         'specific-yield',
         help='Plot specific yield')
-    specific_yield_plot_parser.add_argument(
-        'parameters', metavar='YAML',
-        type=argparse.FileType('rt'),
-        help='YAML hydraulic parameters')
-    specific_yield_plot_parser.add_argument(
-        'water_level_min_cm', metavar='WATER_LEVEL_MIN_CM',
-        type=float,
-        help='Lower end of water level range to plot')
-    specific_yield_plot_parser.add_argument(
-        'water_level_max_cm', metavar='WATER_LEVEL_MAX_CM',
-        type=float,
-        help='Upper end of water level range to plot')
-    specific_yield_plot_parser.add_argument(
-        '-n', '--n-points', metavar='N', type=int,
-        help='Number of points to plot')
-    specific_yield_plot_parser.add_argument(
-        '-d', '--dump',
-        type=argparse.FileType('wt'),
-        default=sys.stdout,
-        help='Do not plot; dump curve to file as delimited text')
-    del specific_yield_plot_parser
-
     conductivity_plot_parser = plot_subparsers.add_parser(
         'conductivity',
         help='Plot conductivity')
-    conductivity_plot_parser.add_argument(
-        'parameters', metavar='YAML',
-        help='YAML hydraulic parameters')
-    del conductivity_plot_parser
-
     transmissivity_plot_parser = plot_subparsers.add_parser(
         'transmissivity',
         help='Plot transmissivity')
-    transmissivity_plot_parser.add_argument(
-        'parameters', metavar='YAML',
-        help='YAML hydraulic parameters')
+    for subparser in (
+            specific_yield_plot_parser,
+            conductivity_plot_parser,
+            transmissivity_plot_parser):
+        subparser.add_argument(
+            'parameters', metavar='YAML',
+            type=argparse.FileType('rt'),
+            help='YAML hydraulic parameters')
+        subparser.add_argument(
+            'water_level_min_cm', metavar='WATER_LEVEL_MIN_CM',
+            type=float,
+            help='Lower end of water level range to plot')
+        subparser.add_argument(
+            'water_level_max_cm', metavar='WATER_LEVEL_MAX_CM',
+            type=float,
+            help='Upper end of water level range to plot')
+        subparser.add_argument(
+            '-n', '--n-points', metavar='N', type=int,
+            default=100,
+            help='Number of points to plot')
+        subparser.add_argument(
+            '-d', '--dump',
+            type=argparse.FileType('wt'),
+            help='Do not plot; dump curve to file as delimited text')
+        del subparser
+    del specific_yield_plot_parser
+    del conductivity_plot_parser,
     del transmissivity_plot_parser
 
     time_series_plot_parser = plot_subparsers.add_parser(

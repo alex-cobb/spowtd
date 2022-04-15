@@ -63,15 +63,22 @@ class PeatclsmSpecificYield:
     psi_s:  air entry pressure, m
 
     """
-    __slots__ = ['sd', 'theta_s', 'b', 'psi_s']
+    __slots__ = ['sd', 'theta_s', 'b', 'psi_s', '_spline',
+                 'zeta_knots_mm', 'sy_knots']
 
     def __init__(self, sd, theta_s, b, psi_s):
         self.sd = sd
         self.theta_s = theta_s
         self.b = b
         self.psi_s = psi_s
+        self.zeta_knots_mm = None
+        self.sy_knots = None
+        self._spline = self._construct_spline()
 
-    def __call__(self, water_level_mm):
+    def _construct_spline(self):
+        """Construct specific yield spline
+
+        """
         # Calculate the specific yield (Dettmann and Bechtold 2015,
         # Hydrological Processes)
         zl_ = np.linspace(-1, 1, 201)
@@ -79,10 +86,24 @@ class PeatclsmSpecificYield:
         Sy1_soil = np.empty((201,), dtype='float64')
         Sy1_soil[:] = np.NaN
         self.get_Sy_soil(Sy1_soil, zl_, zu_)
+        zeta_knots_m = 0.5 * (zu_ + zl_)
         Sy1_surface = scipy.stats.norm.cdf(
-            0.5 * (zu_ + zl_), loc=0, scale=self.sd)
-        Sy = Sy1_soil + Sy1_surface
-        return Sy
+            zeta_knots_m, loc=0, scale=self.sd)
+        self.sy_knots = Sy1_soil + Sy1_surface
+        self.zeta_knots_mm = zeta_knots_m * 1000
+        spline = spline_mod.Spline.from_points(
+            zip(self.zeta_knots_mm, self.sy_knots),
+            order=1)
+        assert np.allclose(spline(self.zeta_knots_mm), self.sy_knots)
+        return spline
+
+    def __call__(self, water_level_mm):
+        result = self._spline(water_level_mm)
+        result[
+            water_level_mm < self.zeta_knots_mm[0]] = self.sy_knots[0]
+        result[
+            water_level_mm > self.zeta_knots_mm[-1]] = self.sy_knots[-1]
+        return result
 
     def get_Sy_soil(self, Sy_soil, zl_, zu_):
         """Calculate soil specific yield profile
