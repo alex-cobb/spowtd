@@ -29,37 +29,6 @@ def create_specific_yield_function(parameters):
     }[sy_type](**parameters)
 
 
-class PeatclsmSpecificYield:
-    """Specific yield function used in PEATCLSM
-
-    sd:  standard deviation of microtopographic distribution, m
-    theta_s:  saturated moisture content, mˆ3/ mˆ3
-    b:  shape parameter, dimensionless
-    psi_s:  air entry pressure, m
-
-    """
-    __slots__ = ['sd', 'theta_s', 'b', 'psi_s']
-
-    def __init__(self, sd, theta_s, b, psi_s):
-        self.sd = sd
-        self.theta_s = theta_s
-        self.b = b
-        self.psi_s = psi_s
-
-    def __call__(self, water_level_mm):
-        # Calculate the specific yield (Dettmann and Bechtold 2015,
-        # Hydrological Processes)
-        zl_ = np.linspace(-1, 1, 201)
-        zu_ = np.linspace(-0.99, 1.01, 201)
-        Sy1_soil = np.empty((201,), dtype='float64')
-        Sy1_soil[:] = np.NaN
-        get_Sy_soil(Sy1_soil, zl_, zu_, self)
-        Sy1_surface = scipy.stats.norm.cdf(
-            0.5 * (zu_ + zl_), loc=0, scale=self.sd)
-        Sy = Sy1_soil + Sy1_surface
-        return Sy
-
-
 class SplineSpecificYield:
     """Cubic spline representing specific yield
 
@@ -85,30 +54,60 @@ class SplineSpecificYield:
         return result
 
 
-def get_Sy_soil(Sy_soil, zl_, zu_, phydr):
-    """Calculate soil specific yield profile
+class PeatclsmSpecificYield:
+    """Specific yield function used in PEATCLSM
 
-    See equation 1 in Dettmann & Bechtold 2015, Hydrological Processes
+    sd:  standard deviation of microtopographic distribution, m
+    theta_s:  saturated moisture content, mˆ3/ mˆ3
+    b:  shape parameter, dimensionless
+    psi_s:  air entry pressure, m
 
     """
-    theta_s = phydr.theta_s
-    b = phydr.b
-    psi_s = phydr.psi_s
-    sd = phydr.sd
-    for i in range(len(zl_)):
-        zl = zl_[i]
-        zu = zu_[i]
-        A = 0
-        for j in range(len(Sy_soil)):
-            zm = 0.5 * (zl_[j] + zu_[j])
-            # apply Campbell function to get soil moisture profile
-            # for lower (zl) water level
-            Azl = campbell_1d_az(zm, zl, theta_s, psi_s, b, sd)
-            # apply campbell function to get soil moisture profile for
-            # upper (zu) water level
-            Azu = campbell_1d_az(zm, zu, theta_s, psi_s, b, sd)
-            A = A + (zu_[j] - zl_[j]) * (Azu - Azl)
-        Sy_soil[i] = 1 / (1 * (zu - zl)) * A
+    __slots__ = ['sd', 'theta_s', 'b', 'psi_s']
+
+    def __init__(self, sd, theta_s, b, psi_s):
+        self.sd = sd
+        self.theta_s = theta_s
+        self.b = b
+        self.psi_s = psi_s
+
+    def __call__(self, water_level_mm):
+        # Calculate the specific yield (Dettmann and Bechtold 2015,
+        # Hydrological Processes)
+        zl_ = np.linspace(-1, 1, 201)
+        zu_ = np.linspace(-0.99, 1.01, 201)
+        Sy1_soil = np.empty((201,), dtype='float64')
+        Sy1_soil[:] = np.NaN
+        self.get_Sy_soil(Sy1_soil, zl_, zu_)
+        Sy1_surface = scipy.stats.norm.cdf(
+            0.5 * (zu_ + zl_), loc=0, scale=self.sd)
+        Sy = Sy1_soil + Sy1_surface
+        return Sy
+
+    def get_Sy_soil(self, Sy_soil, zl_, zu_):
+        """Calculate soil specific yield profile
+
+        See equation 1 in Dettmann & Bechtold 2015, Hydrological Processes
+
+        """
+        theta_s = self.theta_s
+        b = self.b
+        psi_s = self.psi_s
+        sd = self.sd
+        for i in range(len(zl_)):
+            zl = zl_[i]
+            zu = zu_[i]
+            A = 0
+            for j in range(len(Sy_soil)):
+                zm = 0.5 * (zl_[j] + zu_[j])
+                # apply Campbell function to get soil moisture profile
+                # for lower (zl) water level
+                Azl = campbell_1d_az(zm, zl, theta_s, psi_s, b, sd)
+                # apply campbell function to get soil moisture profile for
+                # upper (zu) water level
+                Azu = campbell_1d_az(zm, zu, theta_s, psi_s, b, sd)
+                A = A + (zu_[j] - zl_[j]) * (Azu - Azl)
+            Sy_soil[i] = 1 / (1 * (zu - zl)) * A
 
 
 def campbell_1d_az(z_, zlu, theta_s, psi_s, b, sd):
