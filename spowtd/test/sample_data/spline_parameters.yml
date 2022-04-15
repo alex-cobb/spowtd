@@ -22,7 +22,8 @@ transmissivity:
     - 168.3
     - 1000
   K_knots_km_d:  # Conductivity, km /d
-    - 5.356 e -3
-    - 1.002- 6577.0
-    - 8.430+03
+    - 5.356e-3
+    - 1.002
+    - 6577.0
+    - 8.430e+3
   minimum_transmissivity_m2_d: 7.442  # Minimum transmissivity, m2 /d

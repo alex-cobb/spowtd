@@ -8,4 +8,3 @@ transmissivity:
   type: peatclsm
   Ksmacz0: 7.3  # m/s
   alpha: 3  # dimensionless
-  c: 1.5 e -5  # mˆ-1
