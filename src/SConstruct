@@ -30,7 +30,7 @@ ENV.Command(target='build/doc/user_guide.bbl',
             chdir=True)
 ENV.Command(target='build/doc/user_guide.pdf',
             source='build/doc/user_guide.fls',
-            action=('for i in {1..3}; do '
+            action=('for i in {1..4}; do '
                     'pdflatex --output-directory=build/doc -halt-on-error '
                     'src/user_guide.tex'
                     '; done'))
