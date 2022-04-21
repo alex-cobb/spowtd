@@ -178,7 +178,8 @@ def plot(connection, args):
             connection=connection)
     elif args.subtask == 'rise':
         rise_plot_mod.plot_rise(
-            connection=connection)
+            connection=connection,
+            parameters=args.parameters)
     elif args.subtask == 'specific-yield':
         if args.dump is not None:
             specific_yield_plot_mod.dump_specific_yield(
@@ -382,6 +383,10 @@ def add_plot_args(parser):
     rise_plot_parser.add_argument(
         'db', metavar='SQLITE',
         help='Path to SQLite database')
+    rise_plot_parser.add_argument(
+        '-p', '--parameters', metavar='YAML',
+        type=argparse.FileType('rt'),
+        help='YAML hydraulic parameters')
     del rise_plot_parser
 
 
