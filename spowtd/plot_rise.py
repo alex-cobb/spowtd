@@ -15,6 +15,7 @@ import scipy.integrate as integrate_mod
 import yaml
 
 import spowtd.specific_yield as specific_yield_mod
+import spowtd.simulate_rise as simulate_rise_mod
 
 
 def plot_rise(connection, parameters):
@@ -67,23 +68,14 @@ def plot_rise(connection, parameters):
 
 def plot_simulated_rise(axes, parameters,
                         zeta_grid_cm,
-                        mean_water_level_cm):
+                        mean_storage_cm):
     """Plot simulated rise curve
 
     """
     sy_parameters = yaml.safe_load(parameters)['specific_yield']
-    specific_yield = specific_yield_mod.create_specific_yield_function(
-        sy_parameters)
-    zeta_grid_mm = np.array(zeta_grid_cm, dtype=float) * 10
-    dW_mm = np.empty(zeta_grid_mm.shape, dtype=float)
-    dW_mm[0] = 0.0
-    i = 1
-    for zeta_mm in zeta_grid_mm[1:]:
-        dW_mm[i] = integrate_mod.quad(
-            specific_yield,
-            zeta_grid_mm[i - 1],
-            zeta_grid_mm[i])[0]
-        i += 1
-    W_mm = np.cumsum(dW_mm)
-    W_mm += mean_water_level_cm * 10 - W_mm.mean()
+    W_mm = simulate_rise_mod.compute_rise_curve(
+        specific_yield=specific_yield_mod.create_specific_yield_function(
+            sy_parameters),
+        zeta_grid_mm=np.array(zeta_grid_cm, dtype=float) * 10,
+        mean_storage_mm=mean_storage_cm * 10)
     axes.plot(W_mm / 10, zeta_grid_cm, 'k--')

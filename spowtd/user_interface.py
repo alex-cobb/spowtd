@@ -17,6 +17,7 @@ import spowtd.plot_rise as rise_plot_mod
 import spowtd.plot_specific_yield as specific_yield_plot_mod
 import spowtd.plot_time_series as time_series_plot_mod
 import spowtd.plot_transmissivity as transmissivity_plot_mod
+import spowtd.simulate_rise as simulate_rise_mod
 import spowtd.zeta_grid as zeta_grid_mod
 
 
@@ -81,6 +82,13 @@ def main(argv):
             with sqlite3.connect(args.db) as connection:
                 plot(connection=connection,
                      args=args)
+    elif args.task == 'simulate':
+        if args.subtask is None:
+            plot_parser.print_help()
+            plot_parser.exit()
+        with sqlite3.connect(args.db) as connection:
+            simulate(connection=connection,
+                     args=args)
     else:
         raise AssertionError('Bad task {}'.format(args.task))
     return 0
@@ -139,6 +147,12 @@ def create_parsers():
         help='Plot data')
     add_plot_args(plot_parser)
     add_shared_args(plot_parser)
+
+    simulate_parser = subparsers.add_parser(
+        'simulate',
+        help='Simulate water level rise and recession')
+    add_simulate_args(simulate_parser)
+    add_shared_args(simulate_parser)
 
     return parser, plot_parser
 
@@ -213,6 +227,21 @@ def plot(connection, args):
     else:
         raise AssertionError(
             'Bad plot task {}'.format(args.subtask))
+
+
+def simulate(connection, args):
+    """Dispatch to simulation scripts
+
+    """
+    if args.subtask == 'rise':
+        simulate_rise_mod.simulate_rise(
+            connection=connection,
+            parameters=args.parameters,
+            outfile=args.output,
+            observations_only=args.observations)
+    else:
+        raise AssertionError(
+            'Bad simulate task {}'.format(args.subtask))
 
 
 def add_shared_args(parser):
@@ -388,6 +417,34 @@ def add_plot_args(parser):
         type=argparse.FileType('rt'),
         help='YAML hydraulic parameters')
     del rise_plot_parser
+
+
+def add_simulate_args(parser):
+    """Add arguments for spowtd simulate parser
+
+    """
+    simulate_subparsers = parser.add_subparsers(
+        help='simulate sub-command help',
+        dest='subtask')
+    rise_parser = simulate_subparsers.add_parser(
+        'rise',
+        help='Simulate rise curve')
+    rise_parser.add_argument(
+        'db', metavar='SQLITE',
+        help='Path to SQLite database')
+    rise_parser.add_argument(
+        'parameters', metavar='YAML',
+        type=argparse.FileType('rt'),
+        help='YAML hydraulic parameters')
+    rise_parser.add_argument(
+        '-o', '--output', metavar='FILE',
+        help='Write output to file, default stdout',
+        type=argparse.FileType('wt'),
+        default=sys.stdout)
+    rise_parser.add_argument(
+        '--observations', action='store_true',
+        help='Suppress normal output; just write simulated rise')
+    del rise_parser
 
 
 def get_verbosity(level_index):
