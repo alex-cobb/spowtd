@@ -2,8 +2,13 @@
  - [X] Write regression test for implementing PEATCLSM Sy
  - [X] Write regression test for implementing PEATCLSM T
  - [X] Code to fit rise curve for preliminary Sy
+ - [ ] Preliminary docs for calibration in User Guide
+ - [ ] Regression test for simulation of rise curve
+ - [ ] Make PEATCLSM Sy function instantiation more efficient
+ - [ ] Make rise curve simulation more efficient
  - [ ] Code to jointly fit rise and recession curves (using PEST)
  - [ ] Resolve discrepancy in units between spline and Peatclsm
    transmissivity
+ - [ ] Update man page
  - [ ] Simpler unit tests to verify functions
  - [ ] Trim test time series to short intervals
