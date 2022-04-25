@@ -69,7 +69,8 @@ def compute_rise_curve(specific_yield, zeta_grid_mm,
         dW_mm[i] = integrate_mod.quad(
             specific_yield,
             zeta_grid_mm[i - 1],
-            zeta_grid_mm[i])[0]
+            zeta_grid_mm[i],
+            limit=100)[0]
         i += 1
     W_mm = np.cumsum(dW_mm)
     W_mm += mean_storage_mm - W_mm.mean()
