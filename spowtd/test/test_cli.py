@@ -79,3 +79,63 @@ def test_classify_help():
         cli_mod.main(['classify', '--help'])
     assert exception.type == SystemExit
     assert exception.value.code == 0
+
+
+def test_plot_help():
+    """Invoking spowtd plot --help exits with code 0
+
+    """
+    with pytest.raises(SystemExit) as exception:
+        cli_mod.main(['plot', '--help'])
+    assert exception.type == SystemExit
+    assert exception.value.code == 0
+
+
+def test_plot_specific_yield_help():
+    """Invoking spowtd plot specific-yield --help exits with code 0
+
+    """
+    with pytest.raises(SystemExit) as exception:
+        cli_mod.main(['plot', 'specific-yield', '--help'])
+    assert exception.type == SystemExit
+    assert exception.value.code == 0
+
+
+def test_plot_conductivity_help():
+    """Invoking spowtd plot specific-yield --help exits with code 0
+
+    """
+    with pytest.raises(SystemExit) as exception:
+        cli_mod.main(['plot', 'conductivity', '--help'])
+    assert exception.type == SystemExit
+    assert exception.value.code == 0
+
+
+def test_plot_transmissivity_help():
+    """Invoking spowtd plot specific-yield --help exits with code 0
+
+    """
+    with pytest.raises(SystemExit) as exception:
+        cli_mod.main(['plot', 'transmissivity', '--help'])
+    assert exception.type == SystemExit
+    assert exception.value.code == 0
+
+
+def test_simulate_help():
+    """Invoking spowtd simulate --help exits with code 0
+
+    """
+    with pytest.raises(SystemExit) as exception:
+        cli_mod.main(['simulate', '--help'])
+    assert exception.type == SystemExit
+    assert exception.value.code == 0
+
+
+def test_simulate_rise_help():
+    """Invoking spowtd simulate specific-yield --help exits with code 0
+
+    """
+    with pytest.raises(SystemExit) as exception:
+        cli_mod.main(['simulate', 'rise', '--help'])
+    assert exception.type == SystemExit
+    assert exception.value.code == 0

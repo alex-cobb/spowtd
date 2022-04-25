@@ -58,6 +58,12 @@ For development, you may additionally want:
 
 ## Revision history
 
+Version 0.3.0 - 2022-04-25:
+ - Preliminary implementations of hydraulic functions.
+ - Plotting of hydraulic functions.
+ - Simulation of rise curve.
+ - Documentation on calibration against rise curve using PEST.
+
 Version 0.2.0 - 2022-03-24:
  - Accommodate gaps in water level time series
  - Better axis label in plot_rise

@@ -1,14 +1,16 @@
- - [X] Change 'Storm depth, cm' to 'Dynamic storage, cm' in
-   plot_rise.py
- - [X] Fix issues created by data gaps
- - [ ] Write a test to expose issues created by data gaps
-   - Delete some water level time points
- - [ ] Check for possible off-by-one or short-by-one error in
-   identifying jumps
-   - Only revealed at certain thresholds
-   - See screenshot
- - [ ] Code to invert rise curve for preliminary Sy
-   - See peatflux-hydraulic-parameter-data
+ - [X] Add an R script that tabulates PEATCLSM Sy and T
+ - [X] Write regression test for implementing PEATCLSM Sy
+ - [X] Write regression test for implementing PEATCLSM T
+ - [X] Code to fit rise curve for preliminary Sy
+ - [X] Preliminary docs for calibration in User Guide
+ - [ ] Regression test for simulation of rise curve
+ - [ ] Make PEATCLSM Sy function instantiation more efficient
+ - [ ] Make rise curve simulation more efficient
  - [ ] Code to jointly fit rise and recession curves (using PEST)
+ - [ ] Resolve discrepancy in units between spline and Peatclsm
+   transmissivity
+ - [ ] Update man page
  - [ ] Simpler unit tests to verify functions
  - [ ] Trim test time series to short intervals
+ - [ ] Don't create an SQLite db if it doesn't exist for commands for
+   which this is inappropriate

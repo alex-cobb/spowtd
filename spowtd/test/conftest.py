@@ -4,6 +4,7 @@
 
 import os
 import sqlite3
+import subprocess
 
 import pytest
 
@@ -83,3 +84,47 @@ def get_sample_file_path(file_type, sample):
     """
     return os.path.join(SAMPLE_DATA_DIR,
                         '{}_{}.txt'.format(file_type, sample))
+
+
+def get_parameter_file_path(file_type):
+    """Return path to a parameter file
+
+    """
+    return os.path.join(SAMPLE_DATA_DIR,
+                        '{}_parameters.yml'.format(file_type))
+
+
+def peatclsm_specific_yield_table():
+    """Return a table of specific yields as parameterized in PEATCLSM
+
+    """
+    return get_peatclsm_data_table(
+        'specific_yield',
+        ['"water_level_m"', '"specific_yield"'])
+
+
+def peatclsm_transmissivity_table():
+    """Return a table of transmissivities as parameterized in PEATCLSM
+
+    """
+    return get_peatclsm_data_table(
+        'transmissivity',
+        ['"water_level_m"', '"transmissivity_m2_s"'])
+
+
+def get_peatclsm_data_table(variable, expected_header):
+    """Return a tabulated variable as parameterized in PEATCLSM
+
+    """
+    output = subprocess.check_output(
+        ['Rscript', '--vanilla',
+         os.path.join(
+             os.path.dirname(__file__),
+             'peatclsm_hydraulic_functions.R'),
+         variable
+         ],
+        encoding='utf-8'
+    )
+    rows = [line.strip().split(',') for line in output.splitlines()]
+    assert rows.pop(0) == expected_header
+    return [tuple(float(value) for value in row) for row in rows]
