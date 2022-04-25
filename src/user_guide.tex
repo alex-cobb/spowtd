@@ -57,7 +57,7 @@
 \begin{document}
 \lstset{language=bash}
 
-{\huge User Guide for Spowtd v0.2.0}\\[2ex]
+{\huge User Guide for Spowtd v0.3.0}\\[2ex]
 {\large Alex Cobb}\\[0ex]
 
 \renewcommand{\baselinestretch}{1.18}\normalsize
@@ -274,6 +274,134 @@ spowtd simulate rise ekolongouma.sqlite3 parameters.yml
 reads data from \texttt{ekolongouma.sqlite3} and parameters from the
 file \texttt{parameters.yml} and writes the assembled and simulated
 rise curves to standard output.
+
+\section{Calibration with PEST}
+The simulation scripts make it possible to calibrate the specific
+yield and transmissivity functions against rise and recession of the
+water level using the \href{https://pesthomepage.org/}{PEST} software
+package and tools for model-independent parameter estimation and
+uncertainty analysis.  It should also be possible to calibrate using
+\href{https://www.usgs.gov/software/pest-software-suite-parameter-estimation-uncertainty-analysis-management-optimization-and}{PEST++},
+which is designed to have the same text-based interface, by following
+a similar procedure.
+
+PEST is a highly configurable set of tools.  One of its strengths is
+that it is possible to start with a fairly simple approach and
+incorporate more sophisticated functionality as it is needed.  As an
+introduction, we illustrate calibration of specific yield parameters
+against the rise curve.
+
+For a calibration with PEST, you need to create five text files:
+\begin{enumerate}
+\item A PEST control file (\texttt{.pst}), which configures how PEST
+  will perform the calibration (including identifying the other files
+  used during calibration);
+\item A parameter template file (\texttt{.tpl}), into which PEST will
+  substitute parameter values in a format that can be read by Spowtd;
+\item An output template file, or PEST ``instruction file''
+  (\texttt{.ins}), which teaches PEST how to extract ``observations''
+  from \texttt{spowtd simulate} output;
+\item A vector of initial parameters (\texttt{.par}) to start the
+  calibration; and
+\item A script to execute the rise simulation.
+\end{enumerate}
+
+The first step is to create the PEST control file (\texttt{.pst})
+following the PEST documentation \citep{Doherty_2010}.  For a PEATCLSM
+parameterization, the control file will describe the four PEATCLSM
+parameters for specific yield (\texttt{sd}, \texttt{theta\_s},
+\texttt{b}, and \texttt{psi\_s}), each with their own parameter group.
+The control file must also include an ``observation data'' section
+with a single line giving mean dynamic storage for each water level in
+the rise curve. The ``model command line'' section must provide the
+command line needed to run the script to generate the rise curve.  The
+script itself can be, for example, a bash script that calls
+\texttt{spowtd simulate rise}.  Finally, the ``model input/output''
+section specifies the path to the parameter template file, the path to
+the the parameter file that PEST will create by substituting parameter
+values into the template, the path to the instruction file
+(\texttt{.ins}) that PEST uses to interpret the simulation output, and
+the path to the output file created by a single run of the simulation
+script.
+
+The parameter template file (\texttt{.tpl}) and the parameter vector
+file (\texttt{.par}) are created by replacing values in a Spowtd YAML
+parameter file by placeholders, as described in the PEST
+documentation.  In the case of calibration of PEATCLSM specific yield
+parameters against a rise curve, the template file might look like this:
+\begin{lstlisting}[frame=single]
+ptf @
+specific_yield:
+  type: peatclsm
+  sd: @sd                      @
+  theta_s: @theta_s                 @
+  b: @b                       @
+  psi_s: @psi_s                   @
+transmissivity:
+  type: peatclsm
+  Ksmacz0: 7.3  # m/s
+  alpha: 3  # dimensionless
+\end{lstlisting}
+and an initial parameter vector file might look like this:
+\begin{lstlisting}[frame=single]
+double point
+          sd    0.162                      1.000000         0.000000
+     theta_s    0.88                       1.000000         0.000000
+           b    7.4                        1.000000         0.000000
+       psi_s    -0.024                     1.000000         0.000000
+\end{lstlisting}
+
+To verify the format of a template \texttt{rise\_pars.yml.tpl} and
+initial parameters \texttt{rise\_init.par}, use the PEST
+\texttt{tempchek} command:
+\begin{lstlisting}[frame=single]
+tempchek rise_pars.yml.tpl rise_pars.yml rise_init.par
+\end{lstlisting}
+This command should exit without errors and produce a valid parameter
+file at \texttt{rise\_pars.yml}.
+
+The parameter file can then be verified by running your script.  Your
+script might, for example, contain the command
+\begin{lstlisting}[frame=single]
+spowtd simulate rise ekolongouma.sqlite3 rise_pars.yml -o rise_observations.yml --observations
+\end{lstlisting}
+which generates simulated dynamic storage values (without water levels
+or measured dynamic storage values) in
+\texttt{rise\_observations.yml}; in PEST, simulated output values are
+referred to as ``observations.''
+
+The resulting output file can then be checked against a PEST
+instruction file (\texttt{.ins}) that you create for extracting
+observation data, which might be called
+\texttt{rise\_observations.ins}, using the PEST command
+\texttt{inschek}:
+\begin{lstlisting}[frame=single]
+inschek rise_observations.ins rise_observations.yml
+\end{lstlisting}
+
+To then ensure that the correct initial parameters are used in the
+calibration, substitute these into the control file using
+\texttt{parrep}
+\begin{lstlisting}[frame=single]
+parrep rise_init.par rise_calibration.in.pst rise_calibration.pst
+\end{lstlisting}
+
+To then calibrate specific yield parameters against the rise curve
+(alone) using the PEST control file \texttt{rise\_calibration}, call:
+\begin{lstlisting}[frame=single]
+pestchek rise_calibration &&
+(pest rise_calibration.pst ;
+ tempchek rise_pars.yml.tpl rise_opt.yml rise_calibration.par)
+\end{lstlisting}
+These commands check the PEST control file, perform the calibration,
+and then substitute the calibrated parameter values from
+\texttt{rise\_calibration.par} into \texttt{rise\_opt.yml}.
+
+You can then examine the fit by plotting the rise curve with the
+calibrated parameters:
+\begin{lstlisting}[frame=single]
+spowtd plot rise ekolongouma.sqlite3 --parameters rise_opt.yml
+\end{lstlisting}
 
 \bibliographystyle{unsrtnat}
 \bibliography{user_guide.bib}
