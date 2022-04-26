@@ -115,23 +115,26 @@ class PeatclsmSpecificYield:
         b = self.b
         psi_s = self.psi_s
         sd = self.sd
+        zm_a = 0.5 * (zl_ + zu_)
+        Fs_a = scipy.stats.norm.cdf(zm_a, loc=0, scale=sd)
+        dz = zu_ - zl_
         for i in range(len(zl_)):
             zl = zl_[i]
             zu = zu_[i]
             A = 0
             for j in range(len(Sy_soil)):
-                zm = 0.5 * (zl_[j] + zu_[j])
-                # apply Campbell function to get soil moisture profile
+                zm = zm_a[j]
+                # Apply Campbell function to get soil moisture profile
                 # for lower (zl) water level
-                Azl = campbell_1d_az(zm, zl, theta_s, psi_s, b, sd)
-                # apply campbell function to get soil moisture profile for
-                # upper (zu) water level
-                Azu = campbell_1d_az(zm, zu, theta_s, psi_s, b, sd)
-                A = A + (zu_[j] - zl_[j]) * (Azu - Azl)
-            Sy_soil[i] = 1 / (1 * (zu - zl)) * A
+                Azl = campbell_1d_az(Fs_a[j], zm, zl, theta_s, psi_s, b, sd)
+                # Apply campbell function to get soil moisture profile
+                # for upper (zu) water level
+                Azu = campbell_1d_az(Fs_a[j], zm, zu, theta_s, psi_s, b, sd)
+                A = A + dz[j] * (Azu - Azl)
+            Sy_soil[i] = 1 / (1 * dz[i]) * A
 
 
-def campbell_1d_az(z_, zlu, theta_s, psi_s, b, sd):
+def campbell_1d_az(Fs, z_, zlu, theta_s, psi_s, b, sd):
     """Soil moisture profile from Campbell function and microtopography
 
     See equations 4 and 5 in Dettmann & Bechtold 2015, Hydrological
@@ -139,7 +142,6 @@ def campbell_1d_az(z_, zlu, theta_s, psi_s, b, sd):
 
     """
     # PEATCLSM microtopographic distribution
-    Fs = scipy.stats.norm.cdf(z_, loc=0, scale=sd)
     if ((zlu - z_) * 100) >= (psi_s * 100):
         theta = theta_s
     else:

@@ -4,7 +4,7 @@
  - [X] Code to fit rise curve for preliminary Sy
  - [X] Preliminary docs for calibration in User Guide
  - [X] Regression test for simulation of rise curve
- - [ ] Make PEATCLSM Sy function instantiation more efficient
+ - [X] Make PEATCLSM Sy function instantiation more efficient
  - [ ] Make rise curve simulation more efficient
  - [ ] Code to jointly fit rise and recession curves (using PEST)
  - [ ] Resolve discrepancy in units between spline and Peatclsm
