@@ -6,15 +6,17 @@ import scipy.interpolate as interpolate_mod
 import numpy as np
 
 splev = interpolate_mod.splev
+splint = interpolate_mod.splint
 splrep = interpolate_mod.splrep
 
 
 class Spline:
-    """Non-parametric cubic spline
+    """Spline with constant extrapolation
 
     Splines are implemented using FITPACK, as wrapped in Scipy.
     FITPACK's tck parameters for the coordinate are stored and used
-    for interpolation.
+    for interpolation.  Outside the domain of the knots, constant
+    extrapolation is used.
 
     """
     def __init__(self, tck):
@@ -50,5 +52,31 @@ class Spline:
     def __call__(self, x, der=0):
         """Evaluate der'th derivative of spline at x
 
+        If values in x lie outside the domain of the spline, they are
+        clamped to the smallest or largest knot (constant
+        extrapolation).
+
         """
-        return splev(x, self._tck, der=der)
+        x_clamped = np.minimum(
+            np.maximum(x, self._tck[0][0]), self._tck[0][-1])
+        return splev(x_clamped, self._tck, der=der)
+
+    def integrate(self, a, b):
+        """Evaluate a definite integral of the spline
+
+        """
+        if a > b:
+            return -self.integrate(b, a)
+        if a == b:
+            return 0.0
+        assert a < b
+
+        xmin, xmax = self.domain()
+        integral = 0.0
+        if a < xmin:
+            integral += self(xmin) * (min(xmin, b) - a)
+        if b > xmin:
+            integral += splint(max(a, xmin), min(xmax, b), self._tck)
+        if b > xmax:
+            integral += self(max(a, xmax)) * (b - max(a, xmax))
+        return integral

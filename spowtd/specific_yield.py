@@ -29,7 +29,27 @@ def create_specific_yield_function(parameters):
     }[sy_type](**parameters)
 
 
-class SplineSpecificYield:
+class SpecificYield:
+    """Base class for specific yield
+
+    """
+    def __init__(self, spline):
+        self._spline = spline
+
+    def __call__(self, water_level_mm):
+        return self._spline(water_level_mm)
+
+    def integrate(self, lo_water_level_mm, hi_water_level_mm):
+        """Integrate the specific yield between two water levels
+
+        This produces the rise curve.
+
+        """
+        return self._spline.integrate(
+            lo_water_level_mm, hi_water_level_mm)
+
+
+class SplineSpecificYield(SpecificYield):
     """Cubic spline representing specific yield
 
     zeta_knots_mm: Sequence of water levels in mm
@@ -41,20 +61,15 @@ class SplineSpecificYield:
     def __init__(self, zeta_knots_mm, sy_knots):
         self.zeta_knots_mm = zeta_knots_mm
         self.sy_knots = sy_knots
-        self._spline = spline_mod.Spline.from_points(
-            zip(zeta_knots_mm, sy_knots),
-            order=3)
-
-    def __call__(self, water_level_mm):
-        result = self._spline(water_level_mm)
-        result[
-            water_level_mm < self.zeta_knots_mm[0]] = self.sy_knots[0]
-        result[
-            water_level_mm > self.zeta_knots_mm[-1]] = self.sy_knots[-1]
-        return result
+        SpecificYield.__init__(
+            self,
+            spline_mod.Spline.from_points(
+                zip(zeta_knots_mm, sy_knots),
+                order=3)
+        )
 
 
-class PeatclsmSpecificYield:
+class PeatclsmSpecificYield(SpecificYield):
     """Specific yield function used in PEATCLSM
 
     sd:  standard deviation of microtopographic distribution, m
@@ -73,7 +88,10 @@ class PeatclsmSpecificYield:
         self.psi_s = psi_s
         self.zeta_knots_mm = None
         self.sy_knots = None
-        self._spline = self._construct_spline()
+        SpecificYield.__init__(
+            self,
+            self._construct_spline()
+        )
 
     def _construct_spline(self):
         """Construct specific yield spline
@@ -96,14 +114,6 @@ class PeatclsmSpecificYield:
             order=1)
         assert np.allclose(spline(self.zeta_knots_mm), self.sy_knots)
         return spline
-
-    def __call__(self, water_level_mm):
-        result = self._spline(water_level_mm)
-        result[
-            water_level_mm < self.zeta_knots_mm[0]] = self.sy_knots[0]
-        result[
-            water_level_mm > self.zeta_knots_mm[-1]] = self.sy_knots[-1]
-        return result
 
     def get_Sy_soil(self, Sy_soil, zl_, zu_):
         """Calculate soil specific yield profile
