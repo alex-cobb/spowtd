@@ -17,6 +17,7 @@ import spowtd.plot_rise as rise_plot_mod
 import spowtd.plot_specific_yield as specific_yield_plot_mod
 import spowtd.plot_time_series as time_series_plot_mod
 import spowtd.plot_transmissivity as transmissivity_plot_mod
+import spowtd.simulate_recession as simulate_recession_mod
 import spowtd.simulate_rise as simulate_rise_mod
 import spowtd.zeta_grid as zeta_grid_mod
 
@@ -189,7 +190,9 @@ def plot(connection, args):
             time_zone_name=args.timezone)
     elif args.subtask == 'recession':
         recession_plot_mod.plot_recession(
-            connection=connection)
+            connection=connection,
+            parameters=args.parameters,
+            curvature_km=args.curvature_km)
     elif args.subtask == 'rise':
         rise_plot_mod.plot_rise(
             connection=connection,
@@ -237,6 +240,13 @@ def simulate(connection, args):
         simulate_rise_mod.simulate_rise(
             connection=connection,
             parameters=args.parameters,
+            outfile=args.output,
+            observations_only=args.observations)
+    elif args.subtask == 'recession':
+        simulate_recession_mod.dump_simulated_recession(
+            connection=connection,
+            parameter_file=args.parameters,
+            curvature_km=args.curvature_km,
             outfile=args.output,
             observations_only=args.observations)
     else:
@@ -404,6 +414,14 @@ def add_plot_args(parser):
     recession_plot_parser.add_argument(
         'db', metavar='SQLITE',
         help='Path to SQLite database')
+    recession_plot_parser.add_argument(
+        '-p', '--parameters', metavar='YAML',
+        type=argparse.FileType('rt'),
+        help='YAML hydraulic parameters')
+    recession_plot_parser.add_argument(
+        '-k', '--curvature-km', metavar='CURVATURE',
+        type=float,
+        help='Peat surface curvature for recession simulation, km^-1')
     del recession_plot_parser
 
     rise_plot_parser = plot_subparsers.add_parser(
@@ -445,6 +463,30 @@ def add_simulate_args(parser):
         '--observations', action='store_true',
         help='Suppress normal output; just write simulated rise')
     del rise_parser
+    recession_parser = simulate_subparsers.add_parser(
+        'recession',
+        help='Simulate recession curve')
+    recession_parser.add_argument(
+        'db', metavar='SQLITE',
+        help='Path to SQLite database')
+    recession_parser.add_argument(
+        'parameters', metavar='YAML',
+        type=argparse.FileType('rt'),
+        help='YAML hydraulic parameters')
+    recession_parser.add_argument(
+        '-k', '--curvature-km', metavar='CURVATURE',
+        type=float,
+        help='Peat surface curvature for recession simulation, km^-1',
+        required=True)
+    recession_parser.add_argument(
+        '-o', '--output', metavar='FILE',
+        help='Write output to file, default stdout',
+        type=argparse.FileType('wt'),
+        default=sys.stdout)
+    recession_parser.add_argument(
+        '--observations', action='store_true',
+        help='Suppress normal output; just write simulated recession')
+    del recession_parser
 
 
 def get_verbosity(level_index):
