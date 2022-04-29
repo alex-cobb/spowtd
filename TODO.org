@@ -6,6 +6,15 @@
  - [X] Regression test for simulation of rise curve
  - [X] Make PEATCLSM Sy function instantiation more efficient
  - [X] Make rise curve simulation more efficient
+ - [ ] Design UI to create PEST files from data db for calibration
+   against: rise curve, rise and recession curves, rise and recession
+   intervals:
+   - spowtd pestfiles rise / curves / intervals
+     - Then args for the different file types --- because you can
+       write more than one if you want, why not?
+     - Could have an optional YAML argument with configuration
+       for PEST
+ - [ ] Better tests for rise and recession simulations
  - [ ] Load evapotranspiration data
    - The semantics are different than for rainfall
    - The ET data is LDASsa output and this is averaged around the
@@ -28,7 +37,6 @@
    - Mean ET for Ekolongouma is 0.172796635297707 mm / h
    - That implies a total water loss of about 207 mm in 50 days
    - ... and a mean Sy of 0.296, which seems quite reasonable
- - [ ] Code to jointly fit rise and recession curves (using PEST)
  - [ ] Resolve discrepancy in units between spline and Peatclsm
    transmissivity
  - [ ] Update man page
