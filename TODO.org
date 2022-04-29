@@ -6,6 +6,28 @@
  - [X] Regression test for simulation of rise curve
  - [X] Make PEATCLSM Sy function instantiation more efficient
  - [X] Make rise curve simulation more efficient
+ - [ ] Load evapotranspiration data
+   - The semantics are different than for rainfall
+   - The ET data is LDASsa output and this is averaged around the
+      timestamp so for the first file of Ekolongouma it is:
+     - 2013-01-01 01:00:00,0.035261363
+     - which means that the total evapotranspiration from 23:30:00 on
+       2012-12-31 to 02:30:00 on 2013-01-01 was 0.035261363 mm
+   - The result / implication is that the Congo ET is effectively on a
+     different grid and I think it will need to be regridded to match
+     precipitation.
+   - Also, the effective units are mm per 3 h, so that will need to be
+     fixed up as well.
+   - Really, this should be done in preprocessing, so in a way the
+     correct action with the existing data is to exit with an error
+     message for the user.
+   - Then, I could write, or ask Sebastian to write, a script to fix
+     up ET so that it is acceptable as input.
+ - [ ] Add ET to time series plots
+   - Decline in recession curve is about 700 mm in 50 days
+   - Mean ET for Ekolongouma is 0.172796635297707 mm / h
+   - That implies a total water loss of about 207 mm in 50 days
+   - ... and a mean Sy of 0.296, which seems quite reasonable
  - [ ] Code to jointly fit rise and recession curves (using PEST)
  - [ ] Resolve discrepancy in units between spline and Peatclsm
    transmissivity
