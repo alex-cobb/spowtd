@@ -94,15 +94,20 @@ class PeatclsmTransmissivity:
     See equation 3 in Apers et al. 2022, JAMES.
 
     """
-    __slots__ = ['Ksmacz0', 'alpha']
+    __slots__ = ['Ksmacz0', 'alpha', 'zeta_max_cm']
 
-    def __init__(self, Ksmacz0, alpha):
+    def __init__(self, Ksmacz0, alpha, zeta_max_cm):
         self.Ksmacz0 = Ksmacz0
         self.alpha = alpha
+        self.zeta_max_cm = zeta_max_cm
 
     def __call__(self, water_level_mm):
         Ksmacz0 = self.Ksmacz0
         alpha = self.alpha
+        zeta_max_cm = self.zeta_max_cm
+        if (water_level_mm / 10 > zeta_max_cm).any():
+            raise ValueError('T undefined at water level > {} cm in {}'
+                             .format(zeta_max_cm, water_level_mm / 10))
         return (
-            Ksmacz0 * (1 - water_level_mm / 10) ** (1 - alpha)
+            Ksmacz0 * (zeta_max_cm - water_level_mm / 10) ** (1 - alpha)
         ) / (100 * (alpha - 1))
