@@ -70,6 +70,18 @@ CREATE TABLE rainfall_intensity (
 );
 
 
+CREATE TABLE evapotranspiration (
+  from_epoch integer NOT NULL
+    REFERENCES grid_time (epoch)
+    CHECK (from_epoch < thru_epoch),
+  thru_epoch integer NOT NULL
+    REFERENCES grid_time (epoch)
+    CHECK (from_epoch < thru_epoch),
+  evapotranspiration_mm_h double precision NOT NULL,
+  PRIMARY KEY (from_epoch)
+);
+
+
 CREATE TABLE water_level (
   epoch integer NOT NULL
     REFERENCES grid_time (epoch),

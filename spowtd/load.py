@@ -79,6 +79,7 @@ def load_data(connection,
                                                 time_zone))
     time_grid, time_step = populate_grid_time(cursor, time_zone_name)
     populate_rainfall_intensity(cursor, time_grid, time_step)
+    populate_evapotranspiration(cursor, time_grid, time_step)
     populate_water_level(cursor, time_grid)
     cursor.close()
     connection.commit()
@@ -185,6 +186,21 @@ def populate_rainfall_intensity(cursor, time_grid, time_step):
       USING (epoch)
     WHERE ris.epoch <= ?""", (time_step,
                               time_grid[-2]))
+
+
+def populate_evapotranspiration(cursor, time_grid, time_step):
+    """Populate evapotranspiration on target grid
+
+    """
+    cursor.execute("""
+    INSERT INTO evapotranspiration
+      (from_epoch, thru_epoch, evapotranspiration_mm_h)
+    SELECT es.epoch, es.epoch + ?, evapotranspiration_mm_h
+    FROM evapotranspiration_staging AS es
+    JOIN grid_time AS gt
+      USING (epoch)
+    WHERE es.epoch <= ?""", (time_step,
+                             time_grid[-2]))
 
 
 def generate_timestamped_rows(rows, tz):
