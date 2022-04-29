@@ -10,8 +10,6 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
-import scipy.integrate as integrate_mod
-
 import yaml
 
 import spowtd.specific_yield as specific_yield_mod
