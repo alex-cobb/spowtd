@@ -1,0 +1,170 @@
+pcf
+* control data
+restart  estimation
+    4   141     4     0     1
+    1     1 double point   1   0   0
+   5.0  2.0   0.3  0.03    10
+  3.0   3.0 0.001  0
+  0.1
+   30  0.01     4     3  0.01     3
+    1     1     1
+* parameter groups
+sd           relative 0.01  0.0  switch  2.0 parabolic
+theta_s      relative 0.01  0.0  switch  2.0 parabolic
+b            relative 0.01  0.0  switch  2.0 parabolic
+psi_s        relative 0.01  0.0  switch  2.0 parabolic
+* parameter data
+sd          none relative   NaN  0.0   2.0  sd         1.0  0.0 1
+theta_s     none relative   NaN  0.01  1    theta_s    1.0  0.0 1
+b           none relative   NaN  0.01  20.0 b          1.0  0.0 1
+psi_s       none relative   NaN  -1.0  -0.01  psi_s      1.0  0.0 1
+* observation groups
+storageobs
+* observation data
+e1    -98.63145875005053    1.0   storageobs
+e2    -93.21867854271039    1.0   storageobs
+e3    -89.01305469447308    1.0   storageobs
+e4    -84.38067312973341    1.0   storageobs
+e5    -80.0287346654173    1.0   storageobs
+e6    -80.32961960932346    1.0   storageobs
+e7    -77.58220245253929    1.0   storageobs
+e8    -74.83478529575514    1.0   storageobs
+e9    -72.08736813897099    1.0   storageobs
+e10    -69.33995098218682    1.0   storageobs
+e11    -66.59253382540268    1.0   storageobs
+e12    -59.061421958448214    1.0   storageobs
+e13    -57.297034196187035    1.0   storageobs
+e14    -55.68202636393853    1.0   storageobs
+e15    -54.15450330807738    1.0   storageobs
+e16    -52.95349927248679    1.0   storageobs
+e17    -51.75249523689619    1.0   storageobs
+e18    -50.5514912013056    1.0   storageobs
+e19    -49.350487165715016    1.0   storageobs
+e20    -48.14948313012442    1.0   storageobs
+e21    -46.94847909453383    1.0   storageobs
+e22    -45.747475058943245    1.0   storageobs
+e23    -44.546471023352645    1.0   storageobs
+e24    -48.18778529569849    1.0   storageobs
+e25    -47.70518678798565    1.0   storageobs
+e26    -47.22258828027282    1.0   storageobs
+e27    -46.73998977255998    1.0   storageobs
+e28    -46.25739126484714    1.0   storageobs
+e29    -45.33242664788727    1.0   storageobs
+e30    -44.88022922816916    1.0   storageobs
+e31    -44.42803180845107    1.0   storageobs
+e32    -43.97583438873297    1.0   storageobs
+e33    -43.523636969014866    1.0   storageobs
+e34    -43.07143954929677    1.0   storageobs
+e35    -42.61924212957867    1.0   storageobs
+e36    -40.94246183732656    1.0   storageobs
+e37    -40.55251339658014    1.0   storageobs
+e38    -40.16256495583371    1.0   storageobs
+e39    -39.77261651508728    1.0   storageobs
+e40    -39.4777365125296    1.0   storageobs
+e41    -39.0091390309002    1.0   storageobs
+e42    -38.540541549270806    1.0   storageobs
+e43    -38.07194406764141    1.0   storageobs
+e44    -36.35875371446825    1.0   storageobs
+e45    -40.03340046522636    1.0   storageobs
+e46    -37.985698471726565    1.0   storageobs
+e47    -35.937996478226765    1.0   storageobs
+e48    -37.81921896190643    1.0   storageobs
+e49    -39.77525527583059    1.0   storageobs
+e50    -38.981965661449394    1.0   storageobs
+e51    -38.18867604706819    1.0   storageobs
+e52    -37.395386432687    1.0   storageobs
+e53    -36.60209681830578    1.0   storageobs
+e54    -36.033093822409974    1.0   storageobs
+e55    -35.25654519366015    1.0   storageobs
+e56    -34.479996564910344    1.0   storageobs
+e57    -33.70344793616052    1.0   storageobs
+e58    -34.28553771159541    1.0   storageobs
+e59    -33.59213444193651    1.0   storageobs
+e60    -32.8987311722776    1.0   storageobs
+e61    -32.205327902618684    1.0   storageobs
+e62    -31.51192463295979    1.0   storageobs
+e63    -30.818521363300878    1.0   storageobs
+e64    -30.125118093641973    1.0   storageobs
+e65    -29.43171482398307    1.0   storageobs
+e66    -28.73831155432416    1.0   storageobs
+e67    -30.082539439387986    1.0   storageobs
+e68    -29.41692711748836    1.0   storageobs
+e69    -28.75131479558873    1.0   storageobs
+e70    -28.489037427356777    1.0   storageobs
+e71    -27.828871381195814    1.0   storageobs
+e72    -27.168705335034836    1.0   storageobs
+e73    -27.27483416316556    1.0   storageobs
+e74    -26.63231614786004    1.0   storageobs
+e75    -25.98979813255452    1.0   storageobs
+e76    -27.84673881181959    1.0   storageobs
+e77    -29.633992044953782    1.0   storageobs
+e78    -27.923190706975426    1.0   storageobs
+e79    -26.212389368997066    1.0   storageobs
+e80    -24.501588031018706    1.0   storageobs
+e81    -22.79078669304035    1.0   storageobs
+e82    -24.57803992617454    1.0   storageobs
+e83    -24.033256778567033    1.0   storageobs
+e84    -23.488473630959522    1.0   storageobs
+e85    -22.943690483352015    1.0   storageobs
+e86    -22.39890733574451    1.0   storageobs
+e87    -21.854124188137003    1.0   storageobs
+e88    -18.612894050548825    1.0   storageobs
+e89    -20.155768016639296    1.0   storageobs
+e90    -19.045867506731067    1.0   storageobs
+e91    -17.935966996822835    1.0   storageobs
+e92    -16.826066486914602    1.0   storageobs
+e93    -18.238424177819233    1.0   storageobs
+e94    -17.09344976058813    1.0   storageobs
+e95    -15.948475343357028    1.0   storageobs
+e96    -14.803500926125924    1.0   storageobs
+e97    -13.65852650889482    1.0   storageobs
+e98    -18.45589167364432    1.0   storageobs
+e99    -18.004072906404954    1.0   storageobs
+e100    -17.611127503819674    1.0   storageobs
+e101    -17.03739472686635    1.0   storageobs
+e102    -16.60167538808603    1.0   storageobs
+e103    -16.165956049305713    1.0   storageobs
+e104    -15.730236710525393    1.0   storageobs
+e105    -15.294517371745073    1.0   storageobs
+e106    -14.858798032964756    1.0   storageobs
+e107    -14.423078694184436    1.0   storageobs
+e108    -13.987359355404118    1.0   storageobs
+e109    -13.551640016623798    1.0   storageobs
+e110    -13.115920677843482    1.0   storageobs
+e111    -12.68020133906316    1.0   storageobs
+e112    -12.244482000282842    1.0   storageobs
+e113    -11.808762661502525    1.0   storageobs
+e114    -11.373043322722205    1.0   storageobs
+e115    -10.937323983941887    1.0   storageobs
+e116    -10.501604645161567    1.0   storageobs
+e117    -10.06588530638125    1.0   storageobs
+e118    -9.492152529428072    1.0   storageobs
+e119    -9.041098364184093    1.0   storageobs
+e120    -8.590044198940115    1.0   storageobs
+e121    -8.138990033696139    1.0   storageobs
+e122    -7.464152809932631    1.0   storageobs
+e123    -6.995067718981173    1.0   storageobs
+e124    -6.525982628029719    1.0   storageobs
+e125    -6.0568975370782665    1.0   storageobs
+e126    -6.3011670223981255    1.0   storageobs
+e127    -5.8810892209049195    1.0   storageobs
+e128    -5.461011419411709    1.0   storageobs
+e129    -5.040933617918502    1.0   storageobs
+e130    -4.6208558164252915    1.0   storageobs
+e131    -4.200778014932085    1.0   storageobs
+e132    -3.780700213438874    1.0   storageobs
+e133    -3.360622411945667    1.0   storageobs
+e134    -2.9405446104524566    1.0   storageobs
+e135    -2.5204668089592506    1.0   storageobs
+e136    -2.10038900746604    1.0   storageobs
+e137    -1.6803112059728331    1.0   storageobs
+e138    -1.2602334044796226    1.0   storageobs
+e139    -0.8401556029864157    1.0   storageobs
+e140    -0.42007780149320517    1.0   storageobs
+e141    1.7763568394002505e-15    1.0   storageobs
+* model command line
+bash simulate-rise.sh
+* model input/output
+rise_pars.yml.tpl  rise_pars.yml
+rise_observations.ins  rise_observations.yml
+* prior information

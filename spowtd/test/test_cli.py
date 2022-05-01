@@ -132,10 +132,50 @@ def test_simulate_help():
 
 
 def test_simulate_rise_help():
-    """Invoking spowtd simulate specific-yield --help exits with code 0
+    """Invoking spowtd simulate rise --help exits with code 0
 
     """
     with pytest.raises(SystemExit) as exception:
         cli_mod.main(['simulate', 'rise', '--help'])
+    assert exception.type == SystemExit
+    assert exception.value.code == 0
+
+
+def test_simulate_recession_help():
+    """Invoking spowtd simulate recession --help exits with code 0
+
+    """
+    with pytest.raises(SystemExit) as exception:
+        cli_mod.main(['simulate', 'recession', '--help'])
+    assert exception.type == SystemExit
+    assert exception.value.code == 0
+
+
+def test_pestfiles_help():
+    """Invoking spowtd pestfiles --help exits with code 0
+
+    """
+    with pytest.raises(SystemExit) as exception:
+        cli_mod.main(['pestfiles', '--help'])
+    assert exception.type == SystemExit
+    assert exception.value.code == 0
+
+
+def test_pestfiles_rise_help():
+    """Invoking spowtd pestfiles rise --help exits with code 0
+
+    """
+    with pytest.raises(SystemExit) as exception:
+        cli_mod.main(['pestfiles', 'rise', '--help'])
+    assert exception.type == SystemExit
+    assert exception.value.code == 0
+
+
+def test_pestfiles_curves_help():
+    """Invoking spowtd pestfiles curves --help exits with code 0
+
+    """
+    with pytest.raises(SystemExit) as exception:
+        cli_mod.main(['pestfiles', 'curves', '--help'])
     assert exception.type == SystemExit
     assert exception.value.code == 0

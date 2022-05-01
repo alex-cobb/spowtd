@@ -10,6 +10,7 @@ import sys
 
 import spowtd.classify as classify_mod
 import spowtd.load as load_mod
+import spowtd.pestfiles as pestfiles_mod
 import spowtd.recession as recession_mod
 import spowtd.rise as rise_mod
 import spowtd.plot_recession as recession_plot_mod
@@ -29,7 +30,10 @@ def main(argv):
     """CLI for Spowtd
 
     """
-    parser, plot_parser = create_parsers()
+    (parser,
+     plot_parser,
+     simulate_parser,
+     pestfiles_parser) = create_parsers()
 
     args = parser.parse_args(argv)
     if args.version:
@@ -85,11 +89,18 @@ def main(argv):
                      args=args)
     elif args.task == 'simulate':
         if args.subtask is None:
-            plot_parser.print_help()
-            plot_parser.exit()
+            simulate_parser.print_help()
+            simulate_parser.exit()
         with sqlite3.connect(args.db) as connection:
             simulate(connection=connection,
                      args=args)
+    elif args.task == 'pestfiles':
+        if args.subtask is None:
+            pestfiles_parser.print_help()
+            pestfiles_parser.exit()
+        with sqlite3.connect(args.db) as connection:
+            pestfiles(connection=connection,
+                      args=args)
     else:
         raise AssertionError('Bad task {}'.format(args.task))
     return 0
@@ -155,7 +166,16 @@ def create_parsers():
     add_simulate_args(simulate_parser)
     add_shared_args(simulate_parser)
 
-    return parser, plot_parser
+    pestfiles_parser = subparsers.add_parser(
+        'pestfiles',
+        help='Generate files for calibration with PEST')
+    add_pestfiles_args(pestfiles_parser)
+    add_shared_args(pestfiles_parser)
+
+    return (parser,
+            plot_parser,
+            simulate_parser,
+            pestfiles_parser)
 
 
 def set_up_logging(logfile, verbosity):
@@ -249,6 +269,29 @@ def simulate(connection, args):
             curvature_km=args.curvature_km,
             outfile=args.output,
             observations_only=args.observations)
+    else:
+        raise AssertionError(
+            'Bad simulate task {}'.format(args.subtask))
+
+
+def pestfiles(connection, args):
+    """Dispatch to generate pestfile scripts
+
+    """
+    if args.subtask == 'rise':
+        pestfiles_mod.generate_rise_pestfiles(
+            connection=connection,
+            parameter_file=args.parameters,
+            outfile_type=args.outfile_type,
+            configuration_file=args.configuration,
+            outfile=args.output)
+    elif args.subtask == 'curves':
+        pestfiles_mod.generate_curves_pestfiles(
+            connection=connection,
+            parameter_file=args.parameters,
+            outfile_type=args.outfile_type,
+            configuration_file=args.configuration,
+            outfile=args.output)
     else:
         raise AssertionError(
             'Bad simulate task {}'.format(args.subtask))
@@ -487,6 +530,63 @@ def add_simulate_args(parser):
         '--observations', action='store_true',
         help='Suppress normal output; just write simulated recession')
     del recession_parser
+
+
+def add_pestfiles_args(parser):
+    """Add arguments for spowtd pestfiles parser
+
+    """
+    subparsers = parser.add_subparsers(
+        help='pestfiles sub-command help',
+        dest='subtask')
+    rise_parser = subparsers.add_parser(
+        'rise',
+        help='Generate PEST files for calibration against rise curve')
+    rise_parser.add_argument(
+        'db', metavar='SQLITE',
+        help='Path to SQLite database')
+    rise_parser.add_argument(
+        'parameters', metavar='YAML',
+        type=argparse.FileType('rt'),
+        help='Initial parameter file')
+    rise_parser.add_argument(
+        'outfile_type', metavar='TYPE',
+        choices=['tpl', 'ins', 'pst'],
+        help='File type to produce')
+    rise_parser.add_argument(
+        '-c', '--configuration', metavar='YAML',
+        type=argparse.FileType('rt'),
+        help='Configuration values to populate PEST files')
+    rise_parser.add_argument(
+        '-o', '--output', metavar='FILE',
+        help='Write output to file, default stdout',
+        type=argparse.FileType('wt'),
+        default=sys.stdout)
+    del rise_parser
+    curves_parser = subparsers.add_parser(
+        'curves',
+        help='Generate PEST files for calibration against master curves')
+    curves_parser.add_argument(
+        'db', metavar='SQLITE',
+        help='Path to SQLite database')
+    curves_parser.add_argument(
+        'parameters', metavar='YAML',
+        type=argparse.FileType('rt'),
+        help='Initial parameter file')
+    curves_parser.add_argument(
+        'outfile_type', metavar='TYPE',
+        choices=['tpl', 'ins', 'pst'],
+        help='File type to produce')
+    curves_parser.add_argument(
+        '-c', '--configuration', metavar='YAML',
+        type=argparse.FileType('rt'),
+        help='Configuration values to populate PEST files')
+    curves_parser.add_argument(
+        '-o', '--output', metavar='FILE',
+        help='Write output to file, default stdout',
+        type=argparse.FileType('wt'),
+        default=sys.stdout)
+    del curves_parser
 
 
 def get_verbosity(level_index):
