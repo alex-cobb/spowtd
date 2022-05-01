@@ -9,7 +9,7 @@ import yaml
 
 def generate_rise_pestfiles(connection, parameter_file,
                             outfile_type, configuration_file,
-                            outfile):
+                            outfile, precision=17):
     """Generate PEST files for calibration against rise curve
 
     """
@@ -23,7 +23,8 @@ def generate_rise_pestfiles(connection, parameter_file,
          parameters=parameters,
          configuration=({} if configuration_file is None
                         else yaml.safe_load(configuration_file)),
-         outfile=outfile)
+         outfile=outfile,
+         precision=precision)
 
 
 def generate_curves_pestfiles(connection, parameter_file,
@@ -44,7 +45,7 @@ def generate_curves_pestfiles(connection, parameter_file,
 
 
 def generate_rise_tpl_file(connection, parameters, configuration,
-                           outfile):
+                           outfile, precision):
     """Generate template file for calibration against rise curve
 
     """
@@ -96,7 +97,7 @@ def generate_rise_tpl_file(connection, parameters, configuration,
 
 
 def generate_rise_ins_file(connection, parameters, configuration,
-                           outfile):
+                           outfile, precision):
     """Generate instruction file for calibration against rise curve
 
     """
@@ -114,7 +115,7 @@ def generate_rise_ins_file(connection, parameters, configuration,
 
 
 def generate_rise_pst_file(connection, parameters, configuration,
-                           outfile):
+                           outfile, precision):
     """Generate control file for calibration against rise curve
 
     """
@@ -178,7 +179,9 @@ def generate_rise_pst_file(connection, parameters, configuration,
     lines += [
         '* observation data']
     lines += [
-        'e{}    {}    1.0   storageobs'.format(i + 1, W)
+        ('e{{}}    {{:0.{}g}}    1.0   storageobs'
+         .format(precision)
+         .format(i + 1, W))
         for i, W in enumerate(avg_storage_mm)]
     lines += [
         '* model command line',

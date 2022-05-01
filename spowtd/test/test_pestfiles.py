@@ -147,7 +147,8 @@ def test_generate_rise_pst(classified_connection,
             parameter_file=parameter_file,
             outfile_type='pst',
             configuration_file=None,
-            outfile=outfile)
+            outfile=outfile,
+            precision=13)
     with open(
             conftest.get_sample_file_path(
                 '{}_rise_calibration'.format(parameterization),
