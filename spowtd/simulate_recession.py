@@ -18,6 +18,8 @@ def dump_simulated_recession(connection, parameter_file, curvature_km,
                              outfile, observations_only):
     """Dump master recession curve to file
 
+    Sequence is from highest to lowest water level.
+
     """
     (avg_elapsed_time_d,
      avg_zeta_cm,
@@ -27,17 +29,18 @@ def dump_simulated_recession(connection, parameter_file, curvature_km,
     if observations_only:
         outfile.write('# Recession curve simulation vector\n')
         yaml.dump(
-            elapsed_time_d.tolist(),
+            list(reversed(elapsed_time_d.tolist())),
             outfile)
     else:
         yaml.dump(
             ([['Water level, mm',
                'Measured elapsed time, d',
                'Simulated elapsed time, d']] +
-             list(list(item) for item in
-                  zip(avg_zeta_cm.tolist(),
-                      avg_elapsed_time_d.tolist(),
-                      elapsed_time_d.tolist()))),
+             list(reversed(
+                 list(list(item) for item in
+                      zip(avg_zeta_cm.tolist(),
+                          avg_elapsed_time_d.tolist(),
+                          elapsed_time_d.tolist()))))),
             outfile)
 
 
@@ -50,7 +53,8 @@ def simulate_recession(connection, parameter_file, curvature_km):
     SELECT CAST(elapsed_time_s AS double precision)
              / (3600 * 24) AS elapsed_time_d,
            zeta_mm / 10 AS zeta_cm
-    FROM average_recession_time""")
+    FROM average_recession_time
+    ORDER BY zeta_mm""")
     (avg_elapsed_time_d,
      avg_zeta_cm) = (np.array(v, dtype=float) for v in zip(*cursor))
     # Mean evapotranspiration in recession intervals

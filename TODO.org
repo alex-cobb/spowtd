@@ -6,14 +6,8 @@
  - [X] Regression test for simulation of rise curve
  - [X] Make PEATCLSM Sy function instantiation more efficient
  - [X] Make rise curve simulation more efficient
- - [ ] Design UI to create PEST files from data db for calibration
-   against: rise curve, rise and recession curves, rise and recession
-   intervals:
-   - spowtd pestfiles rise / curves / intervals
-     - Then args for the different file types --- because you can
-       write more than one if you want, why not?
-     - Could have an optional YAML argument with configuration
-       for PEST
+ - [X] Design UI to create PEST files from data db for calibration
+   against: rise curve, rise and recession curves
  - [ ] Better tests for rise and recession simulations
  - [ ] Load evapotranspiration data
    - The semantics are different than for rainfall
@@ -44,3 +38,5 @@
  - [ ] Trim test time series to short intervals
  - [ ] Don't create an SQLite db if it doesn't exist for commands for
    which this is inappropriate
+ - [ ] Implement generation of PEST files for calibration against rise
+   and recession intervals
