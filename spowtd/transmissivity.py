@@ -105,6 +105,7 @@ class PeatclsmTransmissivity:
         Ksmacz0 = self.Ksmacz0
         alpha = self.alpha
         zeta_max_cm = self.zeta_max_cm
+        water_level_mm = np.asarray(water_level_mm)
         if (water_level_mm / 10 > zeta_max_cm).any():
             raise ValueError('T undefined at water level > {} cm in {}'
                              .format(zeta_max_cm, water_level_mm / 10))
