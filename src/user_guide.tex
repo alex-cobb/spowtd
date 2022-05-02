@@ -107,6 +107,8 @@ this order):
 \item \texttt{spowtd plot}: Plot data
 \item \texttt{spowtd simulate}: Simulate data rise curve, recession
   curve, or rising and receding intervals.
+\item \texttt{spowtd pestfiles}: Generate input files for calibration
+  with PEST.
 \end{itemize}
 
 The first step is to load the precipitation, evapotranspiration and
@@ -404,6 +406,32 @@ calibrated parameters:
 \begin{lstlisting}[frame=single]
 spowtd plot rise ekolongouma.sqlite3 --parameters rise_opt.yml
 \end{lstlisting}
+
+\subsection{Generating PEST input files with Spowtd}
+As a convenience, Spowtd can generate input files for calibration with
+PEST, either against the rise curve (\texttt{spowtd pestfiles rise})
+or against both rise and recession curves (\texttt{spowtd pestfiles
+  curves}).  The arguments to both subcommands are the same.  Taking
+calibration against the rise curve as an example, a template file
+can be created with
+\begin{lstlisting}[frame=single]
+spowtd pestfiles rise ekolongouma.sqlite3 parameters.yml tpl \\
+  -o rise_parameters.yml.tpl
+\end{lstlisting}
+An instruction file can similarly be created with
+\begin{lstlisting}[frame=single]
+spowtd pestfiles rise ekolongouma.sqlite3 parameters.yml ins \\
+  -o ekolongouma_rise_observations.ins
+\end{lstlisting}
+and a control file can be created with
+\begin{lstlisting}[frame=single]
+spowtd pestfiles rise ekolongouma.sqlite3 parameters.yml pst \\
+  -o ekolongouma_rise_calibration.in.pst
+\end{lstlisting}
+The template and instruction files can be used as-is.  The generated
+PEST control file will require substitution of valid starting
+parameters and bounds, substitution of paths to input files and the
+invocation for simualtion, adjustment of PEST control parameters, etc.
 
 \bibliographystyle{unsrtnat}
 \bibliography{user_guide.bib}
