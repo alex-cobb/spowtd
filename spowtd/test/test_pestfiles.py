@@ -191,7 +191,7 @@ def test_generate_rise_pst(classified_connection,
             outfile_type='pst',
             configuration_file=None,
             outfile=outfile,
-            precision=10)
+            precision=5)
     with open(
             conftest.get_sample_file_path(
                 '{}_rise_calibration'.format(parameterization),
@@ -296,7 +296,7 @@ def test_generate_curves_pst(classified_connection,
             outfile_type='pst',
             configuration_file=None,
             outfile=outfile,
-            precision=10)
+            precision=5)
     with open(
             conftest.get_sample_file_path(
                 '{}_curves_calibration'.format(parameterization),
