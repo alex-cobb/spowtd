@@ -176,6 +176,15 @@ CREATE TABLE recession_interval_zeta (
 );
 
 
+CREATE TABLE curvature (
+  curvature_km double precision NOT NULL,
+  -- Singleton
+  is_valid integer NOT NULL PRIMARY KEY
+    CHECK (is_valid = 1)
+    DEFAULT 1
+);
+
+
 -- Views
 
 CREATE VIEW storm_total_rain_depth AS
