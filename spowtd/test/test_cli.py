@@ -141,6 +141,16 @@ def test_simulate_rise_help():
     assert exception.value.code == 0
 
 
+def test_set_curvature_help():
+    """Invoking spowtd simulate rise --help exits with code 0
+
+    """
+    with pytest.raises(SystemExit) as exception:
+        cli_mod.main(['set-curvature', '--help'])
+    assert exception.type == SystemExit
+    assert exception.value.code == 0
+
+
 def test_simulate_recession_help():
     """Invoking spowtd simulate recession --help exits with code 0
 

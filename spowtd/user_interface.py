@@ -18,6 +18,7 @@ import spowtd.plot_rise as rise_plot_mod
 import spowtd.plot_specific_yield as specific_yield_plot_mod
 import spowtd.plot_time_series as time_series_plot_mod
 import spowtd.plot_transmissivity as transmissivity_plot_mod
+import spowtd.set_curvature as set_curvature_mod
 import spowtd.simulate_recession as simulate_recession_mod
 import spowtd.simulate_rise as simulate_rise_mod
 import spowtd.zeta_grid as zeta_grid_mod
@@ -87,6 +88,10 @@ def main(argv):
             with sqlite3.connect(args.db) as connection:
                 plot(connection=connection,
                      args=args)
+    elif args.task == 'set-curvature':
+        with sqlite3.connect(args.db) as connection:
+            set_curvature(connection=connection,
+                          args=args)
     elif args.task == 'simulate':
         if args.subtask is None:
             simulate_parser.print_help()
@@ -160,6 +165,13 @@ def create_parsers():
     add_plot_args(plot_parser)
     add_shared_args(plot_parser)
 
+    set_curvature_parser = subparsers.add_parser(
+        'set-curvature',
+        help='Set site curvature')
+    add_set_curvature_args(set_curvature_parser)
+    add_shared_args(set_curvature_parser)
+    del set_curvature_parser
+
     simulate_parser = subparsers.add_parser(
         'simulate',
         help='Simulate water level rise and recession')
@@ -211,8 +223,7 @@ def plot(connection, args):
     elif args.subtask == 'recession':
         recession_plot_mod.plot_recession(
             connection=connection,
-            parameters=args.parameters,
-            curvature_km=args.curvature_km)
+            parameters=args.parameters)
     elif args.subtask == 'rise':
         rise_plot_mod.plot_rise(
             connection=connection,
@@ -252,6 +263,14 @@ def plot(connection, args):
             'Bad plot task {}'.format(args.subtask))
 
 
+def set_curvature(connection, args):
+    """Command-line interface to set curvature
+
+    """
+    set_curvature_mod.set_curvature(
+        connection, curvature_m_km2=args.curvature_m_km2)
+
+
 def simulate(connection, args):
     """Dispatch to simulation scripts
 
@@ -266,7 +285,6 @@ def simulate(connection, args):
         simulate_recession_mod.dump_simulated_recession(
             connection=connection,
             parameter_file=args.parameters,
-            curvature_km=args.curvature_km,
             outfile=args.output,
             observations_only=args.observations)
     else:
@@ -461,10 +479,6 @@ def add_plot_args(parser):
         '-p', '--parameters', metavar='YAML',
         type=argparse.FileType('rt'),
         help='YAML hydraulic parameters')
-    recession_plot_parser.add_argument(
-        '-k', '--curvature-km', metavar='CURVATURE',
-        type=float,
-        help='Peat surface curvature for recession simulation, km^-1')
     del recession_plot_parser
 
     rise_plot_parser = plot_subparsers.add_parser(
@@ -478,6 +492,18 @@ def add_plot_args(parser):
         type=argparse.FileType('rt'),
         help='YAML hydraulic parameters')
     del rise_plot_parser
+
+
+def add_set_curvature_args(parser):
+    """Add arguments for spowtd set-curvature parser
+
+    """
+    parser.add_argument(
+        'db', metavar='DB', help='Spowtd SQLite3 data file')
+    parser.add_argument(
+        'curvature_m_km2',
+        help='Large-scale curvature of site, m / km / km',
+        type=float)
 
 
 def add_simulate_args(parser):
@@ -516,11 +542,6 @@ def add_simulate_args(parser):
         'parameters', metavar='YAML',
         type=argparse.FileType('rt'),
         help='YAML hydraulic parameters')
-    recession_parser.add_argument(
-        '-k', '--curvature-km', metavar='CURVATURE',
-        type=float,
-        help='Peat surface curvature for recession simulation, km^-1',
-        required=True)
     recession_parser.add_argument(
         '-o', '--output', metavar='FILE',
         help='Write output to file, default stdout',

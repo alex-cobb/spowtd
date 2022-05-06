@@ -80,8 +80,6 @@ Scalar parameterization involves these essential steps:
   transmissivity) function to the master rising and recession curves.
 \end{enumerate}
 
-Steps 6 and 7 are not implemented yet.
-
 \section{The spowtd script}
 The \texttt{spowtd} script provides a command-line interface to
 perform calculations with Spowtd.
@@ -97,14 +95,15 @@ The \texttt{spowtd} script has these subcommands (typically run in
 this order):
 \begin{itemize}
 \item \texttt{spowtd load}: Load water level, precipitation and
-  evapotranspiration data
+  evapotranspiration data.
 \item \texttt{spowtd classify}: Classify data into storm and
-  interstorm intervals
+  interstorm intervals.
 \item \texttt{spowtd set-zeta-grid}: Set up water level grid for
-  master curves
-\item \texttt{spowtd recession}: Assemble recession curve
-\item \texttt{spowtd rise}: Assemble rise curve
-\item \texttt{spowtd plot}: Plot data
+  master curves.
+\item \texttt{spowtd recession}: Assemble recession curve.
+\item \texttt{spowtd rise}: Assemble rise curve.
+\item \texttt{spowtd plot}: Plot data.
+\item \texttt{spowtd set-curvature}: Set site curvature.
 \item \texttt{spowtd simulate}: Simulate data rise curve, recession
   curve, or rising and receding intervals.
 \item \texttt{spowtd pestfiles}: Generate input files for calibration
@@ -258,12 +257,12 @@ where \texttt{WHAT} is one of \texttt{specific-yield},
 \texttt{parameters.yml} is a YAML file containing hydraulic
 parameters.
 
-In addition, the plotting commands \texttt{plot rise}, \texttt{plot
-  recession} and \texttt{plot time-series} support a parameter
-\texttt{-p}, \texttt{--parameters}; if a YAML file containing
-hydraulic parameters is passed to one of these commands, the
-corresponding plot (rising curve, recession curve, rising and receding
-intervals) is simulated using those parameters.
+The plotting commands \texttt{plot rise}, \texttt{plot recession} and
+\texttt{plot time-series} support a parameter \texttt{-p},
+\texttt{--parameters}; if a YAML file containing hydraulic parameters
+is passed to one of these commands, the corresponding plot (rising
+curve, recession curve, rising and receding intervals) is simulated
+using those parameters.
 
 The simulated curves and corresponding data can be obtained as text
 using \texttt{spowtd simulate WHAT data.sqlite3 parameters.yml} where
@@ -277,6 +276,17 @@ spowtd simulate rise ekolongouma.sqlite3 parameters.yml
 reads data from \texttt{ekolongouma.sqlite3} and parameters from the
 file \texttt{parameters.yml} and writes the assembled and simulated
 rise curves to standard output.
+
+To simulate (or plot) recession requires setting the large-scale
+curvature of the site.  The command
+\begin{lstlisting}[frame=single]
+  spowtd set-curvature ekolongouma.sqlite3 1.0
+\end{lstlisting}
+sets the site curvature to $1~\text{m}/\text{km}/\text{km}$, whereafter
+\begin{lstlisting}[frame=single]
+  spowtd simulate recession ekolongouma.sqlite3 parameters.yml
+\end{lstlisting}
+simulates the water table recession.
 
 \section{Calibration with PEST}
 The simulation scripts make it possible to calibrate the specific

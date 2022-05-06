@@ -15,7 +15,7 @@ import yaml
 import spowtd.simulate_recession as simulate_recession_mod
 
 
-def plot_recession(connection, parameters, curvature_km):
+def plot_recession(connection, parameters):
     """Plot master recession curve
 
     """
@@ -57,12 +57,9 @@ def plot_recession(connection, parameters, curvature_km):
     axes.plot(avg_elapsed_time_d, avg_zeta_cm)
 
     if parameters is not None:
-        if curvature_km is None:
-            raise ValueError(
-                'Curvature is required for recession simulation')
         (_, _,
          elapsed_time_d) = simulate_recession_mod.simulate_recession(
-            connection, parameters, curvature_km)
+            connection, parameters)
         axes.plot(elapsed_time_d, avg_zeta_cm, 'k--')
 
     plt.show()

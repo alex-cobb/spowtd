@@ -177,7 +177,7 @@ CREATE TABLE recession_interval_zeta (
 
 
 CREATE TABLE curvature (
-  curvature_km double precision NOT NULL,
+  curvature_m_km2 double precision NOT NULL,
   -- Singleton
   is_valid integer NOT NULL PRIMARY KEY
     CHECK (is_valid = 1)

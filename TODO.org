@@ -8,9 +8,8 @@
  - [X] Make rise curve simulation more efficient
  - [X] Design UI to create PEST files from data db for calibration
    against: rise curve, rise and recession curves
- - [ ] Add curvature to data model, CLI and docs
-   - It is a site attribute
- - [ ] Better tests for rise and recession simulations
+ - [X] Add curvature to data model, CLI and docs
+ - [X] Better tests for rise and recession simulations
  - [ ] Load evapotranspiration data
    - The semantics are different than for rainfall
    - The ET data is LDASsa output and this is averaged around the

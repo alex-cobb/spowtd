@@ -14,8 +14,8 @@ import spowtd.specific_yield as specific_yield_mod
 import spowtd.transmissivity as transmissivity_mod
 
 
-def dump_simulated_recession(connection, parameter_file, curvature_km,
-                             outfile, observations_only):
+def dump_simulated_recession(connection, parameter_file, outfile,
+                             observations_only):
     """Dump master recession curve to file
 
     Sequence is from highest to lowest water level.
@@ -24,7 +24,7 @@ def dump_simulated_recession(connection, parameter_file, curvature_km,
     (avg_elapsed_time_d,
      avg_zeta_cm,
      elapsed_time_d) = simulate_recession(
-         connection, parameter_file, curvature_km)
+         connection, parameter_file)
 
     if observations_only:
         outfile.write('# Recession curve simulation vector\n')
@@ -44,11 +44,19 @@ def dump_simulated_recession(connection, parameter_file, curvature_km,
             outfile)
 
 
-def simulate_recession(connection, parameter_file, curvature_km):
+def simulate_recession(connection, parameter_file):
     """Simulate master recession curve
 
     """
     cursor = connection.cursor()
+    cursor.execute(
+        "SELECT EXISTS (SELECT 1 FROM curvature WHERE is_valid)")
+    if not cursor.fetchone()[0]:
+        raise ValueError(
+            'Site curvature must be set to simulate recession')
+    cursor.execute(
+        "SELECT curvature_m_km2 FROM curvature")
+    curvature_m_km2 = cursor.fetchone()[0]
     cursor.execute("""
     SELECT CAST(elapsed_time_s AS double precision)
              / (3600 * 24) AS elapsed_time_d,
@@ -101,7 +109,7 @@ def simulate_recession(connection, parameter_file, curvature_km):
         transmissivity_m2_d=transmissivity_m2_d,
         zeta_grid_mm=np.array(avg_zeta_cm, dtype=float) * 10,
         mean_elapsed_time_d=np.mean(avg_elapsed_time_d),
-        curvature_km=curvature_km,
+        curvature_km=curvature_m_km2 * 1e-3,
         et_mm_d=et_mm_d)
 
     return (avg_elapsed_time_d,
