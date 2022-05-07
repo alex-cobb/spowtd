@@ -219,7 +219,8 @@ def plot(connection, args):
             show_accents=args.flags,
             colors=colors,
             accent_width=args.highlight_weight,
-            time_zone_name=args.timezone)
+            time_zone_name=args.timezone,
+            plot_evapotranspiration=args.plot_evapotranspiration)
     elif args.subtask == 'recession':
         recession_plot_mod.plot_recession(
             connection=connection,
@@ -458,6 +459,9 @@ def add_plot_args(parser):
     time_series_plot_parser.add_argument(
         'db', metavar='SQLITE',
         help='Path to SQLite database')
+    time_series_plot_parser.add_argument(
+        '-e', '--plot-evapotranspiration', action='store_true',
+        help='Plot evapotranspiration')
     time_series_plot_parser.add_argument(
         '-f', '--flags', action='store_true',
         help='Highlight time intervals flagged for storm matching')

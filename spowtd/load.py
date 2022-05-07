@@ -79,7 +79,8 @@ def load_data(connection,
                                                 time_zone))
     time_grid, time_step = populate_grid_time(cursor, time_zone_name)
     populate_rainfall_intensity(cursor, time_grid, time_step)
-    populate_evapotranspiration(cursor, time_grid, time_step)
+    populate_evapotranspiration(cursor, time_grid, time_step,
+                                tz=time_zone)
     populate_water_level(cursor, time_grid)
     cursor.close()
     connection.commit()
@@ -188,10 +189,29 @@ def populate_rainfall_intensity(cursor, time_grid, time_step):
                               time_grid[-2]))
 
 
-def populate_evapotranspiration(cursor, time_grid, time_step):
+def populate_evapotranspiration(cursor, time_grid, time_step, tz):
     """Populate evapotranspiration on target grid
 
     """
+    # Check that evapotranspiration is defined on same grid and same
+    # intervals as rainfall
+    cursor.execute("""
+    SELECT epoch
+    FROM grid_time AS gt
+    WHERE NOT EXISTS (
+      SELECT 1 FROM evapotranspiration_staging AS es
+      WHERE es.epoch = gt.epoch
+    )
+    ORDER BY epoch""")
+    missing_epochs = [row[0] for row in cursor.fetchall()]
+    if missing_epochs:
+        missing_datetimes = [
+            str(datetime_mod.datetime.fromtimestamp(
+                epoch, datetime_mod.timezone.utc).astimezone(tz))
+            for epoch in missing_epochs]
+        raise ValueError(
+            'No ET data at {} grid datetimes (showing up to 3): {}'
+            .format(len(missing_datetimes), missing_datetimes[:3]))
     cursor.execute("""
     INSERT INTO evapotranspiration
       (from_epoch, thru_epoch, evapotranspiration_mm_h)

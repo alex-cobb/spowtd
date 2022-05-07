@@ -74,9 +74,6 @@ def simulate_recession(connection, parameter_file):
       ON e.from_epoch = ri.start_epoch""")
     et_mm_d = cursor.fetchone()[0]
     assert et_mm_d >= 0, et_mm_d
-    # XXX Hack for Congo data, which actually give ET in mm
-    # XXX on 3-hour intervals (mm over 3 h)
-    et_mm_d /= 3.0
     cursor.close()
     del cursor
     del connection

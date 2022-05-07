@@ -31,6 +31,7 @@ class DataInterval:
     mpl_time: np.ndarray
     zeta_cm: np.ndarray
     rain_mm_h: np.ndarray
+    et_mm_h: np.ndarray
     is_jump: list
     is_mystery_jump: list
     is_interstorm: list
@@ -41,7 +42,8 @@ def plot_time_series(
         show_accents,
         colors,
         accent_width,
-        time_zone_name=None):
+        time_zone_name=None,
+        plot_evapotranspiration=False):
     """Plot water level and precipitation time series
 
     """
@@ -54,12 +56,20 @@ def plot_time_series(
     time_zone = pytz.timezone(time_zone_name)
 
     fig = plt.figure()
-    zeta_axes = fig.add_subplot(2, 1, 1)
+    if plot_evapotranspiration:
+        zeta_axes = fig.add_subplot(3, 1, 1)
+        rain_axes = fig.add_subplot(3, 1, 2, sharex=zeta_axes)
+        rain_axes.set_ylabel('Rainfall intensity,\nmm / h')
+        et_axes = fig.add_subplot(3, 1, 3, sharex=zeta_axes)
+        et_axes.xaxis_date(tz=time_zone)
+        et_axes.set_ylabel('Evapotranspiration,\nmm / h')
+    else:
+        zeta_axes = fig.add_subplot(2, 1, 1)
+        rain_axes = fig.add_subplot(2, 1, 2, sharex=zeta_axes)
+        rain_axes.set_ylabel('Rainfall intensity, mm / h')
     zeta_axes.xaxis_date(tz=time_zone)
     zeta_axes.set_ylabel('Water level, cm')
-    rain_axes = fig.add_subplot(2, 1, 2, sharex=zeta_axes)
     rain_axes.xaxis_date(tz=time_zone)
-    rain_axes.set_ylabel('Rainfall intensity, mm / h')
 
     cursor.execute("""
     SELECT DISTINCT data_interval
@@ -75,6 +85,7 @@ def plot_time_series(
         SELECT wl.epoch,
                zeta_mm / 10 AS zeta_cm,
                rainfall_intensity_mm_h,
+               COALESCE(evapotranspiration_mm_h, 'NaN'),
                is_jump,
                is_mystery_jump,
                is_interstorm
@@ -86,16 +97,19 @@ def plot_time_series(
           ON wl.epoch = ri.from_epoch
         JOIN grid_time_flags AS gtf
           ON gtf.start_epoch = wl.epoch
+        LEFT JOIN evapotranspiration
+          ON wl.epoch = evapotranspiration.from_epoch
         ORDER BY wl.epoch""", (label,))
         columns = tuple(zip(*cursor))
         data_intervals.append(
             DataInterval(
                 mpl_time=dates_mod.epoch2num(columns[0]),
-                zeta_cm=np.array(columns[1]),
-                rain_mm_h=np.array(columns[2]),
-                is_jump=columns[3],
-                is_mystery_jump=columns[4],
-                is_interstorm=columns[5]
+                zeta_cm=np.array(columns[1], dtype=float),
+                rain_mm_h=np.array(columns[2], dtype=float),
+                et_mm_h=np.array(columns[3], dtype=float),
+                is_jump=columns[4],
+                is_mystery_jump=columns[5],
+                is_interstorm=columns[6]
             )
         )
         del columns
@@ -152,6 +166,14 @@ def plot_time_series(
                           xmax=interval[1],
                           edgecolor='#ffffff00',
                           facecolor=colors['rain_storm'])
+
+    if plot_evapotranspiration:
+        for series in data_intervals:
+            et_axes.plot_date(series.mpl_time,
+                              series.et_mm_h,
+                              'k-',
+                              drawstyle='steps-post')
+            del series
 
     if show_accents:
         for series in data_intervals:
