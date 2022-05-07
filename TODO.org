@@ -1,17 +1,3 @@
- - [X] Add an R script that tabulates PEATCLSM Sy and T
- - [X] Write regression test for implementing PEATCLSM Sy
- - [X] Write regression test for implementing PEATCLSM T
- - [X] Code to fit rise curve for preliminary Sy
- - [X] Preliminary docs for calibration in User Guide
- - [X] Regression test for simulation of rise curve
- - [X] Make PEATCLSM Sy function instantiation more efficient
- - [X] Make rise curve simulation more efficient
- - [X] Design UI to create PEST files from data db for calibration
-   against: rise curve, rise and recession curves
- - [X] Add curvature to data model, CLI and docs
- - [X] Better tests for rise and recession simulations
- - [X] Exit with an error if ET grid does not match rainfall grid
- - [X] Add ET to time series plots
  - [ ] Resolve discrepancy in units between spline and Peatclsm
    transmissivity
  - [ ] Update man page
