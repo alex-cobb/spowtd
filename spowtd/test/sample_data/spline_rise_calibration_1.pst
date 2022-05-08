@@ -1,0 +1,169 @@
+pcf
+* control data
+restart  estimation
+    6   141     1     0     1
+    1     1 double point   1   0   0
+   5.0  2.0   0.3  0.03    10
+  3.0   3.0 0.001  0
+  0.1
+   30  0.01     4     3  0.01     3
+    1     1     1
+* parameter groups
+sy_knot      relative 0.01  0.0  switch  2.0 parabolic
+* parameter data
+sy_knot_1   none relative   NaN  0.01  1    sy_knot    1.0  0.0 1
+sy_knot_2   none relative   NaN  0.01  1    sy_knot    1.0  0.0 1
+sy_knot_3   none relative   NaN  0.01  1    sy_knot    1.0  0.0 1
+sy_knot_4   none relative   NaN  0.01  1    sy_knot    1.0  0.0 1
+sy_knot_5   none relative   NaN  0.01  1    sy_knot    1.0  0.0 1
+sy_knot_6   none relative   NaN  0.01  1    sy_knot    1.0  0.0 1
+* observation groups
+storageobs
+* observation data
+e1    -98.631    1.0   storageobs
+e2    -93.219    1.0   storageobs
+e3    -89.013    1.0   storageobs
+e4    -84.381    1.0   storageobs
+e5    -80.029    1.0   storageobs
+e6    -80.33    1.0   storageobs
+e7    -77.582    1.0   storageobs
+e8    -74.835    1.0   storageobs
+e9    -72.087    1.0   storageobs
+e10    -69.34    1.0   storageobs
+e11    -66.593    1.0   storageobs
+e12    -59.061    1.0   storageobs
+e13    -57.297    1.0   storageobs
+e14    -55.682    1.0   storageobs
+e15    -54.155    1.0   storageobs
+e16    -52.953    1.0   storageobs
+e17    -51.752    1.0   storageobs
+e18    -50.551    1.0   storageobs
+e19    -49.35    1.0   storageobs
+e20    -48.149    1.0   storageobs
+e21    -46.948    1.0   storageobs
+e22    -45.747    1.0   storageobs
+e23    -44.546    1.0   storageobs
+e24    -48.188    1.0   storageobs
+e25    -47.705    1.0   storageobs
+e26    -47.223    1.0   storageobs
+e27    -46.74    1.0   storageobs
+e28    -46.257    1.0   storageobs
+e29    -45.332    1.0   storageobs
+e30    -44.88    1.0   storageobs
+e31    -44.428    1.0   storageobs
+e32    -43.976    1.0   storageobs
+e33    -43.524    1.0   storageobs
+e34    -43.071    1.0   storageobs
+e35    -42.619    1.0   storageobs
+e36    -40.942    1.0   storageobs
+e37    -40.553    1.0   storageobs
+e38    -40.163    1.0   storageobs
+e39    -39.773    1.0   storageobs
+e40    -39.478    1.0   storageobs
+e41    -39.009    1.0   storageobs
+e42    -38.541    1.0   storageobs
+e43    -38.072    1.0   storageobs
+e44    -36.359    1.0   storageobs
+e45    -40.033    1.0   storageobs
+e46    -37.986    1.0   storageobs
+e47    -35.938    1.0   storageobs
+e48    -37.819    1.0   storageobs
+e49    -39.775    1.0   storageobs
+e50    -38.982    1.0   storageobs
+e51    -38.189    1.0   storageobs
+e52    -37.395    1.0   storageobs
+e53    -36.602    1.0   storageobs
+e54    -36.033    1.0   storageobs
+e55    -35.257    1.0   storageobs
+e56    -34.48    1.0   storageobs
+e57    -33.703    1.0   storageobs
+e58    -34.286    1.0   storageobs
+e59    -33.592    1.0   storageobs
+e60    -32.899    1.0   storageobs
+e61    -32.205    1.0   storageobs
+e62    -31.512    1.0   storageobs
+e63    -30.819    1.0   storageobs
+e64    -30.125    1.0   storageobs
+e65    -29.432    1.0   storageobs
+e66    -28.738    1.0   storageobs
+e67    -30.083    1.0   storageobs
+e68    -29.417    1.0   storageobs
+e69    -28.751    1.0   storageobs
+e70    -28.489    1.0   storageobs
+e71    -27.829    1.0   storageobs
+e72    -27.169    1.0   storageobs
+e73    -27.275    1.0   storageobs
+e74    -26.632    1.0   storageobs
+e75    -25.99    1.0   storageobs
+e76    -27.847    1.0   storageobs
+e77    -29.634    1.0   storageobs
+e78    -27.923    1.0   storageobs
+e79    -26.212    1.0   storageobs
+e80    -24.502    1.0   storageobs
+e81    -22.791    1.0   storageobs
+e82    -24.578    1.0   storageobs
+e83    -24.033    1.0   storageobs
+e84    -23.488    1.0   storageobs
+e85    -22.944    1.0   storageobs
+e86    -22.399    1.0   storageobs
+e87    -21.854    1.0   storageobs
+e88    -18.613    1.0   storageobs
+e89    -20.156    1.0   storageobs
+e90    -19.046    1.0   storageobs
+e91    -17.936    1.0   storageobs
+e92    -16.826    1.0   storageobs
+e93    -18.238    1.0   storageobs
+e94    -17.093    1.0   storageobs
+e95    -15.948    1.0   storageobs
+e96    -14.804    1.0   storageobs
+e97    -13.659    1.0   storageobs
+e98    -18.456    1.0   storageobs
+e99    -18.004    1.0   storageobs
+e100    -17.611    1.0   storageobs
+e101    -17.037    1.0   storageobs
+e102    -16.602    1.0   storageobs
+e103    -16.166    1.0   storageobs
+e104    -15.73    1.0   storageobs
+e105    -15.295    1.0   storageobs
+e106    -14.859    1.0   storageobs
+e107    -14.423    1.0   storageobs
+e108    -13.987    1.0   storageobs
+e109    -13.552    1.0   storageobs
+e110    -13.116    1.0   storageobs
+e111    -12.68    1.0   storageobs
+e112    -12.244    1.0   storageobs
+e113    -11.809    1.0   storageobs
+e114    -11.373    1.0   storageobs
+e115    -10.937    1.0   storageobs
+e116    -10.502    1.0   storageobs
+e117    -10.066    1.0   storageobs
+e118    -9.4922    1.0   storageobs
+e119    -9.0411    1.0   storageobs
+e120    -8.59    1.0   storageobs
+e121    -8.139    1.0   storageobs
+e122    -7.4642    1.0   storageobs
+e123    -6.9951    1.0   storageobs
+e124    -6.526    1.0   storageobs
+e125    -6.0569    1.0   storageobs
+e126    -6.3012    1.0   storageobs
+e127    -5.8811    1.0   storageobs
+e128    -5.461    1.0   storageobs
+e129    -5.0409    1.0   storageobs
+e130    -4.6209    1.0   storageobs
+e131    -4.2008    1.0   storageobs
+e132    -3.7807    1.0   storageobs
+e133    -3.3606    1.0   storageobs
+e134    -2.9405    1.0   storageobs
+e135    -2.5205    1.0   storageobs
+e136    -2.1004    1.0   storageobs
+e137    -1.6803    1.0   storageobs
+e138    -1.2602    1.0   storageobs
+e139    -0.84016    1.0   storageobs
+e140    -0.42008    1.0   storageobs
+e141    1.7764e-15    1.0   storageobs
+* model command line
+bash simulate-rise.sh
+* model input/output
+rise_pars.yml.tpl  rise_pars.yml
+rise_observations.ins  rise_observations.yml
+* prior information

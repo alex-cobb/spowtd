@@ -8,8 +8,14 @@ import itertools
 
 import matplotlib.pyplot as plt
 
+import numpy as np
 
-def plot_recession(connection):
+import yaml
+
+import spowtd.simulate_recession as simulate_recession_mod
+
+
+def plot_recession(connection, parameters):
     """Plot master recession curve
 
     """
@@ -46,9 +52,15 @@ def plot_recession(connection):
     FROM average_recession_time""")
     (avg_elapsed_time_d,
      avg_zeta_cm) = zip(*cursor)
+    cursor.close()
 
     axes.plot(avg_elapsed_time_d, avg_zeta_cm)
 
-    cursor.close()
+    if parameters is not None:
+        (_, _,
+         elapsed_time_d) = simulate_recession_mod.simulate_recession(
+            connection, parameters)
+        axes.plot(elapsed_time_d, avg_zeta_cm, 'k--')
+
     plt.show()
     return 0

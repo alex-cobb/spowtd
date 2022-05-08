@@ -58,6 +58,15 @@ For development, you may additionally want:
 
 ## Revision history
 
+Version 0.4.0 - 2022-05-07:
+ - Add curvature to data model, CLI and docs.
+ - Implement simulation of recession curves.
+ - Load evapotranspiration and add to time series plots.
+ - Implement generation of template PEST files for calibration.
+ - Add a ceiling parameter to PEATCLSM transmissivity.
+ - Make PEATCLSM specific yield instantiation and rise curve
+   simulation more efficient.
+
 Version 0.3.0 - 2022-04-25:
  - Preliminary implementations of hydraulic functions.
  - Plotting of hydraulic functions.

@@ -78,12 +78,12 @@ def classified_connection(loaded_connection):
     yield loaded_connection
 
 
-def get_sample_file_path(file_type, sample):
+def get_sample_file_path(file_type, sample, suffix='txt'):
     """Return path to a sample file
 
     """
     return os.path.join(SAMPLE_DATA_DIR,
-                        '{}_{}.txt'.format(file_type, sample))
+                        '{}_{}.{}'.format(file_type, sample, suffix))
 
 
 def get_parameter_file_path(file_type):

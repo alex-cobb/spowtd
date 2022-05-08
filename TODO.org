@@ -1,12 +1,3 @@
- - [X] Add an R script that tabulates PEATCLSM Sy and T
- - [X] Write regression test for implementing PEATCLSM Sy
- - [X] Write regression test for implementing PEATCLSM T
- - [X] Code to fit rise curve for preliminary Sy
- - [X] Preliminary docs for calibration in User Guide
- - [ ] Regression test for simulation of rise curve
- - [ ] Make PEATCLSM Sy function instantiation more efficient
- - [ ] Make rise curve simulation more efficient
- - [ ] Code to jointly fit rise and recession curves (using PEST)
  - [ ] Resolve discrepancy in units between spline and Peatclsm
    transmissivity
  - [ ] Update man page
@@ -14,3 +5,7 @@
  - [ ] Trim test time series to short intervals
  - [ ] Don't create an SQLite db if it doesn't exist for commands for
    which this is inappropriate
+ - [ ] Don't create SQLite db if load fails (create in memory, then
+   dump)
+ - [ ] Implement generation of PEST files for calibration against rise
+   and recession intervals

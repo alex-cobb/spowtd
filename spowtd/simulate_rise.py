@@ -4,7 +4,6 @@
 
 """
 
-
 import numpy as np
 
 import scipy.integrate as integrate_mod
@@ -66,10 +65,9 @@ def compute_rise_curve(specific_yield, zeta_grid_mm,
     dW_mm[0] = 0.0
     i = 1
     for zeta_mm in zeta_grid_mm[1:]:
-        dW_mm[i] = integrate_mod.quad(
-            specific_yield,
+        dW_mm[i] = specific_yield.integrate(
             zeta_grid_mm[i - 1],
-            zeta_grid_mm[i])[0]
+            zeta_grid_mm[i])
         i += 1
     W_mm = np.cumsum(dW_mm)
     W_mm += mean_storage_mm - W_mm.mean()

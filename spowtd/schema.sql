@@ -70,6 +70,18 @@ CREATE TABLE rainfall_intensity (
 );
 
 
+CREATE TABLE evapotranspiration (
+  from_epoch integer NOT NULL
+    REFERENCES grid_time (epoch)
+    CHECK (from_epoch < thru_epoch),
+  thru_epoch integer NOT NULL
+    REFERENCES grid_time (epoch)
+    CHECK (from_epoch < thru_epoch),
+  evapotranspiration_mm_h double precision NOT NULL,
+  PRIMARY KEY (from_epoch)
+);
+
+
 CREATE TABLE water_level (
   epoch integer NOT NULL
     REFERENCES grid_time (epoch),
@@ -161,6 +173,15 @@ CREATE TABLE recession_interval_zeta (
   zeta_number integer NOT NULL REFERENCES discrete_zeta(zeta_number),
   mean_crossing_time interval NOT NULL,
   PRIMARY KEY (start_epoch, zeta_number)
+);
+
+
+CREATE TABLE curvature (
+  curvature_m_km2 double precision NOT NULL,
+  -- Singleton
+  is_valid integer NOT NULL PRIMARY KEY
+    CHECK (is_valid = 1)
+    DEFAULT 1
 );
 
 
