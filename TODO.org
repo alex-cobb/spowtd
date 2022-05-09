@@ -7,14 +7,5 @@
    which this is inappropriate
  - [ ] Don't create SQLite db if load fails (create in memory, then
    dump)
- - [X] Fix regression tests on PEST control files to work around
-   floating-point precision issues
-   - This is a headache.  We are comparing text files, and the
-     floating-point values in the "observation data" section can
-     differ across machines.  We could verify that the other sections
-     of the files match, and then parse and compare floating-point
-     values in this section?
-   - Using a %f formating operator (instead of %g) might resolve the
-     issue?
  - [ ] Use fixtures to speed up tests that require assembly of rise
    and recession curves
