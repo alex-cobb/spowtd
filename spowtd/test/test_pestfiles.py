@@ -6,6 +6,8 @@ import io
 
 import pytest
 
+import numpy as np
+
 import spowtd.pestfiles as pestfiles_mod
 import spowtd.recession as recession_mod
 import spowtd.rise as rise_mod
@@ -190,16 +192,27 @@ def test_generate_rise_pst(classified_connection,
             parameter_file=parameter_file,
             outfile_type='pst',
             configuration_file=None,
-            outfile=outfile,
-            precision=5)
+            outfile=outfile)
     with open(
             conftest.get_sample_file_path(
                 '{}_rise_calibration'.format(parameterization),
                 sample,
                 'pst'),
             'rt') as ref_file:
-        assert (outfile.getvalue().splitlines() ==
-                ref_file.read().splitlines())
+        out_lines = outfile.getvalue().splitlines()
+        ref_lines = ref_file.read().splitlines()
+        obs_start = ref_lines.index('* observation data')
+        assert ref_lines[obs_start] == '* observation data'
+        assert out_lines[:obs_start + 1] == ref_lines[:obs_start + 1]
+        obs_end = ref_lines.index('* model command line')
+        assert ref_lines[obs_end] == '* model command line'
+        assert out_lines[obs_end:] == ref_lines[obs_end:]
+        (ref_obs_values,
+         ref_obs_lines) = extract_observations(ref_lines)
+        (out_obs_values,
+         out_obs_lines) = extract_observations(out_lines)
+        assert ref_obs_lines == out_obs_lines
+        assert np.allclose(ref_obs_values, out_obs_values)
 
 
 @pytest.mark.parametrize(
@@ -295,13 +308,45 @@ def test_generate_curves_pst(classified_connection,
             parameter_file=parameter_file,
             outfile_type='pst',
             configuration_file=None,
-            outfile=outfile,
-            precision=5)
+            outfile=outfile)
     with open(
             conftest.get_sample_file_path(
                 '{}_curves_calibration'.format(parameterization),
                 sample,
                 'pst'),
             'rt') as ref_file:
-        assert (outfile.getvalue().splitlines() ==
-                ref_file.read().splitlines())
+        out_lines = outfile.getvalue().splitlines()
+        ref_lines = ref_file.read().splitlines()
+        obs_start = ref_lines.index('* observation data')
+        assert ref_lines[obs_start] == '* observation data'
+        assert out_lines[:obs_start + 1] == ref_lines[:obs_start + 1]
+        obs_end = ref_lines.index('* model command line')
+        assert ref_lines[obs_end] == '* model command line'
+        assert out_lines[obs_end:] == ref_lines[obs_end:]
+        (ref_obs_values,
+         ref_obs_lines) = extract_observations(ref_lines)
+        (out_obs_values,
+         out_obs_lines) = extract_observations(out_lines)
+        assert ref_obs_lines == out_obs_lines
+        assert np.allclose(ref_obs_values, out_obs_values)
+
+
+def extract_observations(pestfile_lines):
+    """Extract observations from a PEST control file
+
+    Splits the observation section of a PEST control file and returns
+    a Numpy array of floating-point observation values and a list of
+    lists of whitespace-separated items from each row in the
+    observation section (excluding the observation values), in that
+    order.
+
+    """
+    obs_start = pestfile_lines.index('* observation data')
+    obs_end = pestfile_lines.index('* model command line')
+    observation_rows = [
+        line.strip().split() for line in
+        pestfile_lines[obs_start + 1:obs_end]]
+    return (
+        np.array(
+            [float(row[1]) for row in observation_rows], dtype='float64'),
+        [row[:1] + row[2:] for row in observation_rows])

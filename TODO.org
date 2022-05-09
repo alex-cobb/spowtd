@@ -7,7 +7,7 @@
    which this is inappropriate
  - [ ] Don't create SQLite db if load fails (create in memory, then
    dump)
- - [ ] Fix regression tests on PEST control files to work around
+ - [X] Fix regression tests on PEST control files to work around
    floating-point precision issues
    - This is a headache.  We are comparing text files, and the
      floating-point values in the "observation data" section can
