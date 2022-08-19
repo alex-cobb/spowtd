@@ -66,7 +66,7 @@ def generate_rise_tpl_file(connection, parameters, configuration,
                   for value in
                   parameters['specific_yield']['zeta_knots_mm']]
         lines += ['  sy_knots:  # Specific yield, dimensionless']
-        lines += ['    - @s{}@'.format(str(i).ljust(23))
+        lines += ['    - @sy_knot_{}@'.format(str(i).ljust(16))
                   for i in
                   range(1,
                         len(parameters['specific_yield']['sy_knots']) + 1)]
@@ -224,7 +224,7 @@ def generate_curves_tpl_file(connection, parameters, configuration,
                   for value in
                   parameters['specific_yield']['zeta_knots_mm']]
         lines += ['  sy_knots:  # Specific yield, dimensionless']
-        lines += ['    - @s{}@'.format(str(i).ljust(23))
+        lines += ['    - @sy_knot_{}@'.format(str(i).ljust(16))
                   for i in
                   range(1,
                         len(parameters['specific_yield']['sy_knots']) + 1)]

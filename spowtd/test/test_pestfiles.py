@@ -38,12 +38,12 @@ specific_yield:
     - 38.78
     - 168.3
   sy_knots:  # Specific yield, dimensionless
-    - @s1                      @
-    - @s2                      @
-    - @s3                      @
-    - @s4                      @
-    - @s5                      @
-    - @s6                      @
+    - @sy_knot_1               @
+    - @sy_knot_2               @
+    - @sy_knot_3               @
+    - @sy_knot_4               @
+    - @sy_knot_5               @
+    - @sy_knot_6               @
 transmissivity:
   type: spline
   zeta_knots_mm:
@@ -80,12 +80,12 @@ specific_yield:
     - 38.78
     - 168.3
   sy_knots:  # Specific yield, dimensionless
-    - @s1                      @
-    - @s2                      @
-    - @s3                      @
-    - @s4                      @
-    - @s5                      @
-    - @s6                      @
+    - @sy_knot_1               @
+    - @sy_knot_2               @
+    - @sy_knot_3               @
+    - @sy_knot_4               @
+    - @sy_knot_5               @
+    - @sy_knot_6               @
 transmissivity:
   type: spline
   zeta_knots_mm:
