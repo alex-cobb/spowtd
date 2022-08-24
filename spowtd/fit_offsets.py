@@ -42,9 +42,10 @@ def get_series_time_offsets(series_list, head_step):
     # knows which offsets go with which series, but we also need to
     # sort by initial head; so, retain a mapping from the series_id
     # we use for finding offsets to index in sorted_list
-    dec = sorted(((t - t.min(), H, index) for index, (t, H)
-                  in enumerate(series_list)),
-                 key=lambda t_H_index: t_H_index[1][0])
+    dec = sorted(
+        ((t - t.min(), H, index) for index, (t, H) in enumerate(series_list)),
+        key=lambda t_H_index: t_H_index[1][0],
+    )
     sorted_list = []
     index_mapping = {}
     for new_index, (t, H, original_index) in enumerate(dec):
@@ -52,21 +53,22 @@ def get_series_time_offsets(series_list, head_step):
         index_mapping[new_index] = original_index
     del dec
     head_mapping = build_head_mapping(sorted_list, head_step)
-    series_at_head = dict((head, set(series_id for
-                                     series_id, t_mean in value))
-                          for head, value
-                          in list(head_mapping.items()))
+    series_at_head = dict(
+        (head, set(series_id for series_id, t_mean in value))
+        for head, value in list(head_mapping.items())
+    )
     connected_components = get_connected_components(series_at_head)
     if len(connected_components) > 1:
         LOG.info(
             '%s connected sets of head of sizes '
             '%s; will keep only largest component.',
             len(connected_components),
-            tuple(len(cc) for cc in
-                  connected_components))
+            tuple(len(cc) for cc in connected_components),
+        )
 
-    head_mappings = split_mapping_by_keys(head_mapping,
-                                          connected_components[:1])
+    head_mappings = split_mapping_by_keys(
+        head_mapping, connected_components[:1]
+    )
     assert len(head_mappings) == 1
     head_mapping = head_mappings[0]
     del head_mappings
@@ -78,9 +80,10 @@ def get_series_time_offsets(series_list, head_step):
     # indices
     output_mapping = {}
     for head_id, crossings in list(head_mapping.items()):
-        output_mapping[head_id] = [(index_mapping[series_id],
-                                    t_mean) for series_id, t_mean
-                                   in crossings]
+        output_mapping[head_id] = [
+            (index_mapping[series_id], t_mean)
+            for series_id, t_mean in crossings
+        ]
     return (original_indices, offsets, output_mapping)
 
 
@@ -103,8 +106,7 @@ def build_head_mapping(series, head_step=1):
             all_times.setdefault(head_id, []).append(time)
         for head_id, time in list(all_times.items()):
             t_mean = np.mean(time)
-            head_mapping.setdefault(head_id, []).append((series_id,
-                                                         t_mean))
+            head_mapping.setdefault(head_id, []).append((series_id, t_mean))
     return head_mapping
 
 
@@ -135,20 +137,23 @@ def find_offsets(head_mapping):
             del head_mapping[head_id]
     # Assemble mapping of series ids to row numbers for the
     # least-squares problem
-    series_ids = ((series_id for series_id, t_mean in seq)
-                  for seq in list(head_mapping.values()))
+    series_ids = (
+        (series_id for series_id, t_mean in seq)
+        for seq in list(head_mapping.values())
+    )
     series_ids = sorted(set().union(*series_ids))
-    series_indices = dict(zip(series_ids,
-                              range(len(series_ids))))
+    series_indices = dict(zip(series_ids, range(len(series_ids))))
     # Reference series corresponds to the highest series id; it
     #   has the largest initial head, because we sorted them
     reference_index = max(series_ids)
     LOG.info('Reference index: %s', reference_index)
-    number_of_equations = sum(len(series_at_head) for series_at_head
-                              in list(head_mapping.values()))
+    number_of_equations = sum(
+        len(series_at_head) for series_at_head in list(head_mapping.values())
+    )
     number_of_unknowns = len(series_indices) - 1
-    LOG.info('%s equations, %s unknowns',
-             number_of_equations, number_of_unknowns)
+    LOG.info(
+        '%s equations, %s unknowns', number_of_equations, number_of_unknowns
+    )
     A = np.zeros((number_of_equations, number_of_unknowns))
     b = np.zeros((number_of_equations,))
     row_template = np.zeros((number_of_unknowns,))
@@ -157,9 +162,10 @@ def find_offsets(head_mapping):
         row_template[:] = 0
         sids, times = list(zip(*series_at_head))
         number_of_series_at_head = len(sids)
-        indices = [series_indices[index] for index in sids
-                   if index != reference_index]
-        row_template[indices] = 1. / number_of_series_at_head
+        indices = [
+            series_indices[index] for index in sids if index != reference_index
+        ]
+        row_template[indices] = 1.0 / number_of_series_at_head
         mean_time = np.mean(times)
         for series_id, t in series_at_head:
             A[row_index] = row_template
@@ -171,8 +177,7 @@ def find_offsets(head_mapping):
             row_index += 1
     assert row_index == number_of_equations, row_index
     ATA = np.dot(A.transpose(), A)
-    assert ATA.shape == (number_of_unknowns,
-                         number_of_unknowns), ATA.shape
+    assert ATA.shape == (number_of_unknowns, number_of_unknowns), ATA.shape
     ATd = np.dot(A.transpose(), b)
     offsets = linalg_mod.solve(ATA, ATd)  # pylint: disable=E1101
     # this was the boundary condition, zero offset for
@@ -180,8 +185,9 @@ def find_offsets(head_mapping):
     offsets = np.concatenate((offsets, [0]))
     # offsets are by index, but reverse mapping is trivial
     # because series ids are sorted
-    assert len(series_ids) == len(offsets), \
-        '{} != {}'.format(len(series_ids), len(offsets))
+    assert len(series_ids) == len(offsets), '{} != {}'.format(
+        len(series_ids), len(offsets)
+    )
     return (series_ids, offsets)
 
 
@@ -194,8 +200,13 @@ def split_mapping_by_keys(mapping, key_lists):
     """
     mappings = []
     for seq in key_lists:
-        mappings.append(dict((head_id, value) for head_id, value
-                             in list(mapping.items()) if head_id in seq))
+        mappings.append(
+            dict(
+                (head_id, value)
+                for head_id, value in list(mapping.items())
+                if head_id in seq
+            )
+        )
     return mappings
 
 
@@ -213,17 +224,19 @@ def get_connected_components(head_mapping):
     """
     groups = {}
     for head_id, series_at_head in list(head_mapping.items()):
-        matches = [keys for keys, group in list(groups.items())
-                   if not series_at_head.isdisjoint(group)]
+        matches = [
+            keys
+            for keys, group in list(groups.items())
+            if not series_at_head.isdisjoint(group)
+        ]
         new_keys = (head_id,) + sum(matches, ())
         others = [groups.pop(keys) for keys in matches]
         new_group = series_at_head.union(*others)
         groups[new_keys] = new_group
-    connected_components = sorted(list(groups.keys()),
-                                  key=len, reverse=True)
+    connected_components = sorted(list(groups.keys()), key=len, reverse=True)
     # sanity check: union should include all head_id ids
-    assert (sum(len(cc) for cc in connected_components) ==
-            len(head_mapping))
-    assert (set().union(*[set(cc) for cc in connected_components]) ==
-            set(head_mapping))
+    assert sum(len(cc) for cc in connected_components) == len(head_mapping)
+    assert set().union(*[set(cc) for cc in connected_components]) == set(
+        head_mapping
+    )
     return connected_components

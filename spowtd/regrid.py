@@ -31,8 +31,9 @@ def regrid(x, y, y_step, interpolant='linear'):
     #   (y_i+1, y_i) depending on which is bigger.
     #
     if len(x) != len(y):
-        raise ValueError('arguments lengths unequal: '
-                         '{} != {}'.format(len(x), len(y)))
+        raise ValueError(
+            'arguments lengths unequal: ' '{} != {}'.format(len(x), len(y))
+        )
     # Don't use "if x" here, this is an ndarray
     if len(x) == 0:  # pylint: disable=len-as-condition
         return
@@ -48,17 +49,19 @@ def regrid(x, y, y_step, interpolant='linear'):
         else:
             targets = reversed(list(range(stop, start)))
         for y_target in targets:
-            x_target = brentq(lambda x, y=y_target: spline(x) - y,
-                              x[i], x[i + 1])
+            x_target = brentq(
+                lambda x, y=y_target: spline(x) - y, x[i], x[i + 1]
+            )
             yield (y_target, x_target)
 
 
 if __name__ == '__main__':
-    ys = np.array([2.0, 5.2, -1.3, -1.2, 10.])
+    ys = np.array([2.0, 5.2, -1.3, -1.2, 10.0])
     xs = list(range(len(ys)))
-    ys_step = 1.
+    ys_step = 1.0
     new_points = list(regrid(xs, ys, ys_step, interpolant='nearest'))
     import matplotlib.pyplot as plt
+
     plt.plot(xs, ys, 'bo-')
     yp, xp = list(zip(*new_points))
     plt.plot(xp, yp, 'ro-')

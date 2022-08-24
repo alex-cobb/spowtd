@@ -20,19 +20,17 @@ def create_specific_yield_function(parameters):
     """
     if 'type' not in parameters:
         raise ValueError(
-            '"type" field is required in parameters; got {}'
-            .format(parameters))
+            '"type" field is required in parameters; got {}'.format(parameters)
+        )
     sy_type = parameters.pop('type', None)
-    return {
-        'peatclsm': PeatclsmSpecificYield,
-        'spline': SplineSpecificYield
-    }[sy_type](**parameters)
+    return {'peatclsm': PeatclsmSpecificYield, 'spline': SplineSpecificYield}[
+        sy_type
+    ](**parameters)
 
 
 class SpecificYield:
-    """Base class for specific yield
+    """Base class for specific yield"""
 
-    """
     def __init__(self, spline):
         self._spline = spline
 
@@ -45,8 +43,7 @@ class SpecificYield:
         This produces the rise curve.
 
         """
-        return self._spline.integrate(
-            lo_water_level_mm, hi_water_level_mm)
+        return self._spline.integrate(lo_water_level_mm, hi_water_level_mm)
 
 
 class SplineSpecificYield(SpecificYield):
@@ -56,6 +53,7 @@ class SplineSpecificYield(SpecificYield):
     sy_knots: Specific yield values at those water levels
 
     """
+
     __slots__ = ['zeta_knots_mm', 'sy_knots', '_spline']
 
     def __init__(self, zeta_knots_mm, sy_knots):
@@ -64,8 +62,8 @@ class SplineSpecificYield(SpecificYield):
         SpecificYield.__init__(
             self,
             spline_mod.Spline.from_points(
-                zip(zeta_knots_mm, sy_knots),
-                order=3)
+                zip(zeta_knots_mm, sy_knots), order=3
+            ),
         )
 
 
@@ -78,8 +76,16 @@ class PeatclsmSpecificYield(SpecificYield):
     psi_s:  air entry pressure, m
 
     """
-    __slots__ = ['sd', 'theta_s', 'b', 'psi_s', '_spline',
-                 'zeta_knots_mm', 'sy_knots']
+
+    __slots__ = [
+        'sd',
+        'theta_s',
+        'b',
+        'psi_s',
+        '_spline',
+        'zeta_knots_mm',
+        'sy_knots',
+    ]
 
     def __init__(self, sd, theta_s, b, psi_s):
         self.sd = sd
@@ -88,15 +94,10 @@ class PeatclsmSpecificYield(SpecificYield):
         self.psi_s = psi_s
         self.zeta_knots_mm = None
         self.sy_knots = None
-        SpecificYield.__init__(
-            self,
-            self._construct_spline()
-        )
+        SpecificYield.__init__(self, self._construct_spline())
 
     def _construct_spline(self):
-        """Construct specific yield spline
-
-        """
+        """Construct specific yield spline"""
         # Calculate the specific yield (Dettmann and Bechtold 2015,
         # Hydrological Processes)
         zl_ = np.linspace(-1, 1, 201)
@@ -105,13 +106,12 @@ class PeatclsmSpecificYield(SpecificYield):
         Sy1_soil[:] = np.NaN
         self.get_Sy_soil(Sy1_soil, zl_, zu_)
         zeta_knots_m = 0.5 * (zu_ + zl_)
-        Sy1_surface = scipy.stats.norm.cdf(
-            zeta_knots_m, loc=0, scale=self.sd)
+        Sy1_surface = scipy.stats.norm.cdf(zeta_knots_m, loc=0, scale=self.sd)
         self.sy_knots = Sy1_soil + Sy1_surface
         self.zeta_knots_mm = zeta_knots_m * 1000
         spline = spline_mod.Spline.from_points(
-            zip(self.zeta_knots_mm, self.sy_knots),
-            order=1)
+            zip(self.zeta_knots_mm, self.sy_knots), order=1
+        )
         assert np.allclose(spline(self.zeta_knots_mm), self.sy_knots)
         return spline
 

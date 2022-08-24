@@ -15,7 +15,11 @@ from spowtd.test import conftest
 
 
 reference_text = {
-    ('rise', 'tpl', 'peatclsm'): """ptf @
+    (
+        'rise',
+        'tpl',
+        'peatclsm',
+    ): """ptf @
 specific_yield:
   type: peatclsm
   sd: @sd                      @
@@ -27,7 +31,11 @@ transmissivity:
   Ksmacz0: 7.3  # m/s
   alpha: 3  # dimensionless
   zeta_max_cm: 1.0""",
-    ('rise', 'tpl', 'spline'): """ptf @
+    (
+        'rise',
+        'tpl',
+        'spline',
+    ): """ptf @
 specific_yield:
   type: spline
   zeta_knots_mm:
@@ -57,7 +65,11 @@ transmissivity:
     - 6577.0
     - 8430.0
   minimum_transmissivity_m2_d: 7.442  # Minimum transmissivity, m2 /d""",
-    ('curves', 'tpl', 'peatclsm'): """ptf @
+    (
+        'curves',
+        'tpl',
+        'peatclsm',
+    ): """ptf @
 specific_yield:
   type: peatclsm
   sd: @sd                      @
@@ -69,7 +81,11 @@ transmissivity:
   Ksmacz0: @Ksmacz0                 @  # m/s
   alpha: @alpha                   @  # dimensionless
   zeta_max_cm: 1.0""",
-    ('curves', 'tpl', 'spline'): """ptf @
+    (
+        'curves',
+        'tpl',
+        'spline',
+    ): """ptf @
 specific_yield:
   type: spline
   zeta_knots_mm:
@@ -98,235 +114,230 @@ transmissivity:
     - @K_knot_2                @
     - @K_knot_3                @
     - @K_knot_4                @
-  minimum_transmissivity_m2_d: @T_min                   @  # Minimum transmissivity, m2 /d"""}
+  minimum_transmissivity_m2_d: @T_min                   @  # Minimum transmissivity, m2 /d""",
+}
 
 
 # A way of identifying the sample:
 #   mapping from number of distinct zetas to sample number
-SAMPLE_NUMBER = {141: 1,
-                 204: 2}
+SAMPLE_NUMBER = {141: 1, 204: 2}
 
 
 @pytest.mark.parametrize(
     ('parameterization', 'reference_file_contents'),
-    [('peatclsm', reference_text[('rise', 'tpl', 'peatclsm')]),
-     ('spline', reference_text[('rise', 'tpl', 'spline')])])
-def test_generate_rise_tpl(classified_connection,
-                           parameterization,
-                           reference_file_contents):
-    """Generation of template files for rise curve calibration
-
-    """
+    [
+        ('peatclsm', reference_text[('rise', 'tpl', 'peatclsm')]),
+        ('spline', reference_text[('rise', 'tpl', 'spline')]),
+    ],
+)
+def test_generate_rise_tpl(
+    classified_connection, parameterization, reference_file_contents
+):
+    """Generation of template files for rise curve calibration"""
     outfile = io.StringIO()
     with open(
-            conftest.get_parameter_file_path(parameterization),
-            'rt') as parameter_file:
+        conftest.get_parameter_file_path(parameterization), 'rt'
+    ) as parameter_file:
         pestfiles_mod.generate_rise_pestfiles(
             classified_connection,
             parameter_file=parameter_file,
             outfile_type='tpl',
             configuration_file=None,
-            outfile=outfile)
-    assert (outfile.getvalue().splitlines() ==
-            reference_file_contents.splitlines())
+            outfile=outfile,
+        )
+    assert (
+        outfile.getvalue().splitlines() == reference_file_contents.splitlines()
+    )
 
 
 def test_generate_rise_ins(classified_connection):
-    """Generation of instruction files for rise curve calibration
-
-    """
+    """Generation of instruction files for rise curve calibration"""
     # XXX Use a fixture
-    rise_mod.find_rise_offsets(
-        classified_connection)
+    rise_mod.find_rise_offsets(classified_connection)
     cursor = classified_connection.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
     SELECT count(distinct zeta_number)
-    FROM rising_interval_zeta""")
+    FROM rising_interval_zeta"""
+    )
     n_zeta = cursor.fetchone()[0]
     cursor.close()
     assert n_zeta in SAMPLE_NUMBER
     sample = SAMPLE_NUMBER[n_zeta]
     outfile = io.StringIO()
     with open(
-            # Parameterization doesn't matter for ins file
-            conftest.get_parameter_file_path('peatclsm'),
-            'rt') as parameter_file:
+        # Parameterization doesn't matter for ins file
+        conftest.get_parameter_file_path('peatclsm'),
+        'rt',
+    ) as parameter_file:
         pestfiles_mod.generate_rise_pestfiles(
             classified_connection,
             parameter_file=parameter_file,
             outfile_type='ins',
             configuration_file=None,
-            outfile=outfile)
+            outfile=outfile,
+        )
     with open(
-            conftest.get_sample_file_path('rise_calibration',
-                                          sample,
-                                          'ins'),
-            'rt') as ref_file:
-        assert (outfile.getvalue().splitlines() ==
-                ref_file.read().splitlines())
+        conftest.get_sample_file_path('rise_calibration', sample, 'ins'), 'rt'
+    ) as ref_file:
+        assert outfile.getvalue().splitlines() == ref_file.read().splitlines()
 
 
-@pytest.mark.parametrize('parameterization',
-                         ['peatclsm', 'spline'])
-def test_generate_rise_pst(classified_connection,
-                           parameterization):
-    """Generation of control files for rise curve calibration
-
-    """
+@pytest.mark.parametrize('parameterization', ['peatclsm', 'spline'])
+def test_generate_rise_pst(classified_connection, parameterization):
+    """Generation of control files for rise curve calibration"""
     # XXX Use a fixture
-    rise_mod.find_rise_offsets(
-        classified_connection)
+    rise_mod.find_rise_offsets(classified_connection)
     cursor = classified_connection.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
     SELECT count(distinct zeta_number)
-    FROM rising_interval_zeta""")
+    FROM rising_interval_zeta"""
+    )
     n_zeta = cursor.fetchone()[0]
     cursor.close()
     sample = SAMPLE_NUMBER[n_zeta]
     outfile = io.StringIO()
     with open(
-            conftest.get_parameter_file_path(parameterization),
-            'rt') as parameter_file:
+        conftest.get_parameter_file_path(parameterization), 'rt'
+    ) as parameter_file:
         pestfiles_mod.generate_rise_pestfiles(
             classified_connection,
             parameter_file=parameter_file,
             outfile_type='pst',
             configuration_file=None,
-            outfile=outfile)
+            outfile=outfile,
+        )
     with open(
-            conftest.get_sample_file_path(
-                '{}_rise_calibration'.format(parameterization),
-                sample,
-                'pst'),
-            'rt') as ref_file:
+        conftest.get_sample_file_path(
+            '{}_rise_calibration'.format(parameterization), sample, 'pst'
+        ),
+        'rt',
+    ) as ref_file:
         out_lines = outfile.getvalue().splitlines()
         ref_lines = ref_file.read().splitlines()
         obs_start = ref_lines.index('* observation data')
         assert ref_lines[obs_start] == '* observation data'
-        assert out_lines[:obs_start + 1] == ref_lines[:obs_start + 1]
+        assert out_lines[: obs_start + 1] == ref_lines[: obs_start + 1]
         obs_end = ref_lines.index('* model command line')
         assert ref_lines[obs_end] == '* model command line'
         assert out_lines[obs_end:] == ref_lines[obs_end:]
-        (ref_obs_values,
-         ref_obs_lines) = extract_observations(ref_lines)
-        (out_obs_values,
-         out_obs_lines) = extract_observations(out_lines)
+        (ref_obs_values, ref_obs_lines) = extract_observations(ref_lines)
+        (out_obs_values, out_obs_lines) = extract_observations(out_lines)
         assert ref_obs_lines == out_obs_lines
         assert np.allclose(ref_obs_values, out_obs_values)
 
 
 @pytest.mark.parametrize(
     ('parameterization', 'reference_file_contents'),
-    [('peatclsm', reference_text[('curves', 'tpl', 'peatclsm')]),
-     ('spline', reference_text[('curves', 'tpl', 'spline')])])
-def test_generate_curves_tpl(classified_connection,
-                             parameterization,
-                             reference_file_contents):
-    """Generation of template files for master curves calibration
-
-    """
+    [
+        ('peatclsm', reference_text[('curves', 'tpl', 'peatclsm')]),
+        ('spline', reference_text[('curves', 'tpl', 'spline')]),
+    ],
+)
+def test_generate_curves_tpl(
+    classified_connection, parameterization, reference_file_contents
+):
+    """Generation of template files for master curves calibration"""
     outfile = io.StringIO()
     with open(
-            conftest.get_parameter_file_path(parameterization),
-            'rt') as parameter_file:
+        conftest.get_parameter_file_path(parameterization), 'rt'
+    ) as parameter_file:
         pestfiles_mod.generate_curves_pestfiles(
             classified_connection,
             parameter_file=parameter_file,
             outfile_type='tpl',
             configuration_file=None,
-            outfile=outfile)
-    assert (outfile.getvalue().splitlines() ==
-            reference_file_contents.splitlines())
+            outfile=outfile,
+        )
+    assert (
+        outfile.getvalue().splitlines() == reference_file_contents.splitlines()
+    )
 
 
 def test_generate_curves_ins(classified_connection):
-    """Generation of instruction files for master curves calibration
-
-    """
+    """Generation of instruction files for master curves calibration"""
     # XXX Use a fixture
-    rise_mod.find_rise_offsets(
-        classified_connection)
-    recession_mod.find_recession_offsets(
-        classified_connection)
+    rise_mod.find_rise_offsets(classified_connection)
+    recession_mod.find_recession_offsets(classified_connection)
     cursor = classified_connection.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
     SELECT count(distinct zeta_number)
-    FROM rising_interval_zeta""")
+    FROM rising_interval_zeta"""
+    )
     n_zeta = cursor.fetchone()[0]
     cursor.close()
     assert n_zeta in SAMPLE_NUMBER
     sample = SAMPLE_NUMBER[n_zeta]
     outfile = io.StringIO()
     with open(
-            # Parameterization doesn't matter for ins file
-            conftest.get_parameter_file_path('peatclsm'),
-            'rt') as parameter_file:
+        # Parameterization doesn't matter for ins file
+        conftest.get_parameter_file_path('peatclsm'),
+        'rt',
+    ) as parameter_file:
         pestfiles_mod.generate_curves_pestfiles(
             classified_connection,
             parameter_file=parameter_file,
             outfile_type='ins',
             configuration_file=None,
-            outfile=outfile)
+            outfile=outfile,
+        )
     with open(
-            conftest.get_sample_file_path('curves_calibration',
-                                          sample,
-                                          'ins'),
-            'rt') as ref_file:
-        assert (outfile.getvalue().splitlines() ==
-                ref_file.read().splitlines())
+        conftest.get_sample_file_path('curves_calibration', sample, 'ins'),
+        'rt',
+    ) as ref_file:
+        assert outfile.getvalue().splitlines() == ref_file.read().splitlines()
 
 
-@pytest.mark.parametrize('parameterization',
-                         ['peatclsm', 'spline'])
-def test_generate_curves_pst(classified_connection,
-                             parameterization):
-    """Generation of control files for curves curve calibration
-
-    """
+@pytest.mark.parametrize('parameterization', ['peatclsm', 'spline'])
+def test_generate_curves_pst(classified_connection, parameterization):
+    """Generation of control files for curves curve calibration"""
     # XXX Use a fixture
-    rise_mod.find_rise_offsets(
-        classified_connection)
-    recession_mod.find_recession_offsets(
-        classified_connection)
+    rise_mod.find_rise_offsets(classified_connection)
+    recession_mod.find_recession_offsets(classified_connection)
     cursor = classified_connection.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
     SELECT count(distinct zeta_number)
-    FROM rising_interval_zeta""")
+    FROM rising_interval_zeta"""
+    )
     n_rise_zeta = cursor.fetchone()[0]
-    cursor.execute("""
+    cursor.execute(
+        """
     SELECT count(distinct zeta_number)
-    FROM recession_interval_zeta""")
+    FROM recession_interval_zeta"""
+    )
     n_recession_zeta = cursor.fetchone()[0]
     cursor.close()
     sample = SAMPLE_NUMBER[n_rise_zeta]
     outfile = io.StringIO()
     with open(
-            conftest.get_parameter_file_path(parameterization),
-            'rt') as parameter_file:
+        conftest.get_parameter_file_path(parameterization), 'rt'
+    ) as parameter_file:
         pestfiles_mod.generate_curves_pestfiles(
             classified_connection,
             parameter_file=parameter_file,
             outfile_type='pst',
             configuration_file=None,
-            outfile=outfile)
+            outfile=outfile,
+        )
     with open(
-            conftest.get_sample_file_path(
-                '{}_curves_calibration'.format(parameterization),
-                sample,
-                'pst'),
-            'rt') as ref_file:
+        conftest.get_sample_file_path(
+            '{}_curves_calibration'.format(parameterization), sample, 'pst'
+        ),
+        'rt',
+    ) as ref_file:
         out_lines = outfile.getvalue().splitlines()
         ref_lines = ref_file.read().splitlines()
         obs_start = ref_lines.index('* observation data')
         assert ref_lines[obs_start] == '* observation data'
-        assert out_lines[:obs_start + 1] == ref_lines[:obs_start + 1]
+        assert out_lines[: obs_start + 1] == ref_lines[: obs_start + 1]
         obs_end = ref_lines.index('* model command line')
         assert ref_lines[obs_end] == '* model command line'
         assert out_lines[obs_end:] == ref_lines[obs_end:]
-        (ref_obs_values,
-         ref_obs_lines) = extract_observations(ref_lines)
-        (out_obs_values,
-         out_obs_lines) = extract_observations(out_lines)
+        (ref_obs_values, ref_obs_lines) = extract_observations(ref_lines)
+        (out_obs_values, out_obs_lines) = extract_observations(out_lines)
         assert ref_obs_lines == out_obs_lines
         assert np.allclose(ref_obs_values, out_obs_values)
 
@@ -344,9 +355,10 @@ def extract_observations(pestfile_lines):
     obs_start = pestfile_lines.index('* observation data')
     obs_end = pestfile_lines.index('* model command line')
     observation_rows = [
-        line.strip().split() for line in
-        pestfile_lines[obs_start + 1:obs_end]]
+        line.strip().split()
+        for line in pestfile_lines[obs_start + 1 : obs_end]
+    ]
     return (
-        np.array(
-            [float(row[1]) for row in observation_rows], dtype='float64'),
-        [row[:1] + row[2:] for row in observation_rows])
+        np.array([float(row[1]) for row in observation_rows], dtype='float64'),
+        [row[:1] + row[2:] for row in observation_rows],
+    )

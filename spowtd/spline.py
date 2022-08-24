@@ -19,6 +19,7 @@ class Spline:
     extrapolation is used.
 
     """
+
     def __init__(self, tck):
         self._tck = tck
 
@@ -44,9 +45,7 @@ class Spline:
         return cls(tck)
 
     def domain(self):
-        """End points of spline domain (x_start, x_end)
-
-        """
+        """End points of spline domain (x_start, x_end)"""
         return (self._tck[0][0], self._tck[0][-1])
 
     def __call__(self, x, der=0):
@@ -58,13 +57,12 @@ class Spline:
 
         """
         x_clamped = np.minimum(
-            np.maximum(x, self._tck[0][0]), self._tck[0][-1])
+            np.maximum(x, self._tck[0][0]), self._tck[0][-1]
+        )
         return splev(x_clamped, self._tck, der=der)
 
     def integrate(self, a, b):
-        """Evaluate a definite integral of the spline
-
-        """
+        """Evaluate a definite integral of the spline"""
         if a > b:
             return -self.integrate(b, a)
         if a == b:
