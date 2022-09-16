@@ -139,6 +139,8 @@ spowtd classify ekolongouma.sqlite3 \
   --storm-rain-threshold-mm-h 4.0 \
   --rising-jump-threshold-mm-h 8.0
 \end{lstlisting}
+(For details on how Spowtd matches storms with rises in water level,
+see Appendix~\ref{a:storm_matching}.)
 
 At this stage the classification can be plotted.  A basic interactive
 plot showing the classified water level and precipitation time series
@@ -447,5 +449,44 @@ invocation for simualtion, adjustment of PEST control parameters, etc.
 
 \bibliographystyle{unsrtnat}
 \bibliography{user_guide.bib}
+
+\appendix
+
+\section{Matching of storms and water table rise}
+\label{a:storm_matching}
+
+For construction of rise curves, Spowtd matches intervals of rapidly
+increasing water level (``rises'') to intervals of heavy rain
+(``storms'') in such a way that each storm is matched to no more than
+one rise and each rise is matched to no more than one storm.  This
+matching is performed in two steps.  First, all storms and rises that
+overlap in time are matched.  This first step may result in matching
+from a single storm to multiple rises and vice versa.  This step is
+followed by an arbitration step based on a variant of the Gale-Shapley
+deferred acceptance algorithm for the stable matching problem: it
+finds a set of matches between storms and rises that is stable in the
+sense that, by switching a pair of matches between storms and rises,
+one cannot improve the agreement in duration and start time for both
+matches.
+
+The arbitration step favors agreement in duration over agreement in
+start time in matches by using a property of the Gale-Shapley
+algorithm: it is guaranteed to yield the stable matching that is most
+favorable for the proposing parties, and least favorable for the
+parties accepting or rejecting proposals.  In matching between storms
+and rises, each storm tries to match with the rise with the closest
+duration; the rise is then able to reject that first match if another
+storm with a closer start time proposes a match.  However, a storm
+that is already matched with a rise with a more similar duration will
+never propose to the rise with a closer start time.  Thus, arbitration
+results in the stable matching that results in the best agreement in
+duration between storms and rises.
+
+Note that matching may still result in bad mismatches in storm and
+rise duration depending on the thresholds set for identifying intense
+rain (for storms) and rapid increase in water level (for rises).  If
+differences between storm and rise duration are larger than you think
+they should be, try adjusting one of these thresholds to get better
+agreement.
 
 \end{document}
