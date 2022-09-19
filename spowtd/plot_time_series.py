@@ -20,14 +20,14 @@ DEFAULT_COLORS = {
     'rain_storm': '#0000ff22',
     'rain': '#ff0000ff',
     'jump': '#0000ffff',
-    'mystery_jump': '#ff00ffff'}
+    'mystery_jump': '#ff00ffff',
+}
 
 
 @dataclass
 class DataInterval:
-    """A contiguous interval of water level and rainfall data
+    """A contiguous interval of water level and rainfall data"""
 
-    """
     mpl_time: np.ndarray
     zeta_cm: np.ndarray
     rain_mm_h: np.ndarray
@@ -38,20 +38,18 @@ class DataInterval:
 
 
 def plot_time_series(
-        connection,
-        show_accents,
-        colors,
-        accent_width,
-        time_zone_name=None,
-        plot_evapotranspiration=False):
-    """Plot water level and precipitation time series
-
-    """
+    connection,
+    show_accents,
+    colors,
+    accent_width,
+    time_zone_name=None,
+    plot_evapotranspiration=False,
+):
+    """Plot water level and precipitation time series"""
     cursor = connection.cursor()
 
     if time_zone_name is None:
-        cursor.execute(
-            "SELECT source_time_zone FROM time_grid")
+        cursor.execute("SELECT source_time_zone FROM time_grid")
         time_zone_name = cursor.fetchone()[0]
     time_zone = pytz.timezone(time_zone_name)
 
@@ -71,17 +69,20 @@ def plot_time_series(
     zeta_axes.set_ylabel('Water level, cm')
     rain_axes.xaxis_date(tz=time_zone)
 
-    cursor.execute("""
+    cursor.execute(
+        """
     SELECT DISTINCT data_interval
     FROM grid_time
     WHERE data_interval IS NOT NULL
-    ORDER BY data_interval""")
+    ORDER BY data_interval"""
+    )
     data_interval_labels = [row[0] for row in cursor.fetchall()]
     if not data_interval_labels:
         raise ValueError('No valid data intervals found')
     data_intervals = []
     for label in data_interval_labels:
-        cursor.execute("""
+        cursor.execute(
+            """
         SELECT wl.epoch,
                zeta_mm / 10 AS zeta_cm,
                rainfall_intensity_mm_h,
@@ -99,7 +100,9 @@ def plot_time_series(
           ON gtf.start_epoch = wl.epoch
         LEFT JOIN evapotranspiration
           ON wl.epoch = evapotranspiration.from_epoch
-        ORDER BY wl.epoch""", (label,))
+        ORDER BY wl.epoch""",
+            (label,),
+        )
         columns = tuple(zip(*cursor))
         data_intervals.append(
             DataInterval(
@@ -109,103 +112,113 @@ def plot_time_series(
                 et_mm_h=np.array(columns[3], dtype=float),
                 is_jump=columns[4],
                 is_mystery_jump=columns[5],
-                is_interstorm=columns[6]
+                is_interstorm=columns[6],
             )
         )
         del columns
 
-    cursor.execute("""
+    cursor.execute(
+        """
     SELECT start_epoch,
            thru_epoch
     FROM zeta_interval
-    WHERE interval_type = 'interstorm'""")
-    zeta_interstorm_intervals = [
-        dates_mod.epoch2num(v)
-        for v in zip(*cursor)]
-    cursor.execute("""
+    WHERE interval_type = 'interstorm'"""
+    )
+    zeta_interstorm_intervals = [dates_mod.epoch2num(v) for v in zip(*cursor)]
+    cursor.execute(
+        """
     SELECT start_epoch,
            thru_epoch
     FROM zeta_interval
-    WHERE interval_type = 'storm'""")
-    zeta_storm_intervals = [
-        dates_mod.epoch2num(v)
-        for v in zip(*cursor)]
-    cursor.execute("""
+    WHERE interval_type = 'storm'"""
+    )
+    zeta_storm_intervals = [dates_mod.epoch2num(v) for v in zip(*cursor)]
+    cursor.execute(
+        """
     SELECT start_epoch,
            thru_epoch
-    FROM storm""")
-    rain_storm_intervals = [
-        dates_mod.epoch2num(v)
-        for v in zip(*cursor)]
+    FROM storm"""
+    )
+    rain_storm_intervals = [dates_mod.epoch2num(v) for v in zip(*cursor)]
 
     for series in data_intervals:
-        zeta_axes.plot_date(series.mpl_time,
-                            series.zeta_cm,
-                            'k-')
+        zeta_axes.plot_date(series.mpl_time, series.zeta_cm, 'k-')
         del series
 
     for interval in zip(*zeta_interstorm_intervals):
-        zeta_axes.axvspan(xmin=interval[0],
-                          xmax=interval[1],
-                          edgecolor='#ffffff00',
-                          facecolor=colors['interstorm'])
+        zeta_axes.axvspan(
+            xmin=interval[0],
+            xmax=interval[1],
+            edgecolor='#ffffff00',
+            facecolor=colors['interstorm'],
+        )
     for interval in zip(*zeta_storm_intervals):
-        zeta_axes.axvspan(xmin=interval[0],
-                          xmax=interval[1],
-                          edgecolor='#ffffff00',
-                          facecolor=colors['zeta_storm'])
+        zeta_axes.axvspan(
+            xmin=interval[0],
+            xmax=interval[1],
+            edgecolor='#ffffff00',
+            facecolor=colors['zeta_storm'],
+        )
 
     for series in data_intervals:
-        rain_axes.plot_date(series.mpl_time,
-                            series.rain_mm_h,
-                            'k-',
-                            drawstyle='steps-post')
+        rain_axes.plot_date(
+            series.mpl_time, series.rain_mm_h, 'k-', drawstyle='steps-post'
+        )
         del series
     for interval in zip(*rain_storm_intervals):
-        rain_axes.axvspan(xmin=interval[0],
-                          xmax=interval[1],
-                          edgecolor='#ffffff00',
-                          facecolor=colors['rain_storm'])
+        rain_axes.axvspan(
+            xmin=interval[0],
+            xmax=interval[1],
+            edgecolor='#ffffff00',
+            facecolor=colors['rain_storm'],
+        )
 
     if plot_evapotranspiration:
         for series in data_intervals:
-            et_axes.plot_date(series.mpl_time,
-                              series.et_mm_h,
-                              'k-',
-                              drawstyle='steps-post')
+            et_axes.plot_date(
+                series.mpl_time, series.et_mm_h, 'k-', drawstyle='steps-post'
+            )
             del series
 
     if show_accents:
         for series in data_intervals:
             jumps = mask_from_list(
-                series.zeta_cm,
-                np.array(series.is_jump).astype(bool))
-            zeta_axes.plot_date(series.mpl_time,
-                                jumps,
-                                '-',
-                                color=colors['jump'],
-                                linewidth=accent_width)
+                series.zeta_cm, np.array(series.is_jump).astype(bool)
+            )
+            zeta_axes.plot_date(
+                series.mpl_time,
+                jumps,
+                '-',
+                color=colors['jump'],
+                linewidth=accent_width,
+            )
             mystery_jumps = mask_from_list(
-                series.zeta_cm,
-                np.array(series.is_mystery_jump).astype(bool))
-            zeta_axes.plot_date(series.mpl_time,
-                                mystery_jumps,
-                                '-',
-                                color=colors['mystery_jump'],
-                                linewidth=accent_width)
+                series.zeta_cm, np.array(series.is_mystery_jump).astype(bool)
+            )
+            zeta_axes.plot_date(
+                series.mpl_time,
+                mystery_jumps,
+                '-',
+                color=colors['mystery_jump'],
+                linewidth=accent_width,
+            )
 
-            storm_threshold_mm_h = cursor.execute("""
+            storm_threshold_mm_h = cursor.execute(
+                """
             SELECT storm_rain_threshold_mm_h
-            FROM thresholds""").fetchone()[0]
+            FROM thresholds"""
+            ).fetchone()[0]
             storm_rain = mask_from_list(
-                series.rain_mm_h,
-                series.rain_mm_h >= storm_threshold_mm_h)
-            rain_axes.plot_date(series.mpl_time,
-                                storm_rain,
-                                '-',
-                                color=colors['rain'],
-                                linewidth=accent_width,
-                                drawstyle='steps-post')
+                series.rain_mm_h, series.rain_mm_h >= storm_threshold_mm_h
+            )
+            rain_axes.plot_date(
+                series.mpl_time,
+                storm_rain,
+                '-',
+                color=colors['rain'],
+                linewidth=accent_width,
+                drawstyle='steps-post',
+            )
             del series
 
     cursor.close()

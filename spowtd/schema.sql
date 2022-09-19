@@ -117,7 +117,7 @@ CREATE TABLE zeta_interval (
 CREATE TABLE zeta_interval_storm (
   interval_start_epoch integer NOT NULL PRIMARY KEY,
   interval_type text NOT NULL CHECK (interval_type = 'storm'),
-  storm_start_epoch integer NOT NULL,
+  storm_start_epoch integer NOT NULL UNIQUE,
   FOREIGN KEY (interval_start_epoch, interval_type)
     REFERENCES zeta_interval (start_epoch,
                               interval_type),

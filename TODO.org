@@ -7,5 +7,5 @@
    which this is inappropriate
  - [ ] Don't create SQLite db if load fails (create in memory, then
    dump)
- - [ ] Implement generation of PEST files for calibration against rise
-   and recession intervals
+ - [ ] Use fixtures to speed up tests that require assembly of rise
+   and recession curves

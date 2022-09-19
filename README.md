@@ -58,6 +58,12 @@ For development, you may additionally want:
 
 ## Revision history
 
+Version 0.5.0 - 2022-09-19:
+ - Implement stable matching between storms and rises.
+ - Update format of PEST files for consistency.
+ - Format Python sources with Black.
+ - Fix floating-point comparison issue in .pst tests.
+
 Version 0.4.0 - 2022-05-07:
  - Add curvature to data model, CLI and docs.
  - Implement simulation of recession curves.
