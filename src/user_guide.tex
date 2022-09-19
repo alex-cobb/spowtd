@@ -254,12 +254,13 @@ and invisible to spowtd).
 
 The specific yield and transmissivity curves can be plotted with
 \begin{lstlisting}[frame=single]
-  spowtd plot WHAT parameters.yml
+  spowtd plot WHAT parameters.yml WATER_LEVEL_MIN_CM WATER_LEVEL_MAX_CM
 \end{lstlisting}
 where \texttt{WHAT} is one of \texttt{specific-yield},
-\texttt{conductivity} or \texttt{transmissivity} and
+\texttt{conductivity} or \texttt{transmissivity},
 \texttt{parameters.yml} is a YAML file containing hydraulic
-parameters.
+parameters, and the last two arguments specify the range of water
+levels over which to plot the curve.
 
 The plotting commands \texttt{plot rise}, \texttt{plot recession} and
 \texttt{plot time-series} support a parameter \texttt{-p},
@@ -279,7 +280,9 @@ spowtd simulate rise ekolongouma.sqlite3 parameters.yml
 \end{lstlisting}
 reads data from \texttt{ekolongouma.sqlite3} and parameters from the
 file \texttt{parameters.yml} and writes the assembled and simulated
-rise curves to standard output.
+rise curves to standard output.  The curves are simulated over the
+range of water levels in the data, so plots from different SQLite
+files may look different even if the parameters are identical.
 
 To simulate (or plot) recession requires setting the large-scale
 curvature of the site.  The command
@@ -368,6 +371,12 @@ double point
            b    7.4                        1.000000         0.000000
        psi_s    -0.024                     1.000000         0.000000
 \end{lstlisting}
+In this example, the parameters \texttt{Ksmacz0} and \texttt{alpha}
+are not included in the parameter vector file because only the rise
+curve is being fitted.  The parameters of the transmissivity are not
+free (they do not affect the rising curve fit), and therefore these
+values are fixed in the template file and omitted from the parameter
+vector file.
 
 To verify the format of a template \texttt{rise\_pars.yml.tpl} and
 initial parameters \texttt{rise\_init.par}, use the PEST

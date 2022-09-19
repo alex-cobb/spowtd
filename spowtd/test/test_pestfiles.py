@@ -120,7 +120,7 @@ transmissivity:
 
 # A way of identifying the sample:
 #   mapping from number of distinct zetas to sample number
-SAMPLE_NUMBER = {141: 1, 204: 2}
+SAMPLE_NUMBER = {141: 1, 201: 2}
 
 
 @pytest.mark.parametrize(
