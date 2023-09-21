@@ -11,3 +11,5 @@ htmlcov/
 .ropeproject
 .sconsign.dblite
 doc/
+.project
+.pydevproject
