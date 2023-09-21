@@ -1,4 +1,4 @@
-\documentclass[11pt,a4paper]{article}
+ \documentclass[11pt,a4paper]{article}
 
 \usepackage{pslatex}
 \usepackage{inconsolata}
@@ -9,6 +9,7 @@
 \usepackage{parskip}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{graphicx}
 
 \usepackage{color}
 \definecolor{bluish}{rgb}{0.20,0.29,0.46}
@@ -497,5 +498,116 @@ rain (for storms) and rapid increase in water level (for rises).  If
 differences between storm and rise duration are larger than you think
 they should be, try adjusting one of these thresholds to get better
 agreement.
+
+\section{Event weighting in rise analysis}
+\label{b:storm_matching}
+
+Idea: treat rise and recession separately.
+
+In a \emph{rise} event, the error is mostly in \emph{throughfall},
+which means an error in slope.  If you have constant specific yield,
+incorrect recharge depth for a rise event is manifested as an error
+that increases in proportion to distance from the center of the rise
+event line segment (Fig.~\ref{fig:rise_event_error}).
+
+Thus I think we should use a weighting ``stencil'' that decreases (by
+water level) from the center of the rise event.
+
+\begin{figure}[t!]
+  \centerline{\includegraphics[scale=1]{build/doc/rise_event_error.pdf}}
+  \caption{Model for error in recharge depth observations.}
+  \label{fig:rise_event_error}
+\end{figure}
+
+In contrast, there might not be a good reason to weight
+\emph{recession} events.  We have good measurements of water level,
+and of time.
+
+This suggests an additional argument to fit\_offsets,
+``weighting\_scheme'', default None.
+
+For the weighting scheme for rise curves, we'd want the weight
+proportional to $\frac{1}{\zeta_i - \overline{\zeta_j}}$ where
+$\overline{\zeta_j}$ is the mean of all water levels crossed by that
+rise.  They could be made to sum to 1 or some other constant.
+
+I think that we want the sum of the weights for each rise to sum to
+the same value, say 1.
+
+I think there is a covariance structure in the system of equations
+introduced by the error being in $\Delta W$.  A single event spans
+multiple water levels, and thus affects multiple equations.
+
+
+Solving for: $\Delta W_j$, the mean dynamic storage for rise $j$.
+
+\begin{equation}
+  W_{ij} + \Delta W_j = \frac{1}{J(i)}\left[\sum_{j=1}^{J(i)} W_{ij} + \Delta W_j\right]
+\end{equation}
+where $J(i)$ is the number of rises crossing $\zeta_i$.
+
+Here, $j$ indexes rise events, while $i$ indexes water levels
+$\zeta_i$.
+
+In the ideal case, the true $W_{ij}$ is known.  In practice, the
+observed storage $\widehat{W}_{ij}$ is contaminated by error
+\begin{equation}
+  \widehat{W}_{ij} = W_{ij} + \frac{\zeta_i - \overline{\zeta_j}}{\Delta\zeta_j}\epsilon_j
+\end{equation}
+
+The error $\epsilon_j$ from distribution $E$ is associated with each
+\emph{change} in storage.  So for a rise event $j$, our observations
+at water level $i$ are contaminated by that error $\epsilon_j$:
+
+Hypothesis: We can obtain a truer fit by deriving an estimate of the
+variance-covariance matrix $\Sigma$ of the error vector, and then
+solving the generalized least-squares problem
+\begin{equation}
+  A^T \Sigma^{-1} A x = A^T \Sigma^{-1} b
+\end{equation}
+where
+\begin{equation}
+  \Sigma = E\left[(X - E[X])(X - E[X])^T\right].
+\end{equation}
+
+Recharge depth observations are affected by an additive
+i.i.d. Gaussian error $\alpha$ with variance $\sigma^2$.
+
+Procedure:
+\begin{enumerate}
+\item Derive an expression for the error $\epsilon_k$ in the $k$th
+  equation that must be approximately satisfied.
+  \begin{itemize}
+  \item It will be a linear combination of errors $\alpha_j$ in the
+    recharge depth.
+  \end{itemize}
+\item Derive an expression for the covariance $\sigma_{k_1,k_2}$
+  between elements of the error vector $\epsilon$ (variance of error
+  vector $\epsilon$).
+  \begin{itemize}
+  \item Covariance is the expected value of the product of deviations
+    $\langle\epsilon_{k_1}, \epsilon_{k_2}\rangle$.
+  \item We will divide everything by the variance $\sigma^2$ in
+    $\alpha$; the $\alpha$ for all events are identically distributed,
+    so this variance is the same across all events.
+  \item The correlations between error vector components will be a
+    linear combination of indicator variables $\delta_{j_1,j_2}$
+    because
+    $\langle\alpha_{j_1},\alpha_{j_2}\rangle = \sigma^2 \delta_{j_1
+      j_2}$, i.e., 1 when $j_1=j_2$ and 0 otherwise.
+  \end{itemize}
+\end{enumerate}
+
+In reality, the error in recharge depth cannot be truly Gaussian
+(because recharge depth is bounded below at 0).  Also, it may have a
+heavy tail.  It might be worth trying an $\ell_1$-norm solution.  This
+could be made an option.  We could do numerical experiments with this,
+giving $\Delta W$ some heavy-tailed error distribution.
+
+I've always pictured the master rise curve as a first step towards a
+more sophisticated analysis.  With a curved rise curve, one might do
+better with something more sophisticated --- simulating individual
+rise events (integral), then fitting the parameters.
+
 
 \end{document}
