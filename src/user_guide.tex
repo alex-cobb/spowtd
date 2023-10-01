@@ -501,41 +501,89 @@ they should be, try adjusting one of these thresholds to get better
 agreement.
 
 \section{Event weighting in rise analysis}
-\label{b:storm_matching}
+\label{b:rise_weighting}
 
-Idea: treat rise and recession separately.
+Assembly of recession curves benefits from the fact that both water
+level and time usually can be measured fairly accurately.  In
+contrast, rise events may be affected by large errors in measurement
+of the recharge depth, either because of the difficulties in measuring
+the precipitation that passes through the canopy and litter to reach
+the water table, or because of spatial separation or scale differences
+between where precipitation is measured and where the water table
+response is evaluated.
 
-In a \emph{rise} event, the error is mostly in \emph{throughfall},
-which means an error in slope.  If you have constant specific yield,
-incorrect recharge depth for a rise event is manifested as an error
-that increases in proportion to distance from the center of the rise
-event line segment (Fig.~\ref{fig:rise_event_error}).
+In some cases the error in recharge depth measurement may be large
+enough to cause problems in assembling a reasonable rise curve.
+Because each rise event is represented as a straight line segment
+between the water level and dynamic storage at the beginning and end
+of the event, an error in the recharge depth is manifested as an error
+in slope of this segment.  In the case of a range of water levels
+where specific yield is approximately uniform so that the true slope
+of the rise curve is approximately constant, this error in slope
+causes an error in observed cumulative recharge that increases in
+proportion to distance from the center of the rise event line segment
+(Fig.~\ref{fig:rise_event_error}).  A single event spans multiple
+water levels, and thus affects multiple equations.  To reduce the
+impact of a single event that spans a large number of water levels and
+happens to have a large error in recharge depth on the rise curve,
+Spowtd will provide a scheme to ensure that events are effectively
+weighted equally, and which explicitly considers the effects of a bad
+estimate of recharge depth on observations of the rise event at
+multiple water levels.
 
-Thus I think we should use a weighting ``stencil'' that decreases (by
-water level) from the center of the rise event.
-
-\begin{figure}[t!]
+\begin{figure}[b!]
   \centerline{\includegraphics[scale=1]{build/doc/rise_event_error.pdf}}
   \caption{Model for error in recharge depth observations.}
   \label{fig:rise_event_error}
 \end{figure}
 
-In contrast, there might not be a good reason to weight
-\emph{recession} events.  We have good measurements of water level,
-and of time.
-
-This suggests an additional argument to fit\_offsets,
-``weighting\_scheme'', default None.
-
-I think that we want the sum of the weights for each rise to sum to
-the same value, say 1.
-
-I think there is a covariance structure in the system of equations
-introduced by the error $\alpha_j$ in $R_j$.  A single event spans
-multiple water levels, and thus affects multiple equations.
-
-Here, $j$ indexes rise events, while $i$ indexes water levels
+As discussed in \citet{Cobb_et_al_2017} and
+\citet{Cobb_and_Harvey_2019}, the assembly of the rise curve involves
+finding the mean dynamic storage $S_j$ during each rise event $j$
+(Fig.~\ref{fig:rise_event_error}), and results in the following
+equation:
+\begin{equation}
+  R_{ij} + S_j = \frac{1}{|J_i|}\left(\sum_{j'\in J_i} R_{ij'} + S_{j'}\right)
+\end{equation}
+where $J_i$ is the set of rises crossing $\zeta_i$, $|J_i|$ is the
+size (cardinality) of $J_i$ and $j'$ is a dummy index of summation.
+Note that $j$ indexes rise events, while $i$ indexes water levels
 $\zeta_i$ (Table~\ref{tab:rise_notation}).
+
+Rearranging, for each of the $|J_i|$ rise events $j$ that cross a
+discrete water level $i$, we have an equation
+\begin{equation}
+  \left(\frac{1}{|J_i|}\sum_{j' \in J_i} S_j' \right) - S_j = R_{ij} - \frac{1}{|J_i|} \sum_{j' \in J_i} R_{ij'}
+\end{equation}
+which can be written in matrix form with typical row
+\begin{equation}
+  \label{eq:rise_vector_equation}
+  \left[
+    \begin{array}{cccccc}
+      \frac{1}{J_i} & \frac{1}{J_i} & \ldots & \frac{1}{J_i} - 1 & \ldots & \frac{1}{J_i}
+    \end{array}
+\right]\left[
+  \begin{array}{c}
+    S_1 \\
+    S_2 \\
+    \vdots \\
+    S_j \\
+    \vdots \\
+    S_{J-1}
+  \end{array}
+\right]
+ = \left[R_{ij} - \frac{1}{|J_i|}\sum_{j' \in J_i} R_{ij'}\right].
+\end{equation}
+This represents $|J_i|$ equations. The quantity on the right is a
+scalar; there is one such equation---with the same row and column
+vectors on the left, but a different row vector on the right---for
+each rise event $j$ of the $|J_i|$ rise events crossing water level
+$i$.  The mean dynamic storage $S_J$ for rise event $J$ is set to 0
+and excluded from the unknowns to make the problem nonsingular; after
+solving for the other dynamic storage values, a constant is subtracted
+from all of these to define the dynamic storage as zero when the water
+level is at the peat surface ($\zeta = 0$), as described in
+\citet{Cobb_and_Harvey_2019}.
 
 \begin{table}[b!]
   \centering
@@ -559,73 +607,31 @@ $\zeta_i$ (Table~\ref{tab:rise_notation}).
   \label{tab:rise_notation}
 \end{table}
 
-Solving for: $S_j$, the mean dynamic storage for rise $j$.
-\begin{equation}
-  R_{ij} + S_j = \frac{1}{|J_i|}\left(\sum_{j'\in J_i} R_{ij'} + S_{j'}\right)
-\end{equation}
-where $J_i$ is the set of rises crossing $\zeta_i$, $|J_i|$ is the
-size (cardinality) of $J_i$ and $j'$ is a dummy index of summation.
-
-Rearranging, for each of the $|J_i|$ rise events $j$ that cross a
-discrete water level $i$, we have an equation
-\begin{equation}
-  \left(\frac{1}{|J_i|}\sum_{j' \in J_i} S_j' \right) - S_j = R_{ij} - \frac{1}{|J_i|} \sum_{j' \in J_i} R_{ij'}
-\end{equation}
-which can be written in matrix form with typical row
-\begin{equation}
-  \left[
-    \begin{array}{cccccc}
-      \frac{1}{J_i} & \frac{1}{J_i} & \ldots & \frac{1}{J_i} - 1 & \ldots & \frac{1}{J_i}
-    \end{array}
-\right]\left[
-  \begin{array}{c}
-    S_1 \\
-    S_2 \\
-    \vdots \\
-    S_j \\
-    \vdots \\
-    S_{J-1}
-  \end{array}
-\right]
- = \left[R_{ij} - \frac{1}{|J_i|}\sum_{j' \in J_i} R_{ij'}\right].
-\end{equation}
-This represents $|J_i|$ equations. The quantity on the right is a
-scalar; you get one of these equations (with the same row and column
-vectors on the left, but a different row vector on the right) for each
-rise event $j$ of the $|J_i|$ rise events crossing water level $i$.
-The mean dynamic storage $S_J$ for rise event $J$ is set to 0 and
-excluded from the unknowns to make the problem nonsingular; after
-solving for the other dynamic storage values, a constant is subtracted
-from all of these to define the dynamic storage as zero when the water
-level is at the peat surface ($\zeta = 0$), as described in
-\citet{Cobb_and_Harvey_2019}.
-
-This can then be written as a matrix equation
+The set of equations (\ref{eq:rise_vector_equation}) for the average
+dynamic storage $S_j$ during each event can be written as a matrix
+equation
 \begin{equation}
   \vec{A}\vec{x} = \vec{b}
 \end{equation}
 where $\vec{A}$ is a dense matrix with $\sum_i |J_i|$ rows and $J - 1$
-columns.
+columns, $\vec{x}$ is the vector of unknown dynamic storage values $S$
+and $\vec{b}$ contains the right-hand-side values from
+equation~\ref{eq:rise_vector_equation}.
 
 Ideally, the true recharge depth $R_j$ for a storm $j$ would be known,
-and this system of equations $\vec{A}\vec{x} = \vec{b}$, although
-overdetermined, would have a solution after elimination of redundant
-equations.  In practice, there are errors.
-
-The rise curve equations are potentially strongly affected by errors
-in recharge depth for a variety of reasons.  This type of error
-introduces covariance among the components of the error vector
-$\mathbb{\epsilon}$ associated with the system of equations
-$\vec{A}\vec{x} = \vec{b}$.
+and this system of equations $\vec{A}\vec{x} = \vec{b}$ would have a
+solution after elimination of redundant equations.  In practice,
+errors in recharge depth affect all equations and introduce covariance
+among the components of the error vector $\mathbb{\epsilon}$
+associated with the system of equations $\vec{A}\vec{x} = \vec{b}$.
 
 Suppose recharge depth observations $\widehat{\mathbf{R}}$ are
-affected by an additive i.i.d.\ Gaussian error $\mathbb\alpha$ with
-variance $\text{var}(\alpha)$.  The error $\alpha_j$ from distribution
-$E$ is associated with each \emph{change} in storage.  So for a rise
-event $j$, our observations at water level $i$ are contaminated by
-that error $\alpha_j$:
+affected by multiplicative independent errors $\bm{\alpha}$, each
+identically distributed with mean 1 and variance $\text{var}(\alpha)$.
+For a rise event $j$, our observations at every water level $i$
+crossed by the rise event are contaminated by that error $\alpha_j$:
 \begin{equation}
-  \widehat{R}_{ij} = R_{ij} + f_{ij}\alpha_j
+  \widehat{R}_{ij} = f_{ij}\alpha_j R_{ij}
 \end{equation}
 with $f_{ij}$ defined as
 \begin{equation}
@@ -635,47 +641,50 @@ where $\zeta^o_j$ is the water level at the beginning and $\zeta^*_j$
 the water level at the end of event $j$
 (Fig.~\ref{fig:rise_event_error}).
 
-The error $\epsilon_k$ in the $k^\text{th}$ equation that must be
-approximately satisfied is a linear combination of the errors
-$\alpha_j$ in the recharge depth
+The error $e_{ij}$ in each observed recharge depth is
+\begin{equation}
+  \label{eq:recharge_error_mean}
+  e_{ij} = \widehat{R}_{ij} - R_{ij} = (\alpha_j - 1) R_j f_{ij}
+\end{equation}
+with zero mean
+\begin{equation}
+  \langle e_{ij} \rangle = \left[\langle \alpha_j\rangle - 1\right] R_j f_{ij} = 0.
+\end{equation}
+
+The error $\epsilon_k$ in the $k^\text{th}$ equation is a linear
+combination of the errors $e_{ij}$ in the recharge depth
 \begin{equation}
   \label{eq:epsilon_k}
-  \epsilon_k = f_{ij}\alpha_j - \beta_i
+  \epsilon_k = e_{ij} - \beta_i
 \end{equation}
 where $i$ and $j$ are the water level $i$ and rise $j$ associated with
 the $k$th equation, and $\beta_i$ is the average error across storm
 events crossing water level $i$
 \begin{equation}
   \label{eq:beta_i}
-  \beta_i = \frac{1}{|J_i|}\sum_{j' \in J_i} f_{ij'} \alpha_j'
+  \beta_i = \frac{1}{|J_i|}\sum_{j' \in J_i} e_{ij'}
 \end{equation}
 
 We hypothesize that we can obtain a truer fit by deriving an estimate
 of the variance-covariance matrix $\bm{\Omega}$ of the error vector,
 and then solving the generalized least-squares problem
 \begin{equation}
+  \label{eq:generalized_lsq}
   \vec{A}^T \bm{\Omega}^{-1} \vec{A} \vec{x} = \vec{A}^T \bm{\Omega}^{-1} \vec{b}.
 \end{equation}
 
-We will use our hypothesized error $\alpha$ in depth to derive an
-expression for the covariance $\sigma_{k_1,k_2}$ between elements of
-the error vector $\epsilon$ (variance of error vector $\epsilon$).
+We will use our model for the recharge depth error $\alpha$ to derive
+an estimate for the covariance between elements of the error vector
+$\epsilon$ (variance of error vector $\epsilon$).
 
-We will divide everything by the variance of the error in recharge
-depth $\text{var}(\alpha)$; the $\alpha$ for all events are
-identically distributed, so this variance is the same across all
-events. The correlations between error vector components will be a
-linear combination of indicator variables $\delta_{j_1,j_2}$ because
-$\langle\alpha_{j_1},\alpha_{j_2}\rangle = \text{var}(\alpha)
-\delta_{j_1 j_2}$, i.e., 1 when $j_1=j_2$ and 0 otherwise.
-
-The covariance $\langle \epsilon_{k_1}, \epsilon_{k_2} \rangle$ between two
-components of the error vector is the expected value of the product of
-their deviations.  Because the errors $\mathbb{\alpha}$ in recharge
-have zero mean, inspection of (\ref{eq:epsilon_k}) shows that the
-elements of $\mathbb{\epsilon}$ also have zero mean, and therefore an
-element of the variance-covariance matrix of the error vector
-$\mathbb\epsilon$ is given by
+The covariance $\langle \epsilon_{k_1}, \epsilon_{k_2} \rangle$
+between two components of the error vector is the expected value of
+the product of their deviations.  Because the errors $\vec{e}$ in
+recharge have zero mean (\ref{eq:recharge_error_mean}), inspection of
+(\ref{eq:epsilon_k}) shows that the elements of $\mathbb{\epsilon}$
+also have zero mean, and therefore an element of the
+variance-covariance matrix of the error vector $\mathbb\epsilon$ is
+given by
 \begin{equation}
   \label{eq:epsilon_covariance}
   \langle \epsilon_{k_1}, \epsilon_{k_2} \rangle = \langle \epsilon_{k_1} \epsilon_{k_2}\rangle
@@ -683,96 +692,106 @@ $\mathbb\epsilon$ is given by
 which, after substitution from (\ref{eq:epsilon_k}), expands to
 \begin{equation}
   \label{eq:epsilon_covariance_terms}
-  \langle \epsilon_{k_1}, \epsilon_{k_2} \rangle = \left\langle f_{i_1 j_1} f_{i_2 j_2} \alpha_{j_1}\alpha_{j_2} - f_{i_1 j_1}\alpha_{j_1}\beta_{i_2} - f_{i_2 j_2}\alpha_{j_2}\beta_{i_1} + \beta_{i_1}\beta_{i_2} \right\rangle
+  \langle \epsilon_{k_1}, \epsilon_{k_2} \rangle = \left\langle e_{i_1 j_1} e_{i_2 j_2}\rangle - \langle e_{i_1 j_1}\beta_{i_2}\rangle - \langle e_{i_2 j_2}\beta_{i_1}\rangle + \langle \beta_{i_1}\beta_{i_2} \right\rangle
 \end{equation}
 
-We first derive expressions for some terms in this expression.  We
-will divide the terms in the covariance by the variance $\text{var}(\alpha)$ in
-$\alpha$; because the components in $\alpha$ are independent and
-identically distributed,
+We first derive expressions for some terms in this expression.  It is
+convenient to divide these terms by the variance $\text{var}(\alpha)$
+in $\alpha$.  The covariance between errors $e_{ij}$ in observed
+recharge depth is
 \begin{equation}
-  \label{eq:alpha_correlation}
-  \frac{\langle \alpha_{j_1} \alpha_{j_2}\rangle}{\text{var}(\alpha)} = [j_1 = j_2] =
-  \begin{cases}
-    1 & j_1 = j_2\\
-    0 & \text{otherwise}
-  \end{cases}
+  \left\langle e_{i_1, j_1},e_{i_2, j_2}\right\rangle = \left[ \langle\alpha_{j_1} \alpha_{j_2}\rangle - 1 \right] R_{j_1} R_{j_2} f_{i_1 j_1} f_{i_2 j_2}.
 \end{equation}
-where we use the Iverson bracket $[P]$ to denote the indicator
+Because the components of the error $\bm{\alpha}$ are independent,
+the expected value of their product
+$\langle\alpha_{j_1} \alpha_{j_2}\rangle$ is $1 + \text{var}(\alpha)$
+if $j_1 = j_2$ and 1 otherwise.  Therefore, the covariance among
+recharge depth observation errors, normalized by $\text{var}(\alpha)$,
+is
+\begin{equation}
+  \label{eq:e_covariance}
+  \frac{\left\langle e_{i_1, j_1}, e_{i_2, j_2}\right\rangle}
+       {\text{var}(\alpha)} =
+    R_{j_1}^2 f_{i_1 j_1} f_{i_2 j_1}\, [j_1 = j_2].
+\end{equation}
+where we use the Iverson bracket $[P\,]$ to denote the indicator
 function that takes the value 1 if the statement $P$ within the
 brackets is true and 0 otherwise.
 
-The covariance terms $\langle \alpha_j\beta_i\rangle$, again
-normalized by the variance $\alpha$ of $\text{var}(\alpha)$, after substitution
-and rearrangement, are given by
+The covariance terms $\langle e_{i_1 j_1} \beta_{i_2}\rangle$, again
+normalized by the variance $\text{var}(\alpha)$ of $\alpha$, after
+substitution and rearrangement, are given by
 \begin{equation}
-  \frac{\langle \alpha_j\beta_i\rangle}{\text{var}(\alpha)} = \frac{1}{|J_i|}\sum_{j' \in J_i} f_{ij'} \frac{\langle\alpha_{j'} \alpha_j\rangle}{\text{var}(\alpha)}
+  \frac{\langle e_{i_1 j_1} \beta_{i_2}\rangle}{\text{var}(\alpha)} = \frac{1}{|J_{i_2}|}\sum_{j' \in J_{i_2}} f_{i_2 j'} \frac{\langle e_{i_1 j_1} e_{i_2 j'} \rangle}{\text{var}(\alpha)}
 \end{equation}
-which can be expressed, again using the Iverson bracket, as
+which, because $j_1$ appears at most once in $J_2$, can be expressed,
+again using the Iverson bracket, as
 \begin{equation}
-  \label{eq:alpha_beta_covariance}
-  \frac{\langle \alpha_j\beta_i\rangle}{\text{var}(\alpha)} = \frac{f_{ij}}{|J_i|} [j \in J_i]
+  \label{eq:e_beta_covariance}
+  \frac{\langle e_{i_1 j_1} \beta_{i_2}\rangle}{\text{var}(\alpha)} = \frac{R_{j_1}^2 f_{i_1 j_1} f_{i_2 j_1}}{|J_{i_2}|} [j_1 \in J_{i_2}]
 \end{equation}
 
-Finally, the covariance terms $\langle\beta_{i_1}\beta_{i_2}\rangle$
-are given by substitution from (\ref{eq:beta_i}) as
+Finally, the terms $\langle\beta_{i_1}\beta_{i_2}\rangle$ are given by
+substitution from (\ref{eq:beta_i}) as
 \begin{equation}
-  \label{eq:beta_covariance}
   \langle\beta_{i_1}\beta_{i_2}\rangle =
   \left\langle
-  \left(\frac{1}{|J_{i_1}|}\sum_{j' \in J_{i_1}} f_{i_1 j'} \alpha_j'\right)
-  \left(\frac{1}{|J_{i_2}|}\sum_{j' \in J_{i_2}} f_{i_2 j'} \alpha_j'\right)
+  \left(\frac{1}{|J_{i_1}|}\sum_{j' \in J_{i_1}} e_{i_1 j'}\right)
+  \left(\frac{1}{|J_{i_2}|}\sum_{j' \in J_{i_2}} e_{i_2 j'}\right)
   \right\rangle
 \end{equation}
-which, after again normalizing by the variance of $\alpha$, expands to
+which, after normalizing by the variance of $\alpha$, expands to
 \begin{equation}
   \frac{\langle\beta_{i_1}\beta_{i_2}\rangle}{\text{var}(\alpha)} =
-  \frac{1}{|J_{i_1}| |J_{i_2}|}\left\langle
-    \sum_{j' \in J_{i_1}, j'' \in J_{i_2}} f_{i_1 j'} f_{i_2 j''} \frac{\alpha_{j'}\alpha_{j''}}{\text{var}(\alpha)}
-  \right\rangle
+  \frac{1}{|J_{i_1}| |J_{i_2}|}
+    \sum_{j' \in J_{i_1}, j'' \in J_{i_2}} \frac{\left\langle e_{i_1 j'} e_{i_2 j''} \right\rangle}{\text{var}(\alpha)}
 \end{equation}
-and then, using (\ref{eq:alpha_correlation}), simplifies to
+and then, using (\ref{eq:e_covariance}), simplifies to
 \begin{equation}
+  \label{eq:beta_covariance}
   \frac{\langle\beta_{i_1}\beta_{i_2}\rangle}{\text{var}(\alpha)} =
-  \frac{1}{|J_{i_1}| |J_{i_2}|} \sum_{j' \in J_{i_1}\cap J_{i_2}} f_{i_1 j'} f_{i_2 j'}
+  \frac{1}{|J_{i_1}| |J_{i_2}|} \sum_{j' \in J_{i_1}\cap J_{i_2}} R_{j'}^2 f_{i_1 j'} f_{i_2 j'}
 \end{equation}
 
 Finally, substituting from the expressions
-(\ref{eq:alpha_correlation}), (\ref{eq:alpha_beta_covariance}) and
+(\ref{eq:e_covariance}), (\ref{eq:e_beta_covariance}) and
 (\ref{eq:beta_covariance}) for terms in
 (\ref{eq:epsilon_covariance_terms}), we have the elements
 $\langle \epsilon_{k_1}, \epsilon_{k_2} \rangle$ of the
-variance-covariance matrix $\bm{\Omega}$, normalized by the recharge depth
-error variance $\text{var}(\alpha)$, as
+variance-covariance matrix $\bm{\Omega}$ of the error vector
+$\mathbf{\epsilon}$, normalized by the recharge depth error variance
+$\text{var}(\alpha)$, as
 \begin{align}
+\begin{split}
 \label{eq:epsilon_normalized_covariance}
   \frac{\langle \epsilon_{k_1}, \epsilon_{k_2} \rangle}{\text{var}(\alpha)} =
-  &f_{i_1 j_1} f_{i_2 j_2} [j_1 = j_2] \\
-  &- \frac{f_{i_1 j_1} f_{i_2 j_1}}{|J_{i_2}|} [j_1 \in J_{i_2}]\\
-  &- \frac{f_{i_2 j_2} f_{i_1 j_2}}{|J_{i_1}|} [j_2 \in J_{i_1}]\\
-  &+ \frac{1}{|J_{i_1}| |J_{i_2}|} \sum_{j' \in J_{i_1}\cap J_{i_2}} f_{i_1 j'} f_{i_2 j'}
+  &R_{j_1}^2 f_{i_1 j_1} f_{i_2 j_1}\, [j_1 = j_2] \\
+  &- \frac{R_{j_1}^2 f_{i_1 j_1} f_{i_2 j_1}}{|J_{i_2}|} [j_1 \in J_{i_2}]\\
+  &- \frac{R_{j_2}^2 f_{i_2 j_2} f_{i_1 j_2}}{|J_{i_1}|} [j_2 \in J_{i_1}]\\
+  &+ \frac{1}{|J_{i_1}| |J_{i_2}|} \sum_{j' \in J_{i_1}\cap J_{i_2}} R_{j'}^2 f_{i_1 j'} f_{i_2 j'}
+\end{split}
 \end{align}
+We do not have the true recharge depths $R_j$, but only recharge depth
+observations $\widehat{R}_j$, so we approximate the covariance terms
+using these observations instead.  We note in passing that the
+expected value of $\widehat{R}_j^2$ is
+$[1 + \text{var}(\alpha)]R_j^2$, but because all terms are scaled by
+the same amount, neglecting this does not change the equations
+analytically.
+
+For numerical reasons, to keep the
+norm of $\bm{\Omega}$ close to 1, we nondimensionalize the recharge
+observations $\widehat{R}_j$ by dividing them by their mean prior to
+further calculations (dividing $\bm{\Omega}$ by a scalar has no
+analytical effect because its inverse appears once on the left and the
+right of (\ref{eq:generalized_lsq})).
+
 Using (\ref{eq:epsilon_normalized_covariance}), we populate the
 variance-covariance matrix
-$\bm{\Omega} = \text{var}(\mathbb\epsilon)$, compute its inverse,
-and then solve the generalized least-squares problem
-\begin{equation}
-  \vec{A}^T \bm{\Omega}^{-1} \vec{A} \vec{x} = \vec{A}^T \bm{\Omega}^{-1} \vec{b}
-\end{equation}
-to obtain the average storage $S_j, j \in \{1, 2, \ldots, J - 1\}$ to
-a constant from the entries in $\vec{x}$.
-
-In reality, the error in recharge depth cannot be truly Gaussian
-(because recharge depth is bounded below at 0).  Also, it may have a
-heavy tail.  It might be worth trying an $\ell_1$-norm solution.  This
-could be made an option.  We could do numerical experiments with this,
-giving the recharge depth error $\alpha$ some heavy-tailed error
-distribution.
-
-I've always pictured the master rise curve as a first step towards a
-more sophisticated analysis.  With a curved rise curve, one might do
-better with something more sophisticated --- simulating individual
-rise events (integral), then fitting the parameters.
-
+$\bm{\Omega} = \text{var}(\mathbb\epsilon)$, compute its inverse, and
+then solve the generalized least-squares problem
+(\ref{eq:generalized_lsq}) to obtain the average storage
+$S_j, j \in \{1, 2, \ldots, J - 1\}$ to a constant from the entries in
+$\vec{x}$.
 
 \end{document}
