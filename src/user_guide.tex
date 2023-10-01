@@ -590,17 +590,22 @@ level is at the peat surface ($\zeta = 0$), as described in
   \begin{tabular}{cp{10.8cm}}
     \emph{Symbol} & \emph{Definition} \\
     \hline
+    $\langle\cdot\rangle$ & Expected value \\
+    $e_{ij}$ & Error in cumulative recharge at water level $i$ during event $j$ \\
     $f_{ij}$ & Weighting coefficient for error in cumulative recharge
-               observation $\widehat{R_{ij}}$ at water level $i$ given
-               error $\alpha_j$ in total recharge for event $j$.\\
+               at water level $i$ for event $j$\\
     $i$ & Index over discrete water levels $\zeta_i$\\
     $j$ & Index over rise events\\
-    $R_{ij}$ & Cumulative recharge at water level $i$ during event $j$ \\
+    $J_i$ & Set of rise events crossing water level $i$\\
+    $k$ & Index over equations; enumerates $(i, j)$ pairs identifying water levels crossed by recharge events \\
+    $R_{ij}$ & True cumulative recharge at water level $i$ during event $j$ \\
+    $\widehat{R}_{ij}$ & Observed cumulative recharge at water level $i$ during event $j$ \\
     $R_j$ & True total recharge depth during rise event $j$ \\
     $S$ & Dynamic storage \\
     $S_j$ & Average dynamic storage during event $j$ \\
     $S_y$ & Specific yield \\
     $\alpha_j$ & Error in recharge depth during rise event $j$ \\
+    $\epsilon_k$ & Error in equation $k$ \\
     $\zeta$ & Water level \\
   \end{tabular}
   \caption{Notation for assembly of rise curves}
@@ -613,7 +618,7 @@ equation
 \begin{equation}
   \vec{A}\vec{x} = \vec{b}
 \end{equation}
-where $\vec{A}$ is a dense matrix with $\sum_i |J_i|$ rows and $J - 1$
+where $\vec{A}$ is a dense matrix with $K = \sum_i |J_i|$ rows and $J - 1$
 columns, $\vec{x}$ is the vector of unknown dynamic storage values $S$
 and $\vec{b}$ contains the right-hand-side values from
 equation~\ref{eq:rise_vector_equation}.
@@ -622,8 +627,8 @@ Ideally, the true recharge depth $R_j$ for a storm $j$ would be known,
 and this system of equations $\vec{A}\vec{x} = \vec{b}$ would have a
 solution after elimination of redundant equations.  In practice,
 errors in recharge depth affect all equations and introduce covariance
-among the components of the error vector $\mathbb{\epsilon}$
-associated with the system of equations $\vec{A}\vec{x} = \vec{b}$.
+among the components of the error vector $\bm{\epsilon}$ associated
+with the system of equations $\vec{A}\vec{x} = \vec{b}$.
 
 Suppose recharge depth observations $\widehat{\mathbf{R}}$ are
 affected by multiplicative independent errors $\bm{\alpha}$, each
@@ -675,42 +680,41 @@ and then solving the generalized least-squares problem
 
 We will use our model for the recharge depth error $\alpha$ to derive
 an estimate for the covariance between elements of the error vector
-$\epsilon$ (variance of error vector $\epsilon$).
+$\bm{\epsilon}$ (variance of error vector $\bm{\epsilon}$).
 
-The covariance $\langle \epsilon_{k_1}, \epsilon_{k_2} \rangle$
+The covariance $\text{cov}(\epsilon_{k_1}, \epsilon_{k_2})$
 between two components of the error vector is the expected value of
 the product of their deviations.  Because the errors $\vec{e}$ in
 recharge have zero mean (\ref{eq:recharge_error_mean}), inspection of
-(\ref{eq:epsilon_k}) shows that the elements of $\mathbb{\epsilon}$
-also have zero mean, and therefore an element of the
-variance-covariance matrix of the error vector $\mathbb\epsilon$ is
-given by
+(\ref{eq:epsilon_k}) shows that the elements of $\bm{\epsilon}$ also
+have zero mean, and therefore an element of the variance-covariance
+matrix of the error vector $\bm\epsilon$ is given by
 \begin{equation}
   \label{eq:epsilon_covariance}
-  \langle \epsilon_{k_1}, \epsilon_{k_2} \rangle = \langle \epsilon_{k_1} \epsilon_{k_2}\rangle
+  \text{cov}\left(\epsilon_{k_1}, \epsilon_{k_2}\right) = \langle \epsilon_{k_1} \epsilon_{k_2}\rangle
 \end{equation}
 which, after substitution from (\ref{eq:epsilon_k}), expands to
 \begin{equation}
   \label{eq:epsilon_covariance_terms}
-  \langle \epsilon_{k_1}, \epsilon_{k_2} \rangle = \left\langle e_{i_1 j_1} e_{i_2 j_2}\rangle - \langle e_{i_1 j_1}\beta_{i_2}\rangle - \langle e_{i_2 j_2}\beta_{i_1}\rangle + \langle \beta_{i_1}\beta_{i_2} \right\rangle
+  \text{cov}\left(\epsilon_{k_1}, \epsilon_{k_2}\right) = \left\langle e_{i_1 j_1} e_{i_2 j_2}\rangle - \langle e_{i_1 j_1}\beta_{i_2}\rangle - \langle e_{i_2 j_2}\beta_{i_1}\rangle + \langle \beta_{i_1}\beta_{i_2} \right\rangle
 \end{equation}
 
-We first derive expressions for some terms in this expression.  It is
-convenient to divide these terms by the variance $\text{var}(\alpha)$
-in $\alpha$.  The covariance between errors $e_{ij}$ in observed
-recharge depth is
+We first derive expressions for the terms in this equation
+(\ref{eq:epsilon_covariance_terms}).  It is convenient to divide these
+terms by the variance $\text{var}(\alpha)$ in $\alpha$.  The expected
+product of pairs of errors $e_{ij}$ in observed recharge depth is
 \begin{equation}
-  \left\langle e_{i_1, j_1},e_{i_2, j_2}\right\rangle = \left[ \langle\alpha_{j_1} \alpha_{j_2}\rangle - 1 \right] R_{j_1} R_{j_2} f_{i_1 j_1} f_{i_2 j_2}.
+  \left\langle e_{i_1, j_1}\, e_{i_2, j_2}\right\rangle = \left[ \langle\alpha_{j_1} \alpha_{j_2}\rangle - 1 \right] R_{j_1} R_{j_2} f_{i_1 j_1} f_{i_2 j_2}.
 \end{equation}
-Because the components of the error $\bm{\alpha}$ are independent,
-the expected value of their product
+Because the components of the error $\bm{\alpha}$ are independent, the
+expected value of their product
 $\langle\alpha_{j_1} \alpha_{j_2}\rangle$ is $1 + \text{var}(\alpha)$
-if $j_1 = j_2$ and 1 otherwise.  Therefore, the covariance among
+if $j_1 = j_2$ and 1 otherwise.  Therefore, the expected product of
 recharge depth observation errors, normalized by $\text{var}(\alpha)$,
 is
 \begin{equation}
   \label{eq:e_covariance}
-  \frac{\left\langle e_{i_1, j_1}, e_{i_2, j_2}\right\rangle}
+  \frac{\left\langle e_{i_1, j_1}\, e_{i_2, j_2}\right\rangle}
        {\text{var}(\alpha)} =
     R_{j_1}^2 f_{i_1 j_1} f_{i_2 j_1}\, [j_1 = j_2].
 \end{equation}
@@ -718,23 +722,23 @@ where we use the Iverson bracket $[P\,]$ to denote the indicator
 function that takes the value 1 if the statement $P$ within the
 brackets is true and 0 otherwise.
 
-The covariance terms $\langle e_{i_1 j_1} \beta_{i_2}\rangle$, again
-normalized by the variance $\text{var}(\alpha)$ of $\alpha$, after
-substitution and rearrangement, are given by
+The terms $\langle e_{i_1 j_1}\, \beta_{i_2}\rangle$, again normalized
+by the variance $\text{var}(\alpha)$ of $\alpha$, after substitution
+and rearrangement, are given by
 \begin{equation}
-  \frac{\langle e_{i_1 j_1} \beta_{i_2}\rangle}{\text{var}(\alpha)} = \frac{1}{|J_{i_2}|}\sum_{j' \in J_{i_2}} f_{i_2 j'} \frac{\langle e_{i_1 j_1} e_{i_2 j'} \rangle}{\text{var}(\alpha)}
+  \frac{\langle e_{i_1 j_1}\, \beta_{i_2}\rangle}{\text{var}(\alpha)} = \frac{1}{|J_{i_2}|}\sum_{j' \in J_{i_2}} f_{i_2 j'} \frac{\langle e_{i_1 j_1} e_{i_2 j'} \rangle}{\text{var}(\alpha)}
 \end{equation}
-which, because $j_1$ appears at most once in $J_2$, can be expressed,
-again using the Iverson bracket, as
+which, because any $j$ appears at most once in $J_{i_2}$, can be
+expressed, again using the Iverson bracket, as
 \begin{equation}
   \label{eq:e_beta_covariance}
-  \frac{\langle e_{i_1 j_1} \beta_{i_2}\rangle}{\text{var}(\alpha)} = \frac{R_{j_1}^2 f_{i_1 j_1} f_{i_2 j_1}}{|J_{i_2}|} [j_1 \in J_{i_2}]
+  \frac{\langle e_{i_1 j_1}\, \beta_{i_2}\rangle}{\text{var}(\alpha)} = \frac{R_{j_1}^2 f_{i_1 j_1} f_{i_2 j_1}}{|J_{i_2}|} [j_1 \in J_{i_2}]
 \end{equation}
 
-Finally, the terms $\langle\beta_{i_1}\beta_{i_2}\rangle$ are given by
+Finally, the terms $\langle\beta_{i_1}\,\beta_{i_2}\rangle$ are given by
 substitution from (\ref{eq:beta_i}) as
 \begin{equation}
-  \langle\beta_{i_1}\beta_{i_2}\rangle =
+  \langle\beta_{i_1}\,\beta_{i_2}\rangle =
   \left\langle
   \left(\frac{1}{|J_{i_1}|}\sum_{j' \in J_{i_1}} e_{i_1 j'}\right)
   \left(\frac{1}{|J_{i_2}|}\sum_{j' \in J_{i_2}} e_{i_2 j'}\right)
@@ -742,29 +746,28 @@ substitution from (\ref{eq:beta_i}) as
 \end{equation}
 which, after normalizing by the variance of $\alpha$, expands to
 \begin{equation}
-  \frac{\langle\beta_{i_1}\beta_{i_2}\rangle}{\text{var}(\alpha)} =
+  \frac{\langle\beta_{i_1}\,\beta_{i_2}\rangle}{\text{var}(\alpha)} =
   \frac{1}{|J_{i_1}| |J_{i_2}|}
-    \sum_{j' \in J_{i_1}, j'' \in J_{i_2}} \frac{\left\langle e_{i_1 j'} e_{i_2 j''} \right\rangle}{\text{var}(\alpha)}
+    \sum_{j' \in J_{i_1}, j'' \in J_{i_2}} \frac{\left\langle e_{i_1 j'}\, e_{i_2 j''} \right\rangle}{\text{var}(\alpha)}
 \end{equation}
 and then, using (\ref{eq:e_covariance}), simplifies to
 \begin{equation}
   \label{eq:beta_covariance}
-  \frac{\langle\beta_{i_1}\beta_{i_2}\rangle}{\text{var}(\alpha)} =
+  \frac{\langle\beta_{i_1}\,\beta_{i_2}\rangle}{\text{var}(\alpha)} =
   \frac{1}{|J_{i_1}| |J_{i_2}|} \sum_{j' \in J_{i_1}\cap J_{i_2}} R_{j'}^2 f_{i_1 j'} f_{i_2 j'}
 \end{equation}
 
-Finally, substituting from the expressions
-(\ref{eq:e_covariance}), (\ref{eq:e_beta_covariance}) and
-(\ref{eq:beta_covariance}) for terms in
-(\ref{eq:epsilon_covariance_terms}), we have the elements
-$\langle \epsilon_{k_1}, \epsilon_{k_2} \rangle$ of the
+Finally, substituting from the expressions (\ref{eq:e_covariance}),
+(\ref{eq:e_beta_covariance}) and (\ref{eq:beta_covariance}) for terms
+in (\ref{eq:epsilon_covariance_terms}), we have the elements
+$\text{cov}\left(\epsilon_{k_1}, \epsilon_{k_2} \right)$ of the
 variance-covariance matrix $\bm{\Omega}$ of the error vector
 $\mathbf{\epsilon}$, normalized by the recharge depth error variance
 $\text{var}(\alpha)$, as
 \begin{align}
 \begin{split}
 \label{eq:epsilon_normalized_covariance}
-  \frac{\langle \epsilon_{k_1}, \epsilon_{k_2} \rangle}{\text{var}(\alpha)} =
+  \frac{\text{cov}\left(\epsilon_{k_1}, \epsilon_{k_2}\right)}{\text{var}(\alpha)} =
   &R_{j_1}^2 f_{i_1 j_1} f_{i_2 j_1}\, [j_1 = j_2] \\
   &- \frac{R_{j_1}^2 f_{i_1 j_1} f_{i_2 j_1}}{|J_{i_2}|} [j_1 \in J_{i_2}]\\
   &- \frac{R_{j_2}^2 f_{i_2 j_2} f_{i_1 j_2}}{|J_{i_1}|} [j_2 \in J_{i_1}]\\
@@ -776,8 +779,8 @@ observations $\widehat{R}_j$, so we approximate the covariance terms
 using these observations instead.  We note in passing that the
 expected value of $\widehat{R}_j^2$ is
 $[1 + \text{var}(\alpha)]R_j^2$, but because all terms are scaled by
-the same amount, neglecting this does not change the equations
-analytically.
+the same scalar $1 + \text{var}(\alpha)$, neglecting this does not
+change the equations analytically.
 
 For numerical reasons, to keep the
 norm of $\bm{\Omega}$ close to 1, we nondimensionalize the recharge
