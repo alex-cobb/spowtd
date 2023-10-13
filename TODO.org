@@ -1,10 +1,18 @@
  - *Refactoring for rise analysis*
- - spowtd.rise -> import spowtd.fit_offsets, use get_series_time_offsets
- - spowtd.fit_offsets is the module that does all the linear algebra
- - [X] Refactor out a function that just assembles the system (A and d)
- - [X] Refactor out the solve (assembling A^T A and A^T d,
-   linalg.solve)
-   - Will want to make it easy to add l1 norm option
+ - [ ] Factor out shared code from get_series_time_offsets and call it
+   get_series_offsets; it will contain code that is relevant to both recession
+   (calculating "time" offsets, as stated) and rise (calculating dynamic
+   storage offsets)
+ - [ ] Add a new function for the rise curve, get_series_storage_offsets, that
+   just calls get_series_offsets.
+ - [ ] In rise.py, call get_series_storage_offsets
+ - [ ] Add a flag in rise.py::find_rise_offsets ->
+   rise.py::compute_rise_offsets -> fit_offsets.py::get_series_storage_offsets
+   to compute and use the covariance matrix
+   - The "series" argument passed in to the call to get_series_storage_offsets
+     contains sufficient information to compute the covariance matrix
+   - Put in stub code to raise NotImplementedError if this flag is passed
+ - [ ] Add a function to compute the covariance matrix for rise analysis
  - */Refactoring for rise analysis*
  - [ ] Add test of subcommand that computes and dumps covariance
    matrix for rise analysis
@@ -17,7 +25,7 @@
      - f_ij
      - |J_i|
      - R_j
-     - Terms all look like R_j1 f_i1j1 f_i2j1.  Precompute these?
+     - Terms all look like R_j1^2 f_i1j1 f_i2j1.  Precompute these?
    - It is symmetric, so it makes sense to populate upper and lower
      triangles at the same time
  - [ ] Create subcommand to compute and dump covariance matrix for
