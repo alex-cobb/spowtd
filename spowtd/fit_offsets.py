@@ -16,24 +16,23 @@ LOG = logging.getLogger('spowtd.fit_offsets')
 def get_series_time_offsets(series_list, head_step):
     """Find a time offset that minimizes difference in head crossing times
 
-    Given a sequence of (time, head) data series, rediscretize to get
-    an average crossing time of each integer multiple of head_step for
-    each series.  Then find a time offset for each data series that
-    minimizes the sum of squared differences in times when all data
-    series cross those head values.  This offset *replaces* the existing
-    offset of the series, t_new = t - min(t) + time_offset
+    Given a sequence of (time, head) data series, rediscretize to get an
+    average crossing time of each integer multiple of head_step for each
+    series.  Then find a time offset for each data series that minimizes the
+    sum of squared differences in times when all data series cross those head
+    values.  This offset *replaces* the existing offset of the series,
+    t_new = t - min(t) + time_offset
 
-    The series in the list with the largest initial head is treated as
-    the reference series, and assigned a time offset of zero.
+    The series in the list with the largest initial head is treated as the
+    reference series, and assigned a time offset of zero.
 
-    Returns (indices, time_offsets, head_mapping) connecting indices
-    of series in series_list to their corresponding time offset.  In
-    general, these will be a subset of series_list if there were some
-    heads at which there was no overlap.  The head mapping is a
-    mapping between discrete head ids and sequences of (series_id,
-    t_mean) pairs, representing the mean time at which that series
-    crossed that head.  Head ids are integers which, when multiplied
-    by head_step, will give once more a head with units.
+    Returns (indices, time_offsets, head_mapping) connecting indices of series
+    in series_list to their corresponding time offset.  In general, these will
+    be a subset of series_list if there were some heads at which there was no
+    overlap.  The head mapping is a mapping between discrete head ids and
+    sequences of (series_id, t_mean) pairs, representing the mean time at
+    which that series crossed that head.  Head ids are integers which, when
+    multiplied by head_step, will give once more a head with units.
 
     """
     if not series_list:
@@ -91,12 +90,13 @@ def build_head_mapping(series, head_step=1):
     """Construct a mapping between head ids and series crossing times
 
     series is a sequence of (time, head) data series.  Each series is
-    regridded via interpolation to instead give times at which the
-    head time series crosses an integer multiple of head_step.  That
-    integer multiple (head id) is the key to the returned mapping,
-    which maps between head_id and a sequence of (series_id, time)
-    pairs indicating when each series crossed that head.  The series
-    id is just the index of the series passed in.
+    regridded via interpolation to instead give times at which the head time
+    series crosses an integer multiple of head_step.  That integer multiple
+    (head id) is the key to the returned mapping, which maps between head_id
+    and a sequence of (series_id, time) pairs indicating when each series
+    crossed that head.  The series id is just the index of the series passed
+    in.
+
     """
     head_mapping = {}
     for series_id, (t, H) in enumerate(series):
@@ -113,17 +113,16 @@ def build_head_mapping(series, head_step=1):
 def find_offsets(head_mapping):
     """Find the time offsets that align the series in head_mapping
 
-    Finds the set of time offsets that minimize the sum of squared
-    differences in times at which each series crosses a particular
-    head.  Input is a mapping of head id (a hashable value
-    corresponding to a head, normally an integer) to a sequence of
-    (series_id, time) pairs wherein series_id is an identifier for a
-    sequence and time is the time at which the series crossed the
-    corresponding head value.
+    Finds the set of time offsets that minimize the sum of squared differences
+    in times at which each series crosses a particular head.  Input is a
+    mapping of head id (a hashable value corresponding to a head, normally an
+    integer) to a sequence of (series_id, time) pairs wherein series_id is an
+    identifier for a sequence and time is the time at which the series crossed
+    the corresponding head value.
 
-    The series with the series_id that is largest (last in sort order)
-    is treated as the reference and given an offset of zero; all other
-    offsets are relative to that one.
+    The series with the series_id that is largest (last in sort order) is
+    treated as the reference and given an offset of zero; all other offsets
+    are relative to that one.
 
     Returns series_ids, offsets where series_ids are the identifiers
 
@@ -194,9 +193,10 @@ def find_offsets(head_mapping):
 def split_mapping_by_keys(mapping, key_lists):
     """Split up a mapping (dict) according to connected components
 
-    Each connected component is a sequence of keys from mapping;
-    returned is a corresponding sequence of head mappings, each with
-    only the keys from that connected component.
+    Each connected component is a sequence of keys from mapping; returned is a
+    corresponding sequence of head mappings, each with only the keys from that
+    connected component.
+
     """
     mappings = []
     for seq in key_lists:
@@ -213,9 +213,9 @@ def split_mapping_by_keys(mapping, key_lists):
 def get_connected_components(head_mapping):
     """Find all overlapping sequences of heads in head_mapping
 
-    Head_mapping is a mapping between head_ids and sets of ids for
-    series that have data at that head_id.  Connected components are
-    tuples of series ids that overlap in head.
+    Head_mapping is a mapping between head_ids and sets of ids for series that
+    have data at that head_id.  Connected components are tuples of series ids
+    that overlap in head.
 
     Series id sequences are returned sorted from longest to shortest.
 

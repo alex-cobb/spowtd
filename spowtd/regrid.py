@@ -8,22 +8,24 @@ from scipy.optimize import brentq
 
 
 def regrid(x, y, y_step, interpolant='linear'):
-    """Given a series of points x, y in which y is a function of x,
-    yield a series of points (y, x) with y integer multiples of y_step
-    representing a regridding of an interpolant of (x, y)
+    """Interpolate points to a regular grid on the y axis
 
-    In general there will be multiple points with the same y value
-    and different xs if x |-> y is not one-to-one.
+    Given a series of points x, y in which y is a function of x, yield a
+    series of points (y, x) with y integer multiples of y_step representing a
+    regridding of an interpolant of (x, y)
+
+    In general there will be multiple points with the same y value and
+    different xs if x |-> y is not one-to-one.
 
     interpolant may be any "kind" option acceptable to
     scipy.interpolant.interp1d, that is:
     linear, nearest, zero, slinear, quadratic, cubic
+
+    Monotonicity of cubic splines is not ensured; this may cause problems.
+
     """
     # In between a pair of knots, find the xs corresponding to those
     #   discrete values of y by a root-finding algorithm.
-    # !!! there could be a minor issue here because cubic splines are
-    # !!! not guaranteed to be monotonic.  With a little work, we
-    # !!! could ensure monotonicity.
     #
     # First, divide y by y_step so that integer values correspond to
     #   targets.  Then spline that.  Now, at each knot y_i, look for

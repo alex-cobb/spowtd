@@ -229,8 +229,8 @@ def plot_time_series(
 def mask_from_list(array_to_mask, mask):
     """Mask a float array by setting value to NaN according to mask
 
-    mask is a boolean array, used to set values in array_to_mask to
-    NaN wherever mask_list is False.
+    mask is a boolean array, used to set values in array_to_mask to NaN
+    wherever mask_list is False.
 
     array_to_mask is unaltered; a copy is returned.
 

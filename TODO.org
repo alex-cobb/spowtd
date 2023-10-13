@@ -1,4 +1,4 @@
- - [ ] Blacken sources
+ - [X] Blacken sources
  - *Refactoring for rise analysis*
  - spowtd.rise -> import spowtd.fit_offsets, use get_series_time_offsets
  - spowtd.fit_offsets is the module that does all the linear algebra

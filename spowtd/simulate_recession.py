@@ -143,8 +143,8 @@ def compute_recession_curve(
 
     Returns elapsed time in days on the given grid.
 
-    If the desired mean elapsed time is given, the recession curve is
-    adjusted so its mean matches this value.
+    If the desired mean elapsed time is given, the recession curve is adjusted
+    so its mean matches this value.
 
     """
     assert et_mm_d >= 0

@@ -23,9 +23,9 @@ def find_rise_offsets(connection, reference_zeta_mm=None):
 def compute_rise_offsets(cursor, reference_zeta_mm):
     """Compute time offsets to populate rising_interval_zeta
 
-    If a reference zeta is provided, the crossing-depth of this water
-    level is used as the origin of the axis.  Otherwise, the highest
-    water level in the longest assembled rise is used.
+    If a reference zeta is provided, the crossing-depth of this water level is
+    used as the origin of the axis.  Otherwise, the highest water level in the
+    longest assembled rise is used.
 
     """
     (epoch, zeta_mm) = [

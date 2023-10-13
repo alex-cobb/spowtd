@@ -12,10 +12,9 @@ import spowtd.spline as spline_mod
 def create_specific_yield_function(parameters):
     """Create a specific yield function
 
-    Returns a callable object that returns specific yield at a given
-    water level.  The class of the object depends on the "type" field
-    in the parameters provided, and must be either "peatclsm" or
-    "spline".
+    Returns a callable object that returns specific yield at a given water
+    level.  The class of the object depends on the "type" field in the
+    parameters provided, and must be either "peatclsm" or "spline".
 
     """
     if 'type' not in parameters:
@@ -147,8 +146,7 @@ class PeatclsmSpecificYield(SpecificYield):
 def campbell_1d_az(Fs, z_, zlu, theta_s, psi_s, b, sd):
     """Soil moisture profile from Campbell function and microtopography
 
-    See equations 4 and 5 in Dettmann & Bechtold 2015, Hydrological
-    Processes
+    See equations 4 and 5 in Dettmann & Bechtold 2015, Hydrological Processes
 
     """
     # PEATCLSM microtopographic distribution

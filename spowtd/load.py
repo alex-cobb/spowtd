@@ -152,8 +152,8 @@ def populate_water_level(cursor, time_grid):
 def populate_grid_time(cursor, time_zone_name):
     """Determine and populate grid_time
 
-    Identifies interval with both precipitation and water level data,
-    and returns the time grid array and time step as a tuple.
+    Identifies interval with both precipitation and water level data, and
+    returns the time grid array and time step as a tuple.
 
     """
     time_grid = [
@@ -257,12 +257,12 @@ def populate_evapotranspiration(cursor, time_grid, time_step, tz):
 def generate_timestamped_rows(rows, tz):
     """Generate rows with the first value replaced by a UNIX timestamp
 
-    The first item in each row is assumed to be a text datetime
-    in ISO 8601 format.
+    The first item in each row is assumed to be a text datetime in ISO 8601
+    format.
 
-    The pytz object passed as the second argument is used to convert
-    the datetime to UTC (if necessary) and convert to a UNIX timestamp
-    (seconds since 1970-01-01 00:00:00).
+    The pytz object passed as the second argument is used to convert the
+    datetime to UTC (if necessary) and convert to a UNIX timestamp (seconds
+    since 1970-01-01 00:00:00).
 
     """
     for row in rows:
