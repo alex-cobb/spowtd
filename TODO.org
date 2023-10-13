@@ -1,10 +1,10 @@
  - *Refactoring for rise analysis*
  - spowtd.rise -> import spowtd.fit_offsets, use get_series_time_offsets
  - spowtd.fit_offsets is the module that does all the linear algebra
- - [ ] Refactor out the solve (assembling A^T A and A^T d,
+ - [X] Refactor out a function that just assembles the system (A and d)
+ - [X] Refactor out the solve (assembling A^T A and A^T d,
    linalg.solve)
-   - Will want to allow l1
- - [ ] Refactor out a function that just assembles the system (A and d)
+   - Will want to make it easy to add l1 norm option
  - */Refactoring for rise analysis*
  - [ ] Add test of subcommand that computes and dumps covariance
    matrix for rise analysis

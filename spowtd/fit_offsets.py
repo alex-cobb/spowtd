@@ -38,9 +38,9 @@ def get_series_time_offsets(series_list, head_step):
     if not series_list:
         raise ValueError('empty series list')
     # We need to retain the indices in series_list so that the caller
-    # knows which offsets go with which series, but we also need to
-    # sort by initial head; so, retain a mapping from the series_id
-    # we use for finding offsets to index in sorted_list
+    #   knows which offsets go with which series, but we also need to sort by
+    #   initial head; so, retain a mapping from the series_id we use for
+    #   finding offsets to index in sorted_list
     dec = sorted(
         ((t - t.min(), H, index) for index, (t, H) in enumerate(series_list)),
         key=lambda t_H_index: t_H_index[1][0],
@@ -75,8 +75,8 @@ def get_series_time_offsets(series_list, head_step):
     series_ids, offsets = find_offsets(head_mapping)
     assert len(series_ids) == len(offsets)
     original_indices = [index_mapping[series_id] for series_id in series_ids]
-    # we also need to map series ids in head_mapping to their original
-    # indices
+    # We also need to map series ids in head_mapping to their original
+    #   indices
     output_mapping = {}
     for head_id, crossings in list(head_mapping.items()):
         output_mapping[head_id] = [
@@ -127,25 +127,48 @@ def find_offsets(head_mapping):
     Returns series_ids, offsets where series_ids are the identifiers
 
     """
-    # Eliminate all heads with only one series, these are
-    #   uninformative
+    # Eliminate all heads with only one series, these are uninformative
     for head_id, seq in list(head_mapping.items()):
         # Don't use "assert seq" here, this is an ndarray
         assert len(seq) > 0  # pylint: disable=len-as-condition
         if len(seq) == 1:
             del head_mapping[head_id]
-    # Assemble mapping of series ids to row numbers for the
-    # least-squares problem
-    series_ids = (
-        (series_id for series_id, t_mean in seq)
-        for seq in list(head_mapping.values())
+    # Assemble mapping of series ids to row numbers for the offset-finding
+    #   problem
+    series_ids = sorted(
+        set().union(
+            *(
+                (series_id for series_id, _ in seq)
+                for seq in list(head_mapping.values())
+            )
+        )
     )
-    series_ids = sorted(set().union(*series_ids))
     series_indices = dict(zip(series_ids, range(len(series_ids))))
-    # Reference series corresponds to the highest series id; it
-    #   has the largest initial head, because we sorted them
-    reference_index = max(series_ids)
-    LOG.info('Reference index: %s', reference_index)
+    A, b = assemble_linear_system(
+        head_mapping,
+        series_indices,
+    )
+    offsets = ols_solve(A, b)
+    # This was the boundary condition, zero offset for reference (last) id
+    offsets = np.concatenate((offsets, [0]))
+    # Offsets are by index, but reverse mapping is trivial because series ids
+    #   are sorted
+    assert len(series_ids) == len(offsets), '{} != {}'.format(
+        len(series_ids), len(offsets)
+    )
+    return (series_ids, offsets)
+
+
+def assemble_linear_system(
+    head_mapping,
+    series_indices,
+):
+    """Assemble linear system for fitting offsets
+
+    Creates and populates matrix A and vector b representing the overdetermined
+    system Ax = b that will be solved.
+
+    """
     number_of_equations = sum(
         len(series_at_head) for series_at_head in list(head_mapping.values())
     )
@@ -153,6 +176,10 @@ def find_offsets(head_mapping):
     LOG.info(
         '%s equations, %s unknowns', number_of_equations, number_of_unknowns
     )
+    # Reference series corresponds to the highest series id; it has the
+    #   largest initial head, because we sorted them
+    reference_index = max(series_indices)
+    LOG.info('Reference index: %s', reference_index)
     A = np.zeros((number_of_equations, number_of_unknowns))
     b = np.zeros((number_of_equations,))
     row_template = np.zeros((number_of_unknowns,))
@@ -174,20 +201,22 @@ def find_offsets(head_mapping):
                 A[row_index, series_index] -= 1
             b[row_index] = t - mean_time
             row_index += 1
+
     assert row_index == number_of_equations, row_index
+    return A, b
+
+
+def ols_solve(A, b):
+    """Solve Ax = b by ordinary least squares
+
+    Returns x, the solution to the linear system
+
+    """
+    number_of_unknowns = A.shape[1]
     ATA = np.dot(A.transpose(), A)
     assert ATA.shape == (number_of_unknowns, number_of_unknowns), ATA.shape
     ATd = np.dot(A.transpose(), b)
-    offsets = linalg_mod.solve(ATA, ATd)  # pylint: disable=E1101
-    # this was the boundary condition, zero offset for
-    # reference (last) id
-    offsets = np.concatenate((offsets, [0]))
-    # offsets are by index, but reverse mapping is trivial
-    # because series ids are sorted
-    assert len(series_ids) == len(offsets), '{} != {}'.format(
-        len(series_ids), len(offsets)
-    )
-    return (series_ids, offsets)
+    return linalg_mod.solve(ATA, ATd)  # pylint: disable=E1101
 
 
 def split_mapping_by_keys(mapping, key_lists):
@@ -234,7 +263,7 @@ def get_connected_components(head_mapping):
         new_group = series_at_head.union(*others)
         groups[new_keys] = new_group
     connected_components = sorted(list(groups.keys()), key=len, reverse=True)
-    # sanity check: union should include all head_id ids
+    # Sanity check: union should include all head_id ids
     assert sum(len(cc) for cc in connected_components) == len(head_mapping)
     assert set().union(*[set(cc) for cc in connected_components]) == set(
         head_mapping
