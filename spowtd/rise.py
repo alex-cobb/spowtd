@@ -6,7 +6,7 @@ import logging
 
 import numpy as np
 
-from spowtd.fit_offsets import get_series_time_offsets
+from spowtd.fit_offsets import get_series_storage_offsets
 
 
 LOG = logging.getLogger('spowtd.rise')
@@ -109,7 +109,7 @@ def compute_rise_offsets(cursor, reference_zeta_mm):
         )
 
     # Solve for offsets
-    indices, offsets, zeta_mapping = get_series_time_offsets(
+    indices, offsets, zeta_mapping = get_series_storage_offsets(
         series, delta_z_mm
     )
 

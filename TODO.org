@@ -1,11 +1,11 @@
  - *Refactoring for rise analysis*
- - [ ] Factor out shared code from get_series_time_offsets and call it
+ - [X] Factor out shared code from get_series_time_offsets and call it
    get_series_offsets; it will contain code that is relevant to both recession
    (calculating "time" offsets, as stated) and rise (calculating dynamic
    storage offsets)
- - [ ] Add a new function for the rise curve, get_series_storage_offsets, that
+ - [X] Add a new function for the rise curve, get_series_storage_offsets, that
    just calls get_series_offsets.
- - [ ] In rise.py, call get_series_storage_offsets
+ - [X] In rise.py, call get_series_storage_offsets
  - [ ] Add a flag in rise.py::find_rise_offsets ->
    rise.py::compute_rise_offsets -> fit_offsets.py::get_series_storage_offsets
    to compute and use the covariance matrix
@@ -43,6 +43,9 @@
    - Use Cholesky decomposition of covariance matrix to decorrelate.
    - Then use cvxopt:
      https://cvxopt.org/examples/mlbook/l1.html
+   - This module is not actually in the CVXOPT distribution; it is included as
+     an example module (which, at least on Fedora, is not really set up like a
+     module; there is a test problem that will be executed on import).
  - [ ] Add deltaMu (vertical shift) as a peatclsm parameter
  - [ ] Resolve discrepancy in units between spline and Peatclsm
    transmissivity

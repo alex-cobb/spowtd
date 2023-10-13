@@ -16,23 +16,45 @@ LOG = logging.getLogger('spowtd.fit_offsets')
 def get_series_time_offsets(series_list, head_step):
     """Find a time offset that minimizes difference in head crossing times
 
-    Given a sequence of (time, head) data series, rediscretize to get an
-    average crossing time of each integer multiple of head_step for each
-    series.  Then find a time offset for each data series that minimizes the
+    This function is used in assembly of recession curves.  See further
+    documentation under get_series_offsets.
+
+    """
+    return get_series_offsets(series_list, head_step)
+
+
+def get_series_storage_offsets(series_list, head_step):
+    """Find a storage offset that minimizes difference in head crossing times
+
+    This function is used in assembly of rise curves.  See further
+    documentation under get_series_offsets.
+
+    """
+    return get_series_offsets(series_list, head_step)
+
+
+def get_series_offsets(series_list, head_step):
+    """Find offsets that minimizes difference in head crossing times
+
+    Given a sequence of (x, head) data series, rediscretize to get an
+    average crossing x of each integer multiple of head_step for each
+    series.  Then find an x offset for each data series that minimizes the
     sum of squared differences in times when all data series cross those head
     values.  This offset *replaces* the existing offset of the series,
-    t_new = t - min(t) + time_offset
+    x_new = x - min(x) + time_offset
 
     The series in the list with the largest initial head is treated as the
-    reference series, and assigned a time offset of zero.
+    reference series, and assigned an offset of zero.
 
-    Returns (indices, time_offsets, head_mapping) connecting indices of series
-    in series_list to their corresponding time offset.  In general, these will
-    be a subset of series_list if there were some heads at which there was no
+    Returns (indices, offsets, head_mapping) connecting indices of series in
+    series_list to their corresponding offset.  In general, these will be a
+    subset of series_list if there were some heads at which there was no
     overlap.  The head mapping is a mapping between discrete head ids and
-    sequences of (series_id, t_mean) pairs, representing the mean time at
-    which that series crossed that head.  Head ids are integers which, when
+    sequences of (series_id, x_mean) pairs, representing the mean x at which
+    that series crossed that head.  Head ids are integers which, when
     multiplied by head_step, will give once more a head with units.
+
+    This function is used in assembly of both recession and rise curves.
 
     """
     if not series_list:
