@@ -7,7 +7,7 @@ pylint-3 ${PKG}
 echo "---------------------------- Running pep8 ----------------------------"
 pycodestyle-3 --repeat --statistics --exclude=${PKG}/.ropeproject/config.py ${NAMES}
 echo "--------------------------- Running tests ----------------------------"
-py.test-3 --cov=${PKG}
+pytest-3 --cov=${PKG}
 echo "----------- Displaying html coverage results using Firefox -----------"
 coverage3 html --omit='/usr/*' && firefox file://`pwd`/htmlcov/index.html
 exit
