@@ -6,13 +6,19 @@
  - [X] Add a new function for the rise curve, get_series_storage_offsets, that
    just calls get_series_offsets.
  - [X] In rise.py, call get_series_storage_offsets
- - [ ] Add a flag in rise.py::find_rise_offsets ->
-   rise.py::compute_rise_offsets -> fit_offsets.py::get_series_storage_offsets
-   to compute and use the covariance matrix
+ - [X] Refactor compute_rise_offsets
+ - [ ] Add a function in rise.py to compute the covariance matrix for
+   rise analysis
    - The "series" argument passed in to the call to get_series_storage_offsets
      contains sufficient information to compute the covariance matrix
+ - [ ] Add a subcommand that computes and dumps the covariance matrix
+   for rise analysis
+   - spowtd rise --dump-covariance FILE
+   - spowtd plot rise-covariance
+ - [ ] Add a flag in rise.py::find_rise_offsets ->
+   rise.py::compute_rise_offsets -> fit_offsets.py::get_series_storage_offsets
+   to use the covariance matrix
    - Put in stub code to raise NotImplementedError if this flag is passed
- - [ ] Add a function to compute the covariance matrix for rise analysis
  - */Refactoring for rise analysis*
  - [ ] Add test of subcommand that computes and dumps covariance
    matrix for rise analysis
@@ -28,8 +34,7 @@
      - Terms all look like R_j1^2 f_i1j1 f_i2j1.  Precompute these?
    - It is symmetric, so it makes sense to populate upper and lower
      triangles at the same time
- - [ ] Create subcommand to compute and dump covariance matrix for
-   rise analysis
+
  - [ ] Add optional weighting of linear system so each event is
    weighted equally
    - Consider adding an additional argument 'weighting_scheme' to
