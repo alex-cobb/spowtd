@@ -20,7 +20,11 @@ def get_series_time_offsets(series_list, head_step):
     documentation under get_series_offsets.
 
     """
-    return get_series_offsets(series_list, head_step)
+    head_mapping, index_mapping = build_connected_head_mapping(
+        series_list, head_step
+    )
+    del series_list, head_step
+    return get_series_offsets(head_mapping, index_mapping)
 
 
 def get_series_storage_offsets(series_list, head_step):
@@ -30,10 +34,14 @@ def get_series_storage_offsets(series_list, head_step):
     documentation under get_series_offsets.
 
     """
-    return get_series_offsets(series_list, head_step)
+    head_mapping, index_mapping = build_connected_head_mapping(
+        series_list, head_step
+    )
+    del series_list, head_step
+    return get_series_offsets(head_mapping, index_mapping)
 
 
-def get_series_offsets(series_list, head_step):
+def get_series_offsets(head_mapping, index_mapping):
     """Find offsets that minimizes difference in head crossing times
 
     Given a sequence of (x, head) data series, rediscretize to get an
@@ -57,9 +65,6 @@ def get_series_offsets(series_list, head_step):
     This function is used in assembly of both recession and rise curves.
 
     """
-    head_mapping, index_mapping = build_connected_head_mapping(
-        series_list, head_step
-    )
     series_ids, offsets = find_offsets(head_mapping)
     assert len(series_ids) == len(offsets)
     original_indices = [index_mapping[series_id] for series_id in series_ids]
