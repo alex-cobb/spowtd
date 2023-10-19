@@ -57,43 +57,9 @@ def get_series_offsets(series_list, head_step):
     This function is used in assembly of both recession and rise curves.
 
     """
-    if not series_list:
-        raise ValueError('empty series list')
-    # We need to retain the indices in series_list so that the caller
-    #   knows which offsets go with which series, but we also need to sort by
-    #   initial head; so, retain a mapping from the series_id we use for
-    #   finding offsets to index in sorted_list
-    dec = sorted(
-        ((t - t.min(), H, index) for index, (t, H) in enumerate(series_list)),
-        key=lambda t_H_index: t_H_index[1][0],
+    head_mapping, index_mapping = build_connected_head_mapping(
+        series_list, head_step
     )
-    sorted_list = []
-    index_mapping = {}
-    for new_index, (t, H, original_index) in enumerate(dec):
-        sorted_list.append((t, H))
-        index_mapping[new_index] = original_index
-    del dec
-    head_mapping = build_head_mapping(sorted_list, head_step)
-    series_at_head = dict(
-        (head, set(series_id for series_id, t_mean in value))
-        for head, value in list(head_mapping.items())
-    )
-    connected_components = get_connected_components(series_at_head)
-    if len(connected_components) > 1:
-        LOG.info(
-            '%s connected sets of head of sizes '
-            '%s; will keep only largest component.',
-            len(connected_components),
-            tuple(len(cc) for cc in connected_components),
-        )
-
-    head_mappings = split_mapping_by_keys(
-        head_mapping, connected_components[:1]
-    )
-    assert len(head_mappings) == 1
-    head_mapping = head_mappings[0]
-    del head_mappings
-
     series_ids, offsets = find_offsets(head_mapping)
     assert len(series_ids) == len(offsets)
     original_indices = [index_mapping[series_id] for series_id in series_ids]
@@ -108,7 +74,68 @@ def get_series_offsets(series_list, head_step):
     return (original_indices, offsets, output_mapping)
 
 
-def build_head_mapping(series, head_step=1):
+def build_connected_head_mapping(series_list, head_step):
+    """Construct a mapping between head ids and series crossing times
+
+    Calls build_exhaustive_head_mapping to create an initial mapping between
+    head ids and series crossing times, and then identifies and retains just
+    the largest connected component of overlapping events.  Series are
+    identified by an id that sorts the series by initial head.
+
+    The output is two dicts:
+
+    head_mapping: maps head_id to a sequence of (series_id, time) pairs
+                  indicating when each series crossed that head.
+    index_mapping: maps series_id to the index of the series in series_list.
+
+    """
+    if not series_list:
+        raise ValueError('empty series list')
+    # We need to retain the indices in series_list so that the caller knows
+    # which offsets go with which series, but we also need to sort by initial
+    # head; so, retain a mapping from the series_id we use for finding offsets
+    # to index in sorted_list
+    dec = sorted(
+        (
+            (t - t.min(), H, index)
+            for (index, (t, H)) in enumerate(series_list)
+        ),
+        key=lambda t_H_index: t_H_index[1][0],
+    )
+    del series_list
+    sorted_list = []
+    index_mapping = {}
+    for new_index, (t, H, original_index) in enumerate(dec):
+        sorted_list.append((t, H))
+        index_mapping[new_index] = original_index
+
+    del dec
+    head_mapping = build_exhaustive_head_mapping(sorted_list, head_step)
+    del sorted_list
+    series_at_head = dict(
+        (head, set(series_id for (series_id, t_mean) in value))
+        for (head, value) in list(head_mapping.items())
+    )
+    connected_components = get_connected_components(series_at_head)
+    del series_at_head
+    if len(connected_components) > 1:
+        LOG.info(
+            '%s connected sets of head of sizes '
+            '%s; will keep only largest component.',
+            len(connected_components),
+            tuple(len(cc) for cc in connected_components),
+        )
+    head_mappings = split_mapping_by_keys(
+        head_mapping, connected_components[:1]
+    )
+    del connected_components
+    assert len(head_mappings) == 1
+    head_mapping = head_mappings[0]
+    del head_mappings
+    return head_mapping, index_mapping
+
+
+def build_exhaustive_head_mapping(series, head_step=1):
     """Construct a mapping between head ids and series crossing times
 
     series is a sequence of (time, head) data series.  Each series is
