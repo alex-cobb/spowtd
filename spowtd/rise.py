@@ -6,7 +6,10 @@ import logging
 
 import numpy as np
 
-from spowtd.fit_offsets import get_series_storage_offsets
+from spowtd.fit_offsets import (
+    get_series_storage_offsets,
+    build_connected_head_mapping,
+)
 
 
 LOG = logging.getLogger('spowtd.rise')
@@ -20,29 +23,126 @@ def find_rise_offsets(connection, reference_zeta_mm=None):
     connection.commit()
 
 
-def assemble_rise_covariance(series):
+def get_rise_covariance(connection):
+    """Use database connection to build covariance of rise event errors"""
+    cursor = connection.cursor()
+    series, _, _ = assemble_rise_series(cursor)
+    head_step = get_head_step(cursor)
+    cursor.close()
+    head_mapping, index_mapping = build_connected_head_mapping(
+        series, head_step
+    )
+    return assemble_rise_covariance(head_mapping, series, head_step)
+
+
+def assemble_rise_covariance(head_mapping, series, head_step):
     """Assemble covariance of rise event errors
+
+    Creates and populates matrix omega representing the errors in the
+    overdetermined system Ax = b for the rise curve assembly problem.
 
     The covariance of rise event errors is a symmetric, positive definite
     matrix with shape (n_equations, n_equations) characterizing the covariance
-    between errors in each equation of the rise curve assembly problem.
+    among errors in each equation of the rise curve assembly problem.
+
+    This function does not verify that the computed covariance matrix is
+    positive definite.  However, it does verify that the matrix is symmetric,
+    and therefore successful Cholesky decomposition of the matrix
+    (numpy.linalg.cholesky) will confirm that it is positive definite.  See
+    Press et al. (2021) Numerical Recipes, 3rd ed.
 
     """
-    # XXX
-    n_equations = 1
-    omega = np.empty((n_equations, n_equations), dtype=np.float64)
-    omega[:] = float('NaN')
+    # XXX Duplicate code in find_offsets
+    # Assemble mapping of series ids to row numbers for the offset-finding
+    #   problem
+    series_ids = sorted(
+        set().union(
+            *(
+                (series_id for series_id, _ in seq)
+                for seq in list(head_mapping.values())
+            )
+        )
+    )
+    series_indices = dict(zip(series_ids, range(len(series_ids))))
+
+    number_of_equations = sum(
+        len(series_at_head) for series_at_head in list(head_mapping.values())
+    )
+    number_of_unknowns = len(series_indices) - 1
+    # XXX /Duplicate code
+    # k[i, j]
+    eqn_no = {
+        (head_id, series_id): eqn
+        for eqn, (head_id, series_id) in enumerate(
+            (head_id, series_id)
+            for head_id, series_at_head in sorted(head_mapping.items())
+            for series_id, _ in series_at_head
+        )
+    }
+    assert max(eqn_no.values()) == number_of_equations - 1
+
+    omega = np.zeros(
+        (number_of_equations, number_of_equations), dtype=np.float64
+    )
+
+    # R[j]
+    rain_depth = {
+        # Retrieving rain depth: obtain index, retrieve series;
+        #   total_depth is the 2nd element of the first tuple
+        series_id: series[series_indices[series_id]][0][1]
+        for series_id in series_ids
+    }
+    # zeta_j^* - zeta_j^o
+    rise = {
+        # Retrieving rise: obtain index, retrieve series;
+        #   initial_zeta, final_zeta is the second tuple
+        series_id: (
+            series[series_indices[series_id]][1][1]
+            - series[series_indices[series_id]][1][0]
+        )
+        for series_id in series_ids
+    }
+    # zeta_bar
+    mean_zeta = {
+        series_id: sum(series[series_indices[series_id]][1]) / 2
+        for series_id in series_ids
+    }
+    # f[i, j]
+    coef = {
+        (head_id, series_id): (head_id * head_step - mean_zeta[series_id])
+        / rise[series_id]
+        for head_id, series_at_head in head_mapping.items()
+        for series_id, _ in series_at_head
+    }
+
+    # To compute the terms in the covariance matrix, we need sets of heads
+    # crossed by each series
+    series_heads = {}
+    for head_id, series_at_head in head_mapping.items():
+        for sid, _ in series_at_head:
+            series_heads.setdefault(sid, []).append(head_id)
+
+    # Terms R[j]^2 f[i_1, j] f[i_2, j]
+    Rff = {}
+    for series_id, head_ids in series_heads.items():
+        for head_id_1 in head_ids:
+            for head_id_2 in head_ids:
+                Rff[(series_id, head_id_1, head_id_2)] = (
+                    rain_depth[series_id] ** 2
+                    * coef[(head_id_1, series_id)]
+                    * coef[(head_id_2, series_id)]
+                )
 
     # Basic checks
     assert omega.shape == (
-        n_equations,
-        n_equations,
+        number_of_equations,
+        number_of_equations,
     ), f'Covariance matrix shape {omega.shape} != (# eqs, #eqs)'
-    assert (omega == omega.T).all(), 'Covariance matrix not symmetric'
     assert np.isfinite(omega).all(), (
         'Covariance matrix contains non-finite values: '
         f'{omega[~np.isfinite(omega)]}'
     )
+    assert (omega == omega.T).all(), 'Covariance matrix not symmetric'
     return omega
 
 
@@ -55,18 +155,7 @@ def compute_rise_offsets(cursor, reference_zeta_mm):
 
     """
     series, epoch, zeta_intervals = assemble_rise_series(cursor)
-
-    try:
-        delta_z_mm = cursor.execute(
-            """
-        SELECT (grid_interval_mm) FROM zeta_grid
-        """
-        ).fetchone()[0]
-    except TypeError:
-        raise ValueError(  # pylint: disable=raise-missing-from
-            "Discrete water level interval not yet set"
-        )
-
+    delta_z_mm = get_head_step(cursor)
     # Solve for offsets
     indices, offsets, zeta_mapping = get_series_storage_offsets(
         series, delta_z_mm
@@ -132,6 +221,25 @@ def compute_rise_offsets(cursor, reference_zeta_mm):
             del mean_crossing_depth_mm, interval
         del discrete_zeta, crossings
     cursor.close()
+
+
+def get_head_step(cursor):
+    """Get grid interval in mm from database cursor
+
+    If grid_interval_mm is not yet populated in zeta_grid, ValueError is raised
+
+    """
+    try:
+        delta_z_mm = cursor.execute(
+            """
+        SELECT (grid_interval_mm) FROM zeta_grid
+        """
+        ).fetchone()[0]
+    except TypeError:
+        raise ValueError(  # pylint: disable=raise-missing-from
+            "Discrete water level interval not yet set"
+        )
+    return delta_z_mm
 
 
 def assemble_rise_series(cursor):

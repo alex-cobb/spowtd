@@ -68,7 +68,7 @@ def get_series_offsets(head_mapping, index_mapping):
     series_ids, offsets = find_offsets(head_mapping)
     assert len(series_ids) == len(offsets)
     original_indices = [index_mapping[series_id] for series_id in series_ids]
-    # We also need to map series ids in head_mapping to their original
+    # We need to map series ids in head_mapping back to their original
     #   indices
     output_mapping = {}
     for head_id, crossings in list(head_mapping.items()):
@@ -84,8 +84,9 @@ def build_connected_head_mapping(series_list, head_step):
 
     Calls build_exhaustive_head_mapping to create an initial mapping between
     head ids and series crossing times, and then identifies and retains just
-    the largest connected component of overlapping events.  Series are
-    identified by an id that sorts the series by initial head.
+    the largest connected component of overlapping events.  Heads with only one
+    series are also removed as these are uninformative.  Series are identified
+    by an id that sorts the series by initial head.
 
     The output is two dicts:
 
@@ -137,6 +138,12 @@ def build_connected_head_mapping(series_list, head_step):
     assert len(head_mappings) == 1
     head_mapping = head_mappings[0]
     del head_mappings
+    # Eliminate all heads with only one series, these are uninformative
+    for head_id, seq in list(head_mapping.items()):
+        # Don't use "assert seq" here, this is an ndarray
+        assert len(seq) > 0  # pylint: disable=len-as-condition
+        if len(seq) == 1:
+            del head_mapping[head_id]
     return head_mapping, index_mapping
 
 
@@ -181,12 +188,6 @@ def find_offsets(head_mapping):
     Returns series_ids, offsets where series_ids are the identifiers
 
     """
-    # Eliminate all heads with only one series, these are uninformative
-    for head_id, seq in list(head_mapping.items()):
-        # Don't use "assert seq" here, this is an ndarray
-        assert len(seq) > 0  # pylint: disable=len-as-condition
-        if len(seq) == 1:
-            del head_mapping[head_id]
     # Assemble mapping of series ids to row numbers for the offset-finding
     #   problem
     series_ids = sorted(
@@ -238,7 +239,7 @@ def assemble_linear_system(
     b = np.zeros((number_of_equations,))
     row_template = np.zeros((number_of_unknowns,))
     row_index = 0
-    for head_id, series_at_head in list(head_mapping.items()):
+    for head_id, series_at_head in sorted(head_mapping.items()):
         row_template[:] = 0
         sids, times = list(zip(*series_at_head))
         number_of_series_at_head = len(sids)

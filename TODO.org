@@ -9,8 +9,6 @@
  - [X] Refactor compute_rise_offsets
  - [ ] Add a function in rise.py to compute the covariance matrix for
    rise analysis
-   - The "series" argument passed in to the call to get_series_storage_offsets
-     contains sufficient information to compute the covariance matrix
  - [ ] Add a subcommand that computes and dumps the covariance matrix
    for rise analysis
    - spowtd rise --dump-covariance FILE
