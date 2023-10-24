@@ -32,14 +32,24 @@ def get_rise_covariance(connection):
     head_mapping, index_mapping = build_connected_head_mapping(
         series, head_step
     )
-    return assemble_rise_covariance(head_mapping, series, head_step)
+    return assemble_rise_covariance(
+        head_mapping, index_mapping, series, head_step
+    )
 
 
-def assemble_rise_covariance(head_mapping, series, head_step):
+def assemble_rise_covariance(head_mapping, index_mapping, series, head_step):
     """Assemble covariance of rise event errors
 
     Creates and populates matrix omega representing the errors in the
     overdetermined system Ax = b for the rise curve assembly problem.
+
+    head_mapping: maps head_id to a sequence of (series_id, time) pairs
+                  indicating when each series crossed that head.
+    index_mapping: maps series_id to the index of the series in series_list.
+    series: list of (depth, rise) pairs where depth is a (0, storm_depth)
+            duple and rise is a (zeta_initial, zeta_final) duple.
+    head_step: factor by which to multiply integer head_id to get water
+               level zeta.
 
     The covariance of rise event errors is a symmetric, positive definite
     matrix with shape (n_equations, n_equations) characterizing the covariance
@@ -52,9 +62,12 @@ def assemble_rise_covariance(head_mapping, series, head_step):
     Press et al. (2021) Numerical Recipes, 3rd ed.
 
     """
-    # XXX Duplicate code in find_offsets
-    # Assemble mapping of series ids to row numbers for the offset-finding
-    #   problem
+    # XXX Partly duplicates code in find_offsets
+
+    # Assemble mapping of series ids to row numbers (unknowns) for the offset-
+    #   finding problem.  Note that these are not the same as indices in the
+    #   series list, which must be obtained via index_mapping:
+    #   a_series = series[index_mapping[series_id]]
     series_ids = sorted(
         set().union(
             *(
@@ -63,21 +76,40 @@ def assemble_rise_covariance(head_mapping, series, head_step):
             )
         )
     )
-    series_indices = dict(zip(series_ids, range(len(series_ids))))
+    # series_indices = dict(zip(series_ids, range(len(series_ids))))
+
+    # Check input
+    for head_id, series_at_head in head_mapping.items():
+        zeta = head_id * head_step
+        for series_id, depth_at_head in series_at_head:
+            depth, rise = series[index_mapping[series_id]]
+            assert len(depth) == 2
+            assert len(rise) == 2
+            assert depth[0] == 0, f'depth[0] = {depth[0]}'
+            assert depth_at_head >= 0, depth_at_head
+            assert depth_at_head <= depth[1], f'{depth_at_head} > {depth[1]}'
+            assert (
+                rise[0] <= zeta and rise[1] >= zeta
+            ), f'Rise {rise} does not span {zeta}'
+            del depth, rise, series_id, depth_at_head
+        del head_id, zeta, series_at_head
 
     number_of_equations = sum(
         len(series_at_head) for series_at_head in list(head_mapping.values())
     )
-    number_of_unknowns = len(series_indices) - 1
+    number_of_unknowns = len(series_ids) - 1
     # XXX /Duplicate code
+    # (i, j)(k)
+    ij = [
+        (head_id, series_id)
+        for head_id, series_at_head in sorted(head_mapping.items())
+        for series_id, _ in series_at_head
+    ]
+    assert len(ij) == number_of_equations
     # k[i, j]
     eqn_no = {
         (head_id, series_id): eqn
-        for eqn, (head_id, series_id) in enumerate(
-            (head_id, series_id)
-            for head_id, series_at_head in sorted(head_mapping.items())
-            for series_id, _ in series_at_head
-        )
+        for eqn, (head_id, series_id) in enumerate(ij)
     }
     assert max(eqn_no.values()) == number_of_equations - 1
 
@@ -89,49 +121,86 @@ def assemble_rise_covariance(head_mapping, series, head_step):
     rain_depth = {
         # Retrieving rain depth: obtain index, retrieve series;
         #   total_depth is the 2nd element of the first tuple
-        series_id: series[series_indices[series_id]][0][1]
+        series_id: series[index_mapping[series_id]][0][1]
         for series_id in series_ids
     }
+
+    mean_rain_depth = sum(value for value in rain_depth.values()) / len(
+        rain_depth
+    )
+    normalized_rain_depth = {
+        key: value / mean_rain_depth for key, value in rain_depth.items()
+    }
+    del rain_depth
     # zeta_j^* - zeta_j^o
     rise = {
         # Retrieving rise: obtain index, retrieve series;
         #   initial_zeta, final_zeta is the second tuple
         series_id: (
-            series[series_indices[series_id]][1][1]
-            - series[series_indices[series_id]][1][0]
+            series[index_mapping[series_id]][1][1]
+            - series[index_mapping[series_id]][1][0]
         )
         for series_id in series_ids
     }
+
     # zeta_bar
     mean_zeta = {
-        series_id: sum(series[series_indices[series_id]][1]) / 2
+        series_id: sum(series[index_mapping[series_id]][1]) / 2
         for series_id in series_ids
     }
-    # f[i, j]
+
+    # f[i, j]m
     coef = {
         (head_id, series_id): (head_id * head_step - mean_zeta[series_id])
         / rise[series_id]
         for head_id, series_at_head in head_mapping.items()
         for series_id, _ in series_at_head
     }
+    assert min(coef.values()) >= -0.5, min(coef.values())
+    assert max(coef.values()) <= 0.5, max(coef.values())
 
     # To compute the terms in the covariance matrix, we need sets of heads
     # crossed by each series
+    # I[j]
     series_heads = {}
     for head_id, series_at_head in head_mapping.items():
         for sid, _ in series_at_head:
             series_heads.setdefault(sid, []).append(head_id)
+    # We also need sets of series crossing each head
+    # J[i]
+    Ji = {}
+    for head_id, series_at_head in head_mapping.items():
+        for sid, _ in series_at_head:
+            Ji.setdefault(head_id, []).append(sid)
 
-    # Terms R[j]^2 f[i_1, j] f[i_2, j]
+    # Terms
+    # Rff[(j, i1, i2)] = R[j]^2 f[i_1, j] f[i_2, j]
     Rff = {}
     for series_id, head_ids in series_heads.items():
         for head_id_1 in head_ids:
             for head_id_2 in head_ids:
                 Rff[(series_id, head_id_1, head_id_2)] = (
-                    rain_depth[series_id] ** 2
+                    normalized_rain_depth[series_id] ** 2
                     * coef[(head_id_1, series_id)]
                     * coef[(head_id_2, series_id)]
                 )
+
+    # Populate covariance matrix
+    for k1 in range(number_of_equations):
+        i1, j1 = ij[k1]
+        Ji1 = set(Ji[i1])
+        for k2 in range(number_of_equations):
+            i2, j2 = ij[k2]
+            Ji2 = set(Ji[i2])
+            if j1 == j2:
+                omega[k1, k2] += Rff[(j1, i1, i2)]
+            if j1 in Ji2:
+                omega[k1, k2] -= Rff[(j1, i1, i2)] / len(Ji2)
+            if j2 in Ji1:
+                omega[k1, k2] -= Rff[(j2, i2, i1)] / len(Ji1)
+            omega[k1, k2] += sum(
+                Rff[(j, i1, i2)] for j in Ji1.intersection(Ji2)
+            ) / (len(Ji1) * len(Ji2))
 
     # Basic checks
     assert omega.shape == (
@@ -142,7 +211,28 @@ def assemble_rise_covariance(head_mapping, series, head_step):
         'Covariance matrix contains non-finite values: '
         f'{omega[~np.isfinite(omega)]}'
     )
+    # Matrix may not be exactly symmetric due to roundoff
+    assert np.allclose(
+        omega, omega.T
+    ), 'Covariance matrix not nearly symmetric'
+    # Make exactly symmetric
+    i_lower = np.tril_indices(number_of_equations, -1)
+    omega[i_lower] = omega.T[i_lower]
+    # Normalize
+    omega /= np.linalg.norm(omega)
     assert (omega == omega.T).all(), 'Covariance matrix not symmetric'
+    # Check that omega is positive semidefinite; see
+    #   https://scicomp.stackexchange.com/a/12984
+    # L = np.linalg.cholesky(omega)
+    L = np.linalg.cholesky(omega + 1e-6 * np.identity(number_of_equations))
+    assert np.allclose(np.dot(L, L.T), omega, atol=1e-5, rtol=1e-5)
+    # Another, slower way: Check that all eigenvalues are non-negative to some
+    # tolerance
+    #   https://stackoverflow.com/a/17265664
+    # Or, use arpack: https://stackoverflow.com/a/27245159
+    tol = 1e-8
+    eig = np.linalg.eigvalsh(omega)
+    assert (eig > -tol).all()
     return omega
 
 
