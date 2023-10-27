@@ -1,9 +1,4 @@
- - [X] Add a CLI argument to consider covariance when assembling rise
-   curve
-   - spowtd rise --recharge-error-weight=1e3
- - [X] Add a CLI subcommand that computes and dumps the covariance
-   matrix for rise analysis
-   - spowtd rise --dump-covariance FILE
+ - [ ] Add docs on usage of covariance for rise analysis
  - [ ] Add regression test of rise analysis with covariance
  - [ ] Enable use of l1 norm instead of l2 norm when fitting rise
    curves
