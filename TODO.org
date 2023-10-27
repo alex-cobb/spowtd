@@ -1,36 +1,7 @@
- - [X] Factor out shared code from get_series_time_offsets and call it
-   get_series_offsets; it will contain code that is relevant to both recession
-   (calculating "time" offsets, as stated) and rise (calculating dynamic
-   storage offsets)
- - [X] Add a new function for the rise curve, get_series_storage_offsets, that
-   just calls get_series_offsets.
- - [X] In rise.py, call get_series_storage_offsets
- - [X] Refactor compute_rise_offsets
- - [X] Add a function in rise.py to compute the covariance matrix for
-   rise analysis
- - [X] Add a flag in rise.py::find_rise_offsets ->
-   rise.py::compute_rise_offsets -> fit_offsets.py::get_series_storage_offsets
-   to use the covariance matrix
- - [X] Create a function that assembles the covariance matrix for
-   rise analysis, assuming multiplicative errors
-   - It has size (# equations, # equations)
-   - Start by assembling it in the most naive way, to try to get an
-     accurate regression test from the beginning. Then, refactor.
-   - We will need some statistics on each series:
-     - f_ij
-     - |J_i|
-     - R_j
-     - Terms all look like R_j1^2 f_i1j1 f_i2j1.  Precompute these?
-   - It is symmetric, so it makes sense to populate upper and lower
-     triangles at the same time
- - [X] Add optional weighting of linear system so each event is
-   weighted equally
-   - Consider adding an additional argument 'weighting_scheme' to
-     fit_offsets, default None.
-   - Consider allowing an l1-norm solution to the generalized
-     least-squares problem?
-   - We could do numerical experiments with this, giving the recharge
-     depth error \alpha some heavy-tailed distribution.
+ - [ ] Add a CLI argument to consider covariance when assembling rise
+   curve
+   - spowtd rise --recharge-error-weight=1e3
+ - [ ] Add smoke test of CLI covariance argument for `spowtd rise`
  - [ ] Add a CLI subcommand that computes and dumps the covariance
    matrix for rise analysis
    - spowtd rise --dump-covariance FILE
