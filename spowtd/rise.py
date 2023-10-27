@@ -99,8 +99,8 @@ def assemble_rise_covariance(
     among errors in each equation of the rise curve assembly problem.
 
     Recharge_error_factor is the relative weight for errors arising from
-    mismeasurement of recharge depth.  The identity matrix /
-    recharge_error_weight is added to the rise event error covariance to make
+    mismeasurement of recharge depth.  The identity matrix, divided by
+    recharge_error_weight, is added to the rise event error covariance to make
     it positive definite.
 
     This function does not verify that the computed covariance matrix is
