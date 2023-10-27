@@ -7,7 +7,7 @@ import logging
 import numpy as np
 
 from spowtd.fit_offsets import (
-    get_series_storage_offsets,
+    get_series_offsets,
     build_connected_head_mapping,
 )
 
@@ -15,15 +15,52 @@ from spowtd.fit_offsets import (
 LOG = logging.getLogger('spowtd.rise')
 
 
-def find_rise_offsets(connection, reference_zeta_mm=None):
-    """Determine rising curves"""
+def find_rise_offsets(
+    connection, reference_zeta_mm=None, recharge_error_weight=0
+):
+    """Determine rising curves
+
+    If recharge_error_weight is provided, an estimated variance-covariance
+    matrix is assembled and used when solving the rise curve assembly problem.
+    """
     cursor = connection.cursor()
-    compute_rise_offsets(cursor, reference_zeta_mm)
+    compute_rise_offsets(
+        cursor, reference_zeta_mm, recharge_error_weight=recharge_error_weight
+    )
     cursor.close()
     connection.commit()
 
 
-def get_rise_covariance(connection):
+def get_series_storage_offsets(
+    series_list, head_step, recharge_error_weight=0
+):
+    """Find a storage offset that minimizes difference in head crossing times
+
+    This function is used in assembly of rise curves.  See further
+    documentation under get_series_offsets.
+
+    If recharge_error_weight is given, an estimated variance-covariance matrix
+    is assembled and used when solving the rise curve assembly problem.
+
+    """
+    head_mapping, index_mapping = build_connected_head_mapping(
+        series_list, head_step
+    )
+    if not recharge_error_weight:
+        return get_series_offsets(head_mapping, index_mapping)
+    covariance = assemble_rise_covariance(
+        head_mapping,
+        index_mapping,
+        series_list,
+        head_step,
+        recharge_error_weight,
+    )
+    return get_series_offsets(
+        head_mapping, index_mapping, covariance=covariance
+    )
+
+
+def get_rise_covariance(connection, recharge_error_weight=1e3):
     """Use database connection to build covariance of rise event errors"""
     cursor = connection.cursor()
     series, _, _ = assemble_rise_series(cursor)
@@ -33,11 +70,13 @@ def get_rise_covariance(connection):
         series, head_step
     )
     return assemble_rise_covariance(
-        head_mapping, index_mapping, series, head_step
+        head_mapping, index_mapping, series, head_step, recharge_error_weight
     )
 
 
-def assemble_rise_covariance(head_mapping, index_mapping, series, head_step):
+def assemble_rise_covariance(
+    head_mapping, index_mapping, series, head_step, recharge_error_weight=1e3
+):
     """Assemble covariance of rise event errors
 
     Creates and populates matrix omega representing the errors in the
@@ -50,10 +89,17 @@ def assemble_rise_covariance(head_mapping, index_mapping, series, head_step):
             duple and rise is a (zeta_initial, zeta_final) duple.
     head_step: factor by which to multiply integer head_id to get water
                level zeta.
+    zeta_error_factor: ratio of error in zeta measurement to error induced
+                       by recharge depth mismeasurement.
 
-    The covariance of rise event errors is a symmetric, positive definite
+    The covariance of rise event errors is a symmetric, positive semidefinite
     matrix with shape (n_equations, n_equations) characterizing the covariance
     among errors in each equation of the rise curve assembly problem.
+
+    Recharge_error_factor is the relative weight for errors arising from
+    mismeasurement of recharge depth.  The identity matrix /
+    recharge_error_weight is added to the rise event error covariance to make
+    it positive definite.
 
     This function does not verify that the computed covariance matrix is
     positive definite.  However, it does verify that the matrix is symmetric,
@@ -218,28 +264,20 @@ def assemble_rise_covariance(head_mapping, index_mapping, series, head_step):
     # Make exactly symmetric
     i_lower = np.tril_indices(number_of_equations, -1)
     omega[i_lower] = omega.T[i_lower]
+    assert (omega == omega.T).all(), 'Covariance matrix not symmetric'
     # Normalize
     omega /= np.linalg.norm(omega)
-    assert (omega == omega.T).all(), 'Covariance matrix not symmetric'
-    # Check that omega is positive semidefinite; see
-    #   https://scicomp.stackexchange.com/a/12984
-    # L = np.linalg.cholesky(omega)
-    L = np.linalg.cholesky(omega + 1e-6 * np.identity(number_of_equations))
-    assert np.allclose(np.dot(L, L.T), omega, atol=1e-5, rtol=1e-5)
-    # Another, slower way: Check that all eigenvalues are non-negative to some
-    # tolerance
-    #   https://stackoverflow.com/a/17265664
-    # Or, use arpack: https://stackoverflow.com/a/27245159
-    tol = 1e-8
-    eig = np.linalg.eigvalsh(omega)
-    assert (eig > -tol).all()
+    omega += np.identity(number_of_equations) / recharge_error_weight
+    # Check that omega is positive definite
+    L = np.linalg.cholesky(omega)
+    assert np.allclose(np.dot(L, L.T), omega)
     return omega
 
 
-def compute_rise_offsets(cursor, reference_zeta_mm):
+def compute_rise_offsets(cursor, reference_zeta_mm, recharge_error_weight=0):
     """Compute time offsets to populate rising_interval_zeta
 
-    If a reference zeta is provided, the crossing-depth of this water level is
+    If a reference zeta is not None, the crossing-depth of this water level is
     used as the origin of the axis.  Otherwise, the highest water level in the
     longest assembled rise is used.
 
@@ -248,7 +286,7 @@ def compute_rise_offsets(cursor, reference_zeta_mm):
     delta_z_mm = get_head_step(cursor)
     # Solve for offsets
     indices, offsets, zeta_mapping = get_series_storage_offsets(
-        series, delta_z_mm
+        series, delta_z_mm, recharge_error_weight=recharge_error_weight
     )
 
     reference_zeta_off_grid = (

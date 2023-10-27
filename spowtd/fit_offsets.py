@@ -27,21 +27,7 @@ def get_series_time_offsets(series_list, head_step):
     return get_series_offsets(head_mapping, index_mapping)
 
 
-def get_series_storage_offsets(series_list, head_step):
-    """Find a storage offset that minimizes difference in head crossing times
-
-    This function is used in assembly of rise curves.  See further
-    documentation under get_series_offsets.
-
-    """
-    head_mapping, index_mapping = build_connected_head_mapping(
-        series_list, head_step
-    )
-    del series_list, head_step
-    return get_series_offsets(head_mapping, index_mapping)
-
-
-def get_series_offsets(head_mapping, index_mapping):
+def get_series_offsets(head_mapping, index_mapping, covariance=None):
     """Find offsets that minimizes difference in head crossing times
 
     Given a sequence of (x, head) data series, rediscretize to get an
@@ -65,7 +51,7 @@ def get_series_offsets(head_mapping, index_mapping):
     This function is used in assembly of both recession and rise curves.
 
     """
-    series_ids, offsets = find_offsets(head_mapping)
+    series_ids, offsets = find_offsets(head_mapping, covariance)
     assert len(series_ids) == len(offsets)
     original_indices = [index_mapping[series_id] for series_id in series_ids]
     # We need to map series ids in head_mapping back to their original
@@ -171,7 +157,7 @@ def build_exhaustive_head_mapping(series, head_step=1):
     return head_mapping
 
 
-def find_offsets(head_mapping):
+def find_offsets(head_mapping, covariance=None):
     """Find the time offsets that align the series in head_mapping
 
     Finds the set of time offsets that minimize the sum of squared differences
@@ -203,7 +189,12 @@ def find_offsets(head_mapping):
         head_mapping,
         series_indices,
     )
-    offsets = ols_solve(A, b)
+    if covariance is not None:
+        assert covariance.shape == (len(b), len(b))
+        offsets = gls_solve(A, b, covariance)
+    else:
+        offsets = ols_solve(A, b)
+    assert offsets.shape == (A.shape[1],)
     # This was the boundary condition, zero offset for reference (last) id
     offsets = np.concatenate((offsets, [0]))
     # Offsets are by index, but reverse mapping is trivial because series ids
@@ -270,8 +261,28 @@ def ols_solve(A, b):
     number_of_unknowns = A.shape[1]
     ATA = np.dot(A.transpose(), A)
     assert ATA.shape == (number_of_unknowns, number_of_unknowns), ATA.shape
-    ATd = np.dot(A.transpose(), b)
-    return linalg_mod.solve(ATA, ATd)  # pylint: disable=E1101
+    ATb = np.dot(A.transpose(), b)
+    return linalg_mod.solve(ATA, ATb)  # pylint: disable=E1101
+
+
+def gls_solve(A, b, O):
+    """Solve Ax = b with covariance O by generalized least squares
+
+    Returns x, the solution to the linear system
+
+    """
+    number_of_unknowns = A.shape[1]
+    assert O.shape == (A.shape[0], A.shape[0])
+    Oinv = np.linalg.inv(O)
+    assert Oinv.shape == (A.shape[0], A.shape[0])
+    ATOinvA = A.T @ Oinv @ A
+    assert ATOinvA.shape == (
+        number_of_unknowns,
+        number_of_unknowns,
+    ), ATOinvA.shape
+    ATOinvb = A.T @ Oinv @ b
+    assert ATOinvb.shape == (number_of_unknowns,)
+    return linalg_mod.solve(ATOinvA, ATOinvb)  # pylint: disable=E1101
 
 
 def split_mapping_by_keys(mapping, key_lists):

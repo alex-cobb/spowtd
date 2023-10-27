@@ -1,4 +1,3 @@
- - *Refactoring for rise analysis*
  - [X] Factor out shared code from get_series_time_offsets and call it
    get_series_offsets; it will contain code that is relevant to both recession
    (calculating "time" offsets, as stated) and rise (calculating dynamic
@@ -7,20 +6,12 @@
    just calls get_series_offsets.
  - [X] In rise.py, call get_series_storage_offsets
  - [X] Refactor compute_rise_offsets
- - [ ] Add a function in rise.py to compute the covariance matrix for
+ - [X] Add a function in rise.py to compute the covariance matrix for
    rise analysis
- - [ ] Add a subcommand that computes and dumps the covariance matrix
-   for rise analysis
-   - spowtd rise --dump-covariance FILE
-   - spowtd plot rise-covariance
- - [ ] Add a flag in rise.py::find_rise_offsets ->
+ - [X] Add a flag in rise.py::find_rise_offsets ->
    rise.py::compute_rise_offsets -> fit_offsets.py::get_series_storage_offsets
    to use the covariance matrix
-   - Put in stub code to raise NotImplementedError if this flag is passed
- - */Refactoring for rise analysis*
- - [ ] Add test of subcommand that computes and dumps covariance
-   matrix for rise analysis
- - [ ] Create a function that assembles the covariance matrix for
+ - [X] Create a function that assembles the covariance matrix for
    rise analysis, assuming multiplicative errors
    - It has size (# equations, # equations)
    - Start by assembling it in the most naive way, to try to get an
@@ -32,8 +23,7 @@
      - Terms all look like R_j1^2 f_i1j1 f_i2j1.  Precompute these?
    - It is symmetric, so it makes sense to populate upper and lower
      triangles at the same time
-
- - [ ] Add optional weighting of linear system so each event is
+ - [X] Add optional weighting of linear system so each event is
    weighted equally
    - Consider adding an additional argument 'weighting_scheme' to
      fit_offsets, default None.
@@ -41,6 +31,12 @@
      least-squares problem?
    - We could do numerical experiments with this, giving the recharge
      depth error \alpha some heavy-tailed distribution.
+ - [ ] Add a CLI subcommand that computes and dumps the covariance
+   matrix for rise analysis
+   - spowtd rise --dump-covariance FILE
+   - spowtd plot rise-covariance
+ - [ ] Add test of CLI subcommand that computes and dumps covariance
+   matrix for rise analysis
  - [ ] Enable use of l1 norm instead of l2 norm when fitting rise
    curves
    - Use Cholesky decomposition of covariance matrix to decorrelate.
