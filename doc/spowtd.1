@@ -1,0 +1,79 @@
+'\" t
+.\"     Title: pgbuild
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 09/28/2021
+.\"    Manual: spowtd Manual
+.\"    Source: spowtd
+.\"  Language: English
+.\"
+.TH "PGBUILD" "1" "09/28/2021" "spowtd" "spowtd Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+spowtd \- scalar parameterization of water table dynamics
+.SH "SYNOPSIS"
+.sp
+\fBspowtd\fR \fIDB\fR [\fIOPTIONS\fR]
+.SH "DESCRIPTION"
+.sp
+The \fBspowtd\fR script \&...
+.SH "ARGUMENTS"
+.PP
+DB
+.RS 4
+The path to the working database, e\&.g\&., foo\&.sqlite3
+.RE
+.SH "OPTIONS"
+.PP
+\fB\-h, \-\-help\fR
+.RS 4
+Show help message and exit\&.
+.RE
+.PP
+\fB\-o, \-\-output\fR
+.RS 4
+Write output to the specified file, instead of standard output\&.
+.RE
+.SH "BUGS"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+None known\&.
+.RE
+.SH "EXAMPLES"
+.PP
+spowtd foo\&.sqlite3
+.RS 4
+Do something with the working database
+foo\&...
+.RE
+.SH "SEE ALSO"
+.sp
+\fBsqlite3\fR(1)
+.SH "HISTORY"
+.sp
+2021 \(em Originally written by Alex Cobb (alex\&.cobb@smart\&.mit\&.edu)\&.
