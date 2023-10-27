@@ -425,7 +425,7 @@ def add_rise_args(parser):
     parser.add_argument(
         '--dump-covariance',
         metavar='FILE',
-        help='Dump error covariance matrix as JSON',
+        help='Dump error covariance matrix as JSON to a file, default stdout',
         type=argparse.FileType('wt', encoding='ascii'),
         default=sys.stdout,
     )

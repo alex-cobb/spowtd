@@ -185,6 +185,19 @@ spowtd recession -vvv ekolongouma.sqlite3
 \begin{lstlisting}[frame=single]
 spowtd rise -vvv ekolongouma.sqlite3
 \end{lstlisting}
+If desired, the correlated errors produced by imprecision in recharge
+depth measurement can be taken into account when assembling the rise
+curve (see Appendix~\ref{b:rise_weighting}, ``Event weighting in rise
+analysis'').  To do so, pass in a relative weight to assign to these
+errors, vs.\ direct errors in water level measurement, via
+\texttt{--recharge-error-weight}:
+\begin{lstlisting}[frame=single]
+spowtd rise -vvv ekolongouma.sqlite3 --recharge-error-weight=1e3
+\end{lstlisting}
+To examine the error covariance matrix used in the rise curve
+assembly, append the \texttt{--dump-covariance} flag and the error
+covariance matrix will be written to a file (default is standard
+output) as JSON.
 
 The recession and rise curves are now assembled, and can be plotted.
 \begin{lstlisting}[frame=single]
