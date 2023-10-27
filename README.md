@@ -58,6 +58,11 @@ For development, you may additionally want:
 
 ## Revision history
 
+Version 0.6.0 - 2023-10-27:
+ - Preliminary implementation of event weighting in rise curve assembly.
+ - Blacken sources (python-black).
+ - Refactoring.
+
 Version 0.5.0 - 2022-09-19:
  - Implement stable matching between storms and rises.
  - Update format of PEST files for consistency.
