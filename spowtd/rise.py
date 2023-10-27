@@ -124,7 +124,6 @@ def assemble_rise_covariance(
             )
         )
     )
-    # series_indices = dict(zip(series_ids, range(len(series_ids))))
 
     # Check input
     for head_id, series_at_head in head_mapping.items():
