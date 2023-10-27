@@ -266,7 +266,7 @@ def ols_solve(A, b):
 
 
 def gls_solve(A, b, O):
-    """Solve Ax = b with covariance O by generalized least squares
+    """Solve Ax = b with covariance matrix O by generalized least squares
 
     Returns x, the solution to the linear system
 
@@ -288,7 +288,7 @@ def gls_solve(A, b, O):
 def split_mapping_by_keys(mapping, key_lists):
     """Split up a mapping (dict) according to connected components
 
-    Each connected component is a sequence of keys from mapping; returned is a
+    Each connected component is a sequence of keys from mapping; returns a
     corresponding sequence of head mappings, each with only the keys from that
     connected component.
 
