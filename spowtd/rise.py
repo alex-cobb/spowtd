@@ -60,7 +60,7 @@ def get_series_storage_offsets(
     )
 
 
-def get_rise_covariance(connection, recharge_error_weight=1e3):
+def get_rise_covariance(connection, recharge_error_weight):
     """Use database connection to build covariance of rise event errors"""
     cursor = connection.cursor()
     series, _, _ = assemble_rise_series(cursor)
@@ -90,7 +90,9 @@ def assemble_rise_covariance(
     head_step: factor by which to multiply integer head_id to get water
                level zeta.
     zeta_error_factor: ratio of error in zeta measurement to error induced
-                       by recharge depth mismeasurement.
+                       by recharge depth mismeasurement.  If zero or None, the
+                       K x K identity matrix is returned where K is the total
+                       number of equations.
 
     The covariance of rise event errors is a symmetric, positive semidefinite
     matrix with shape (n_equations, n_equations) characterizing the covariance
@@ -143,6 +145,8 @@ def assemble_rise_covariance(
     number_of_equations = sum(
         len(series_at_head) for series_at_head in list(head_mapping.values())
     )
+    if not recharge_error_weight:
+        return np.identity(number_of_equations)
     number_of_unknowns = len(series_ids) - 1
     # XXX /Duplicate code
     # (i, j)(k)

@@ -3,6 +3,7 @@
 """
 
 import argparse
+import json
 import logging
 import os
 import sqlite3
@@ -71,8 +72,19 @@ def main(argv):
     elif args.task == 'rise':
         with sqlite3.connect(args.db) as connection:
             rise_mod.find_rise_offsets(
-                connection=connection, reference_zeta_mm=args.reference_zeta_mm
+                connection=connection,
+                reference_zeta_mm=args.reference_zeta_mm,
+                recharge_error_weight=args.recharge_error_weight,
             )
+            if args.dump_covariance:
+                with args.dump_covariance as dumpfile:
+                    json.dump(
+                        rise_mod.get_rise_covariance(
+                            connection,
+                            recharge_error_weight=args.recharge_error_weight,
+                        ).tolist(),
+                        dumpfile,
+                    )
     elif args.task == 'plot':
         if args.subtask is None:
             plot_parser.print_help()
@@ -400,10 +412,27 @@ def add_rise_args(parser):
         type=float,
         default=None,
     )
+    parser.add_argument(
+        '--recharge-error-weight',
+        help=(
+            'Relative weight for correlated errors from mismeasurement of '
+            'recharge depth. If provided, an estimated variance-covariance '
+            'matrix is assembled and used when fitting rise offsets.'
+        ),
+        type=float,
+        default=None,
+    )
+    parser.add_argument(
+        '--dump-covariance',
+        metavar='FILE',
+        help='Dump error covariance matrix as JSON',
+        type=argparse.FileType('wt', encoding='ascii'),
+        default=sys.stdout,
+    )
 
 
 def add_plot_args(parser):
-    """Add arguments for spowtd rise parser"""
+    """Add arguments for spowtd plotting parser"""
     plot_subparsers = parser.add_subparsers(
         help='plotting sub-command help', dest='subtask'
     )

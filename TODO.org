@@ -1,13 +1,10 @@
- - [ ] Add a CLI argument to consider covariance when assembling rise
+ - [X] Add a CLI argument to consider covariance when assembling rise
    curve
    - spowtd rise --recharge-error-weight=1e3
- - [ ] Add smoke test of CLI covariance argument for `spowtd rise`
- - [ ] Add a CLI subcommand that computes and dumps the covariance
+ - [X] Add a CLI subcommand that computes and dumps the covariance
    matrix for rise analysis
    - spowtd rise --dump-covariance FILE
-   - spowtd plot rise-covariance
- - [ ] Add test of CLI subcommand that computes and dumps covariance
-   matrix for rise analysis
+ - [ ] Add regression test of rise analysis with covariance
  - [ ] Enable use of l1 norm instead of l2 norm when fitting rise
    curves
    - Use Cholesky decomposition of covariance matrix to decorrelate.

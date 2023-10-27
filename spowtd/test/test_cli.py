@@ -104,6 +104,14 @@ def test_plot_transmissivity_help():
     assert exception.value.code == 0
 
 
+def test_rise_help():
+    """Invoking spowtd rise --help exits with code 0"""
+    with pytest.raises(SystemExit) as exception:
+        cli_mod.main(['rise', '--help'])
+    assert exception.type == SystemExit
+    assert exception.value.code == 0
+
+
 def test_simulate_help():
     """Invoking spowtd simulate --help exits with code 0"""
     with pytest.raises(SystemExit) as exception:

@@ -12,7 +12,9 @@ def test_rise(classified_connection):
 
 def test_rise_covariance(classified_connection):
     """Assemble covariance of rise event errors"""
-    rise_mod.get_rise_covariance(classified_connection)
+    rise_mod.get_rise_covariance(
+        classified_connection, recharge_error_weight=1e3
+    )
 
 
 def test_rise_with_covariance(classified_connection):
