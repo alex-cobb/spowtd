@@ -9,15 +9,20 @@ Build requires:
 
 """
 
+import glob
+import os
+
 ENV = Environment()
 
 ENV.Command(target='doc/spowtd.1',
             source='src/spowtd.1.txt',
             action='a2x -f manpage -D doc $SOURCE')
 
-ENV.Command(target='build/doc/rise_event_error.pdf',
-            source='src/rise_event_error.svg',
-            action='inkscape $SOURCE -o $TARGET -C')
+for FIGURE_NAME in glob.glob('src/*.svg'):
+    basename = os.path.basename(FIGURE_NAME)[:-4]
+    ENV.Command(target=f'build/doc/{basename}.pdf',
+                source=f'src/{basename}.svg',
+                action='inkscape $SOURCE -o $TARGET -C')
 ENV.Command(target=['build/doc/user_guide.aux', 'build/doc/user_guide.fls'],
             source=['src/user_guide.tex', 'build/doc/rise_event_error.pdf'],
             action=('pdflatex -halt-on-error --output-directory=build/doc '
