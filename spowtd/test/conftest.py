@@ -27,36 +27,50 @@ for dirpath, dirnames, filenames in os.walk(os.path.dirname(__file__)):
 
 
 # pylint: disable=redefined-outer-name
-@pytest.fixture
+@pytest.fixture(scope="session", params=[1, 2])
+def persistent_loaded_connection(request):
+    """Connection to in-memory database with loaded data
+
+    Each loaded connection is created once per test session by loading
+    data from a set of sample files (indexed by param).  Tests work
+    with copies.
+
+    """
+    with sqlite3.connect(':memory:') as persistent_connection:
+        sample = request.param
+        with open(
+            get_sample_file_path('precipitation', sample),
+            'rt',
+            encoding='utf-8-sig',
+        ) as precip_f, open(
+            get_sample_file_path('evapotranspiration', sample),
+            'rt',
+            encoding='utf-8-sig',
+        ) as et_f, open(
+            get_sample_file_path('water_level', sample), 'rt', encoding='utf-8-sig'
+        ) as zeta_f:
+            load_mod.load_data(
+                connection=persistent_connection,
+                precipitation_data_file=precip_f,
+                evapotranspiration_data_file=et_f,
+                water_level_data_file=zeta_f,
+                time_zone_name='Africa/Lagos',
+            )
+            yield persistent_connection
+
+
+@pytest.fixture(scope="function")
 def connection():
     """Connection to an in-memory database"""
     with sqlite3.connect(':memory:') as in_memory_db:
         yield in_memory_db
 
 
-@pytest.fixture(scope="function", params=[1, 2])
-def loaded_connection(request, connection):
+@pytest.fixture(scope="function")
+def loaded_connection(connection, persistent_loaded_connection):
     """Connection to in-memory database with loaded data"""
-    sample = request.param
-    with open(
-        get_sample_file_path('precipitation', sample),
-        'rt',
-        encoding='utf-8-sig',
-    ) as precip_f, open(
-        get_sample_file_path('evapotranspiration', sample),
-        'rt',
-        encoding='utf-8-sig',
-    ) as et_f, open(
-        get_sample_file_path('water_level', sample), 'rt', encoding='utf-8-sig'
-    ) as zeta_f:
-        load_mod.load_data(
-            connection=connection,
-            precipitation_data_file=precip_f,
-            evapotranspiration_data_file=et_f,
-            water_level_data_file=zeta_f,
-            time_zone_name='Africa/Lagos',
-        )
-        yield connection
+    persistent_loaded_connection.backup(connection)
+    yield connection
 
 
 @pytest.fixture(scope="function")
