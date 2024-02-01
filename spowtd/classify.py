@@ -210,9 +210,9 @@ def match_all_storms(
     is_storm = rainfall_intensity_mm_h > storm_rain_threshold_mm_h
     for i, (rain_start, rain_stop) in enumerate(rain_intervals):
         assert is_storm[rain_start:rain_stop].all(), (
-            "Storm interval [{}, {}] includes only raining time steps"
             # XXX Convert to datetime for error message?
-            .format(epoch[rain_start], epoch[rain_stop - 1])
+            f'Storm interval [{epoch[rain_start]}, {epoch[rain_stop - 1]}] '
+            'includes only raining time steps'
         )
         jump_start, jump_stop = jump_intervals[i]
         assert (
@@ -385,22 +385,23 @@ def get_candidate_match_intervals(
     jump_indices = np.nonzero(jump_mask)[0]
     jump_start = jump_indices[0]
     jump_stop = jump_indices[-1] + 2
-    assert (
-        np.diff(head[jump_start:jump_stop]) > jump_threshold
-    ).all(), "Head pair [{}, {}) meets jump threshold {} mm".format(
-        jump_start, jump_stop, jump_threshold
+    assert (np.diff(head[jump_start:jump_stop]) > jump_threshold).all(), (
+        f'Head pair [{jump_start}, {jump_stop}) '
+        f'meets jump threshold {jump_threshold} mm'
     )
     assert (
         jump_start == 0
         or head[jump_start] - head[jump_start - 1] <= jump_threshold
-    ), "Jump <= {} starts at jump_start: {}, {}".format(
-        jump_threshold, jump_start, head[jump_start] - head[jump_start - 1]
+    ), (
+        f'Jump <= {jump_threshold} starts at jump_start: '
+        f'{jump_start}, {head[jump_start] - head[jump_start - 1]}'
     )
     assert (
         jump_stop == len(head)
         or head[jump_stop] - head[jump_stop - 1] <= jump_threshold
-    ), "Jump > {} ends at jump_stop: {}, {}".format(
-        jump_threshold, jump_stop, head[jump_stop] - head[jump_stop - 1]
+    ), (
+        f'Jump > {jump_threshold} ends at jump_stop: '
+        f'{jump_stop}, {head[jump_stop] - head[jump_stop - 1]}'
     )
     # At a minimum, all intervals include 1 rainfall intensity
     # value and 2 head values (note that these correspond to the
@@ -423,12 +424,8 @@ def disambiguate_matching(rain_intervals, jump_intervals):
 
     """
     assert len(rain_intervals) == len(jump_intervals)
-    storm_stops = {
-        rain_start: rain_stop for rain_start, rain_stop in rain_intervals
-    }
-    jump_stops = {
-        jump_start: jump_stop for jump_start, jump_stop in jump_intervals
-    }
+    storm_stops = dict(rain_intervals)
+    jump_stops = dict(jump_intervals)
     candidate_matches = [
         (rain_start, jump_start)
         for (rain_start, _), (jump_start, _) in zip(
@@ -458,7 +455,9 @@ def disambiguate_matching(rain_intervals, jump_intervals):
             return -abs(duration_differences[(rain_start, jump_start)])
 
         candidates = sorted(jumps, key=absolute_duration_difference)
+        del jumps, absolute_duration_difference
         storm_candidates[rain_start] = candidates
+        del rain_start
 
     jump_preferences = {}
     for jump_start, rains in jumps_dict.items():
@@ -470,6 +469,8 @@ def disambiguate_matching(rain_intervals, jump_intervals):
         jump_preferences[jump_start] = {
             rain_start: -abs(time_offset(rain_start)) for rain_start in rains
         }
+        del time_offset, jump_start, rains
+
     # Mapping from jumps to storms
     jump_matches = find_stable_matching(storm_candidates, jump_preferences)
     unique_rain_intervals = []
@@ -501,7 +502,7 @@ def find_stable_matching(storm_candidates, jump_preferences):
     matchable_storms = {
         storm for storm, candidates in storm_candidates.items() if candidates
     }
-    matches = dict()
+    matches = {}
     while matchable_storms:
         storm = matchable_storms.pop()
         # Inefficient but safe
@@ -537,9 +538,7 @@ def check_for_uniform_time_steps(epoch):
     """
     delta_t = np.diff(epoch)
     if delta_t.min() != delta_t.max():
-        raise ValueError(
-            "Nonuniform time steps in {}".format(sorted(set(delta_t)))
-        )
+        raise ValueError(f'Nonuniform time steps in {sorted(set(delta_t))}')
 
 
 def get_mystery_jump_mask(is_jump, is_raining):
@@ -599,8 +598,8 @@ def get_true_interval_masks(boolean_vector):
 
 def assert_equal(a, b, message=None):  # pylint:disable=invalid-name
     """Convenience function for checking equality"""
-    prefix = "{}: ".format(message) if message else ""
-    assert a == b, "{}{} != {}".format(prefix, a, b)
+    prefix = f'{message}: ' if message else ''
+    assert a == b, f'{prefix}{a} != {b}'
 
 
 def convert_epoch_to_datetime_text(epoch):

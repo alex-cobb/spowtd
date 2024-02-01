@@ -19,7 +19,9 @@ def test_get_version(capfd):
     assert exception.value.code == 0
     out, _ = capfd.readouterr()
     with open(
-        os.path.join(os.path.dirname(__file__), os.pardir, 'VERSION.txt'), 'rt'
+        os.path.join(os.path.dirname(__file__), os.pardir, 'VERSION.txt'),
+        'rt',
+        encoding='utf-8',
     ) as version_file:
         version = version_file.read()
     assert out == version
@@ -44,7 +46,7 @@ def test_load_help():
 def test_load():
     """'spowtd load' exits without error"""
     paths = {
-        key: os.path.join(conftest.SAMPLE_DATA_DIR, '{}_1.txt'.format(key))
+        key: os.path.join(conftest.SAMPLE_DATA_DIR, f'{key}_1.txt')
         for key in ('evapotranspiration', 'precipitation', 'water_level')
     }
     with tempfile.NamedTemporaryFile(suffix='.sqlite3') as db_file:

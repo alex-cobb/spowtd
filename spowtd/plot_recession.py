@@ -8,10 +8,6 @@ import itertools
 
 import matplotlib.pyplot as plt
 
-import numpy as np
-
-import yaml
-
 import spowtd.simulate_recession as simulate_recession_mod
 
 

@@ -162,12 +162,10 @@ def compute_recession_curve(
             -et_mm_d - curvature_km * transmissivity_m2_d(zeta_mm)
         )
 
-    i = 1
-    for zeta_mm in zeta_grid_mm[1:]:
+    for i in range(1, len(zeta_grid_mm)):
         dt_d[i] = integrate_mod.quad(f, zeta_grid_mm[i - 1], zeta_grid_mm[i])[
             0
         ]
-        i += 1
     elapsed_time_d = np.cumsum(dt_d)
     elapsed_time_d += mean_elapsed_time_d - elapsed_time_d.mean()
     return elapsed_time_d

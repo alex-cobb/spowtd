@@ -199,9 +199,9 @@ def find_offsets(head_mapping, covariance=None):
     offsets = np.concatenate((offsets, [0]))
     # Offsets are by index, but reverse mapping is trivial because series ids
     #   are sorted
-    assert len(series_ids) == len(offsets), '{} != {}'.format(
-        len(series_ids), len(offsets)
-    )
+    assert len(series_ids) == len(
+        offsets
+    ), f'{len(series_ids)} != {len(offsets)}'
     return (series_ids, offsets)
 
 
@@ -230,7 +230,7 @@ def assemble_linear_system(
     b = np.zeros((number_of_equations,))
     row_template = np.zeros((number_of_unknowns,))
     row_index = 0
-    for head_id, series_at_head in sorted(head_mapping.items()):
+    for _, series_at_head in sorted(head_mapping.items()):
         row_template[:] = 0
         sids, times = list(zip(*series_at_head))
         number_of_series_at_head = len(sids)

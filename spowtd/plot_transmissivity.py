@@ -22,7 +22,7 @@ def dump_transmissivity(
             parameters, water_level_min_cm, water_level_max_cm, n_points
         )
     ):
-        outfile.write('{}, {}\n'.format(water_level_cm, transmissivity))
+        outfile.write(f'{water_level_cm}, {transmissivity}\n')
 
 
 def plot_transmissivity(

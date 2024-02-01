@@ -136,7 +136,7 @@ def assemble_rise_covariance(
             assert depth_at_head >= 0, depth_at_head
             assert depth_at_head <= depth[1], f'{depth_at_head} > {depth[1]}'
             assert (
-                rise[0] <= zeta and rise[1] >= zeta
+                rise[0] <= zeta <= rise[1]
             ), f'Rise {rise} does not span {zeta}'
             del depth, rise, series_id, depth_at_head
         del head_id, zeta, series_at_head
@@ -298,8 +298,8 @@ def compute_rise_offsets(cursor, reference_zeta_mm, recharge_error_weight=0):
     )
     if reference_zeta_off_grid:
         raise ValueError(
-            'Reference zeta {} mm not evenly divisible by '
-            'zeta step {} mm'.format(reference_zeta_mm, delta_z_mm)
+            f'Reference zeta {reference_zeta_mm} mm not evenly divisible by '
+            f'zeta step {delta_z_mm} mm'
         )
     if reference_zeta_mm is not None:
         reference_index = int(reference_zeta_mm / delta_z_mm)
@@ -440,7 +440,7 @@ ORDER BY s.start_epoch"""
         ), 'A jump is defined by at least two zeta values'
         assert (
             np.diff(zeta_seq) > 0
-        ).all(), '{} is not strictly increasing'.format(zeta_seq)
+        ).all(), f'{zeta_seq} is not strictly increasing'
         initial_zeta = zeta_seq[0]
         final_zeta = zeta_seq[-1]
         assert (

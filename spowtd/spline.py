@@ -62,6 +62,8 @@ class Spline:
     def integrate(self, a, b):
         """Evaluate a definite integral of the spline"""
         if a > b:
+            # Reverse arguments and negate integral
+            # pylint: disable=arguments-out-of-order
             return -self.integrate(b, a)
         if a == b:
             return 0.0

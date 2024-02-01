@@ -52,12 +52,12 @@ def compute_offsets(cursor, reference_zeta_mm):
         indices = np.argwhere(
             (epoch >= interval_start_epoch) & (epoch <= interval_thru_epoch)
         )[:, 0]
-        assert epoch[indices][0] == interval_start_epoch, '{} != {}'.format(
-            epoch[indices][0], interval_start_epoch
-        )
-        assert epoch[indices][-1] == interval_thru_epoch, '{} != {}'.format(
-            epoch[indices][-1], interval_thru_epoch
-        )
+        assert (
+            epoch[indices][0] == interval_start_epoch
+        ), f'{epoch[indices][0]} != {interval_start_epoch}'
+        assert (
+            epoch[indices][-1] == interval_thru_epoch
+        ), f'{epoch[indices][-1]} != {interval_thru_epoch}'
         series.append((epoch[indices], zeta_mm[indices]))
         del indices
         del i, interval_start_epoch, interval_thru_epoch
@@ -83,8 +83,8 @@ def compute_offsets(cursor, reference_zeta_mm):
     )
     if reference_zeta_off_grid:
         raise ValueError(
-            'Reference zeta {} mm not evenly divisible by '
-            'zeta step {} mm'.format(reference_zeta_mm, delta_z_mm)
+            f'Reference zeta {reference_zeta_mm} mm '
+            f'not evenly divisible by zeta step {delta_z_mm} mm'
         )
     if reference_zeta_mm is not None:
         reference_index = int(reference_zeta_mm / delta_z_mm)

@@ -142,6 +142,8 @@ def plot_time_series(
     rain_storm_intervals = [dates_mod.epoch2num(v) for v in zip(*cursor)]
 
     for series in data_intervals:
+        # PyLint false positive
+        # pylint: disable=modified-iterating-list
         zeta_axes.plot_date(series.mpl_time, series.zeta_cm, 'k-')
         del series
 
@@ -161,6 +163,8 @@ def plot_time_series(
         )
 
     for series in data_intervals:
+        # PyLint false positive
+        # pylint: disable=modified-iterating-list
         rain_axes.plot_date(
             series.mpl_time, series.rain_mm_h, 'k-', drawstyle='steps-post'
         )
@@ -175,6 +179,8 @@ def plot_time_series(
 
     if plot_evapotranspiration:
         for series in data_intervals:
+            # PyLint false positive
+            # pylint: disable=modified-iterating-list
             et_axes.plot_date(
                 series.mpl_time, series.et_mm_h, 'k-', drawstyle='steps-post'
             )
@@ -211,6 +217,8 @@ def plot_time_series(
             storm_rain = mask_from_list(
                 series.rain_mm_h, series.rain_mm_h >= storm_threshold_mm_h
             )
+            # PyLint false positive
+            # pylint: disable=modified-iterating-list
             rain_axes.plot_date(
                 series.mpl_time,
                 storm_rain,

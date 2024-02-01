@@ -67,6 +67,7 @@ def generate_rise_tpl_file(
     connection, parameters, configuration, outfile, precision
 ):
     """Generate template file for calibration against rise curve"""
+    del connection, configuration, precision
     lines = ['ptf @', 'specific_yield:']
     if parameters['specific_yield']['type'] == 'peatclsm':
         lines += [
@@ -80,12 +81,12 @@ def generate_rise_tpl_file(
         assert parameters['specific_yield']['type'] == 'spline'
         lines += ['  type: spline', '  zeta_knots_mm:']
         lines += [
-            '    - {}'.format(value)
+            f'    - {value}'
             for value in parameters['specific_yield']['zeta_knots_mm']
         ]
         lines += ['  sy_knots:  # Specific yield, dimensionless']
         lines += [
-            '    - @sy_knot_{}@'.format(str(i).ljust(16))
+            f'    - @sy_knot_{str(i).ljust(16)}@'
             for i in range(
                 1, len(parameters['specific_yield']['sy_knots']) + 1
             )
@@ -94,34 +95,30 @@ def generate_rise_tpl_file(
     if parameters['transmissivity']['type'] == 'peatclsm':
         lines += [
             '  type: peatclsm',
-            '  Ksmacz0: {}  # m/s'.format(
-                parameters['transmissivity']['Ksmacz0']
+            f"  Ksmacz0: {parameters['transmissivity']['Ksmacz0']}  # m/s",
+            (
+                f"  alpha: {parameters['transmissivity']['alpha']}"
+                '  # dimensionless'
             ),
-            '  alpha: {}  # dimensionless'.format(
-                parameters['transmissivity']['alpha']
-            ),
-            '  zeta_max_cm: {}'.format(
-                parameters['transmissivity']['zeta_max_cm']
-            ),
+            f"  zeta_max_cm: {parameters['transmissivity']['zeta_max_cm']}",
         ]
     else:
         assert parameters['transmissivity']['type'] == 'spline'
         lines += ['  type: spline']
         lines += ['  zeta_knots_mm:']
         lines += [
-            '    - {}'.format(value)
+            f'    - {value}'
             for value in parameters['transmissivity']['zeta_knots_mm']
         ]
         lines += ['  K_knots_km_d:  # Conductivity, km /d']
         lines += [
-            '    - {}'.format(value)
+            f'    - {value}'
             for value in parameters['transmissivity']['K_knots_km_d']
         ]
         lines += [
-            '  minimum_transmissivity_m2_d: {}  '
-            '# Minimum transmissivity, m2 /d'.format(
-                parameters['transmissivity']['minimum_transmissivity_m2_d']
-            )
+            '  minimum_transmissivity_m2_d: '
+            f"{parameters['transmissivity']['minimum_transmissivity_m2_d']}"
+            '  # Minimum transmissivity, m2 /d'
         ]
     outfile.write(os.linesep.join(lines))
 
@@ -130,6 +127,7 @@ def generate_rise_ins_file(
     connection, parameters, configuration, outfile, precision
 ):
     """Generate instruction file for calibration against rise curve"""
+    del parameters, configuration, precision
     cursor = connection.cursor()
     cursor.execute(
         """
@@ -139,7 +137,7 @@ def generate_rise_ins_file(
     n_zeta = cursor.fetchone()[0]
     cursor.close()
     lines = ['pif @', '@# Rise curve simulation vector@']
-    lines += ['l1 [e{}]3:24'.format(i + 1) for i in range(n_zeta)]
+    lines += [f'l1 [e{i + 1}]3:24' for i in range(n_zeta)]
     outfile.write(os.linesep.join(lines))
 
 
@@ -147,12 +145,11 @@ def generate_rise_pst_file(
     connection, parameters, configuration, outfile, precision
 ):
     """Generate control file for calibration against rise curve"""
+    del configuration
     # See Example 11.3 in pestman and Preface of addendum
     parameterization = parameters['specific_yield']['type']
     if parameterization not in ('peatclsm', 'spline'):
-        raise ValueError(
-            'Unrecognized parameterization "{}"'.format(parameterization)
-        )
+        raise ValueError(f'Unrecognized parameterization "{parameterization}"')
     if parameterization == 'spline':
         npar = len(parameters['specific_yield']['sy_knots'])
         npargp = 1  # One parameter group
@@ -180,12 +177,10 @@ def generate_rise_pst_file(
         '* control data',
         'restart  estimation',
         (
-            '{}{}{}     0{}'.format(
-                str(npar).rjust(5),
-                str(n_zeta).rjust(6),
-                str(npargp).rjust(6),
-                str(nobsgp).rjust(6),
-            )
+            f'{str(npar).rjust(5)}'
+            f'{str(n_zeta).rjust(6)}'
+            f'{str(npargp).rjust(6)}'
+            f'     0{str(nobsgp).rjust(6)}'
         ),
         '    1     1 double point   1   0   0',
         '   5.0  2.0   0.3  0.03    10',
@@ -201,9 +196,8 @@ def generate_rise_pst_file(
             '* parameter data',
         ]
         lines += [
-            'sy_knot_{}   none relative   NaN  0.01  1    sy_knot    1.0  0.0 1'.format(
-                i + 1
-            )
+            f'sy_knot_{i + 1}   '
+            'none relative   NaN  0.01  1    sy_knot    1.0  0.0 1'
             for i in range(npar)
         ]
     else:
@@ -224,11 +218,7 @@ def generate_rise_pst_file(
     lines += ['* observation groups', 'storageobs']
     lines += ['* observation data']
     lines += [
-        (
-            'e{{}}    {{:0.{}g}}    1.0   storageobs'.format(precision).format(
-                i + 1, W
-            )
-        )
+        f'e{{}}    {{:0.{precision}g}}    1.0   storageobs'.format(i + 1, W)
         for i, W in enumerate(avg_storage_mm)
     ]
     lines += [
@@ -250,6 +240,7 @@ def generate_curves_tpl_file(
     connection, parameters, configuration, outfile, precision
 ):
     """Generate template file for calibration against master curves"""
+    del connection, configuration, precision
     lines = ['ptf @', 'specific_yield:']
     if parameters['specific_yield']['type'] == 'peatclsm':
         lines += [
@@ -263,12 +254,12 @@ def generate_curves_tpl_file(
         assert parameters['specific_yield']['type'] == 'spline'
         lines += ['  type: spline', '  zeta_knots_mm:']
         lines += [
-            '    - {}'.format(value)
+            f'    - {value}'
             for value in parameters['specific_yield']['zeta_knots_mm']
         ]
         lines += ['  sy_knots:  # Specific yield, dimensionless']
         lines += [
-            '    - @sy_knot_{}@'.format(str(i).ljust(16))
+            f'    - @sy_knot_{str(i).ljust(16)}@'
             for i in range(
                 1, len(parameters['specific_yield']['sy_knots']) + 1
             )
@@ -279,30 +270,26 @@ def generate_curves_tpl_file(
             '  type: peatclsm',
             '  Ksmacz0: @Ksmacz0                 @  # m/s',
             '  alpha: @alpha                   @  # dimensionless',
-            '  zeta_max_cm: {}'.format(
-                parameters['transmissivity']['zeta_max_cm']
-            ),
+            f"  zeta_max_cm: {parameters['transmissivity']['zeta_max_cm']}",
         ]
     else:
         assert parameters['transmissivity']['type'] == 'spline'
         lines += ['  type: spline']
         lines += ['  zeta_knots_mm:']
         lines += [
-            '    - {}'.format(value)
+            f'    - {value}'
             for value in parameters['transmissivity']['zeta_knots_mm']
         ]
         lines += ['  K_knots_km_d:  # Conductivity, km /d']
         lines += [
-            '    - @K_knot_{}@'.format(str(i).ljust(17))
+            f'    - @K_knot_{str(i).ljust(17)}@'
             for i in range(
                 1, len(parameters['transmissivity']['K_knots_km_d']) + 1
             )
         ]
         lines += [
-            '  minimum_transmissivity_m2_d: {}  '
-            '# Minimum transmissivity, m2 /d'.format(
-                '@T_min                   @'
-            )
+            '  minimum_transmissivity_m2_d: @T_min                   @  '
+            '# Minimum transmissivity, m2 /d'
         ]
     outfile.write(os.linesep.join(lines))
 
@@ -311,6 +298,7 @@ def generate_curves_ins_file(
     connection, parameters, configuration, outfile, precision
 ):
     """Generate instruction file for calibration against master curves"""
+    del parameters, configuration, precision
     cursor = connection.cursor()
     cursor.execute(
         """
@@ -326,10 +314,10 @@ def generate_curves_ins_file(
     n_recession_zeta = cursor.fetchone()[0]
     cursor.close()
     lines = ['pif @', '@# Rise curve simulation vector@']
-    lines += ['l1 [e{}]3:24'.format(i + 1) for i in range(n_rise_zeta)]
+    lines += [f'l1 [e{i + 1}]3:24' for i in range(n_rise_zeta)]
     lines += ['@# Recession curve simulation vector@']
     lines += [
-        'l1 [e{}]3:24'.format(i + 1)
+        f'l1 [e{i + 1}]3:24'
         for i in range(n_rise_zeta, n_rise_zeta + n_recession_zeta)
     ]
     outfile.write(os.linesep.join(lines))
@@ -339,12 +327,11 @@ def generate_curves_pst_file(
     connection, parameters, configuration, outfile, precision
 ):
     """Generate control file for calibration against master curves"""
+    del configuration
     # See Example 11.3 in pestman and Preface of addendum
     parameterization = parameters['specific_yield']['type']
     if parameterization not in ('peatclsm', 'spline'):
-        raise ValueError(
-            'Unrecognized parameterization "{}"'.format(parameterization)
-        )
+        raise ValueError(f'Unrecognized parameterization "{parameterization}"')
     if parameterization == 'spline':
         n_Sy = len(parameters['specific_yield']['sy_knots'])
         n_T = len(parameters['transmissivity']['K_knots_km_d'])
@@ -381,12 +368,10 @@ def generate_curves_pst_file(
         '* control data',
         'restart  estimation',
         (
-            '{}{}{}     0{}'.format(
-                str(npar).rjust(5),
-                str(n_rise_zeta + n_recession_zeta).rjust(6),
-                str(npargp).rjust(6),
-                str(nobsgp).rjust(6),
-            )
+            f'{str(npar).rjust(5)}'
+            f'{str(n_rise_zeta + n_recession_zeta).rjust(6)}'
+            f'{str(npargp).rjust(6)}'
+            f'     0{str(nobsgp).rjust(6)}'
         ),
         '    1     1 double point   1   0   0',
         '   5.0  2.0   0.3  0.03    10',
@@ -404,15 +389,11 @@ def generate_curves_pst_file(
             '* parameter data',
         ]
         lines += [
-            'sy_knot_{}  none relative  NaN  0.01     1       sy_knot  1.0  0.0  1'.format(
-                i + 1
-            )
+            f'sy_knot_{i + 1}  none relative  NaN  0.01     1       sy_knot  1.0  0.0  1'
             for i in range(n_Sy)
         ]
         lines += [
-            'k_knot_{}   log  factor    NaN  1.0e-04  1.0e+5  k_knot   1.0  0.0  1'.format(
-                i + 1
-            )
+            f'k_knot_{i + 1}   log  factor    NaN  1.0e-04  1.0e+5  k_knot   1.0  0.0  1'
             for i in range(n_T)
         ]
         lines += [
@@ -440,16 +421,12 @@ def generate_curves_pst_file(
     lines += ['* observation groups', 'storageobs', 'timeobs']
     lines += ['* observation data']
     lines += [
-        (
-            'e{{}}    {{:0.{}g}}    1.0   storageobs'.format(precision).format(
-                i + 1, W
-            )
-        )
+        (f'e{{}}    {{:0.{precision}g}}    1.0   storageobs'.format(i + 1, W))
         for i, W in enumerate(avg_storage_mm)
     ]
     lines += [
         (
-            'e{{}}    {{:0.{}g}}    1.0   timeobs'.format(precision).format(
+            f'e{{}}    {{:0.{precision}g}}    1.0   timeobs'.format(
                 n_rise_zeta + i + 1, t
             )
         )
@@ -474,13 +451,11 @@ def check_parameters(parameters):
     """Check parameters for correctness"""
     if parameters['specific_yield']['type'] not in ('peatclsm', 'spline'):
         raise ValueError(
-            'Unexpected specific yield type: {}'.format(
-                parameters['specific_yield']['type']
-            )
+            'Unexpected specific yield type: '
+            f"{parameters['specific_yield']['type']}"
         )
     if parameters['transmissivity']['type'] not in ('peatclsm', 'spline'):
         raise ValueError(
-            'Unexpected specific yield type: {}'.format(
-                parameters['transmissivity']['type']
-            )
+            'Unexpected specific yield type: '
+            f"{parameters['transmissivity']['type']}"
         )

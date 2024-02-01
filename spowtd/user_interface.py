@@ -115,7 +115,7 @@ def main(argv):
         with sqlite3.connect(args.db) as connection:
             pestfiles(connection=connection, args=args)
     else:
-        raise AssertionError('Bad task {}'.format(args.task))
+        raise AssertionError(f'Bad task {args.task}')
     return 0
 
 
@@ -259,7 +259,7 @@ def plot(connection, args):
                 n_points=args.n_points,
             )
     else:
-        raise AssertionError('Bad plot task {}'.format(args.subtask))
+        raise AssertionError(f'Bad plot task {args.subtask}')
 
 
 def set_curvature(connection, args):
@@ -286,7 +286,7 @@ def simulate(connection, args):
             observations_only=args.observations,
         )
     else:
-        raise AssertionError('Bad simulate task {}'.format(args.subtask))
+        raise AssertionError(f'Bad simulate task {args.subtask}')
 
 
 def pestfiles(connection, args):
@@ -308,7 +308,7 @@ def pestfiles(connection, args):
             outfile=args.output,
         )
     else:
-        raise AssertionError('Bad simulate task {}'.format(args.subtask))
+        raise AssertionError(f'Bad simulate task {args.subtask}')
 
 
 def add_shared_args(parser):
@@ -720,5 +720,5 @@ def get_verbosity(level_index):
 def get_version():
     """Get project version"""
     version_file_path = os.path.join(os.path.dirname(__file__), 'VERSION.txt')
-    with open(version_file_path) as version_file:
+    with open(version_file_path, mode='rt', encoding='utf-8') as version_file:
         return version_file.read().strip()

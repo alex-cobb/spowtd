@@ -34,7 +34,7 @@ def regrid(x, y, y_step, interpolant='linear'):
     #
     if len(x) != len(y):
         raise ValueError(
-            'arguments lengths unequal: ' '{} != {}'.format(len(x), len(y))
+            f'Argument lengths unequal: {len(x)} != {len(y)}'
         )
     # Don't use "if x" here, this is an ndarray
     if len(x) == 0:  # pylint: disable=len-as-condition

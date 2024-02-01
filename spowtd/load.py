@@ -39,7 +39,7 @@ def load_data(
     if tables:
         raise ValueError('Database already populated; remove before loading')
 
-    with open(SCHEMA_PATH, 'rt') as schema_file:
+    with open(SCHEMA_PATH, 'rt', encoding='utf-8') as schema_file:
         cursor.executescript(schema_file.read())
     # Format: Datetime, precipitation intensity (mm / h)
     precip_csv = csv_mod.reader(precipitation_data_file, delimiter=',')
@@ -176,7 +176,7 @@ def populate_grid_time(cursor, time_zone_name):
     delta_t = sorted(set(np.diff(time_grid)))
     if len(delta_t) != 1:
         raise ValueError(
-            'Nonuniform time steps in rainfall data: {} s'.format(delta_t)
+            f'Nonuniform time steps in rainfall data: {delta_t} s'
         )
     time_step = int(delta_t[0])
     del delta_t
@@ -237,9 +237,8 @@ def populate_evapotranspiration(cursor, time_grid, time_step, tz):
             for epoch in missing_epochs
         ]
         raise ValueError(
-            'No ET data at {} grid datetimes (showing up to 3): {}'.format(
-                len(missing_datetimes), missing_datetimes[:3]
-            )
+            f'No ET data at {len(missing_datetimes)} grid datetimes '
+            f'(showing up to 3): {missing_datetimes[:3]}'
         )
     cursor.execute(
         """
@@ -274,6 +273,6 @@ def generate_timestamped_rows(rows, tz):
         epoch = local_datetime.timestamp()
         if not epoch.is_integer():
             raise ValueError(
-                'Non-integer seconds in datetime {}'.format(row[0])
+                f'Non-integer seconds in datetime {row[0]}'
             )
         yield [int(epoch)] + row[1:]

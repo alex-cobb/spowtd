@@ -73,14 +73,12 @@ def classified_connection(loaded_connection):
 
 def get_sample_file_path(file_type, sample, suffix='txt'):
     """Return path to a sample file"""
-    return os.path.join(
-        SAMPLE_DATA_DIR, '{}_{}.{}'.format(file_type, sample, suffix)
-    )
+    return os.path.join(SAMPLE_DATA_DIR, f'{file_type}_{sample}.{suffix}')
 
 
 def get_parameter_file_path(file_type):
     """Return path to a parameter file"""
-    return os.path.join(SAMPLE_DATA_DIR, '{}_parameters.yml'.format(file_type))
+    return os.path.join(SAMPLE_DATA_DIR, f'{file_type}_parameters.yml')
 
 
 def peatclsm_specific_yield_table():

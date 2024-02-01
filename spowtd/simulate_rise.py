@@ -6,8 +6,6 @@
 
 import numpy as np
 
-import scipy.integrate as integrate_mod
-
 import yaml
 
 import spowtd.specific_yield as specific_yield_mod
@@ -72,12 +70,10 @@ def compute_rise_curve(specific_yield, zeta_grid_mm, mean_storage_mm=0.0):
     """
     dW_mm = np.empty(zeta_grid_mm.shape, dtype=float)
     dW_mm[0] = 0.0
-    i = 1
-    for zeta_mm in zeta_grid_mm[1:]:
+    for i in range(1, len(zeta_grid_mm)):
         dW_mm[i] = specific_yield.integrate(
             zeta_grid_mm[i - 1], zeta_grid_mm[i]
         )
-        i += 1
     W_mm = np.cumsum(dW_mm)
     W_mm += mean_storage_mm - W_mm.mean()
     return W_mm

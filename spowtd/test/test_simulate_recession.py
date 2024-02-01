@@ -93,7 +93,9 @@ def test_simulate_recession_curve(
     }[(parameterization_type, n_zeta)]
 
     with open(
-        conftest.get_parameter_file_path(parameterization_type), 'rt'
+        conftest.get_parameter_file_path(parameterization_type),
+        'rt',
+        encoding='utf-8',
     ) as parameter_file:
         parameters = yaml.safe_load(parameter_file)
     specific_yield = specific_yield_mod.create_specific_yield_function(

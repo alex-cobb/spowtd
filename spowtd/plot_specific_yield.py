@@ -22,7 +22,7 @@ def dump_specific_yield(
             parameters, water_level_min_cm, water_level_max_cm, n_points
         )
     ):
-        outfile.write('{}, {}\n'.format(water_level_cm, specific_yield))
+        outfile.write(f'{water_level_cm}, {specific_yield}\n')
 
 
 def plot_specific_yield(

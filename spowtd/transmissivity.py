@@ -19,7 +19,7 @@ def create_transmissivity_function(parameters):
     """
     if 'type' not in parameters:
         raise ValueError(
-            '"type" field is required in parameters; got {}'.format(parameters)
+            f'"type" field is required in parameters; got {parameters}'
         )
     sy_type = parameters.pop('type', None)
     return {
@@ -65,6 +65,7 @@ class SplineTransmissivity:
         )
 
     def conductivity(self, water_level_mm):
+        """Compute conductivity for a scalar argument"""
         assert water_level_mm >= self.zeta_knots_mm.min()
         if water_level_mm >= self.zeta_knots_mm.max():
             raise NotImplementedError('Extrapolation above highest knot')
@@ -113,9 +114,8 @@ class PeatclsmTransmissivity:
         water_level_mm = np.asarray(water_level_mm)
         if (water_level_mm / 10 > zeta_max_cm).any():
             raise ValueError(
-                'T undefined at water level > {} cm in {}'.format(
-                    zeta_max_cm, water_level_mm / 10
-                )
+                f'T undefined at water level > {zeta_max_cm} cm '
+                f'in {water_level_mm / 10}'
             )
         return (
             Ksmacz0 * (zeta_max_cm - water_level_mm / 10) ** (1 - alpha)
