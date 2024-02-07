@@ -10,7 +10,6 @@ import pytest
 
 import spowtd.classify as classify_mod
 import spowtd.load as load_mod
-import spowtd.test
 import spowtd.zeta_grid as zeta_grid_mod
 
 
@@ -61,7 +60,6 @@ def persistent_loaded_connection(request):
                 water_level_data_file=zeta_f,
                 time_zone_name='Africa/Lagos',
             )
-            spowtd.test.set_dataset_id(persistent_connection, sample)
             yield persistent_connection
 
 
