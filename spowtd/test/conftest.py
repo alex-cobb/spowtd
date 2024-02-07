@@ -10,6 +10,7 @@ import pytest
 
 import spowtd.classify as classify_mod
 import spowtd.load as load_mod
+import spowtd.test
 import spowtd.zeta_grid as zeta_grid_mod
 
 
@@ -36,7 +37,9 @@ def persistent_loaded_connection(request):
     with copies.
 
     """
-    with sqlite3.connect(':memory:') as persistent_connection:
+    with sqlite3.connect(
+        ':memory:', autocommit=False
+    ) as persistent_connection:
         sample = request.param
         with open(
             get_sample_file_path('precipitation', sample),
@@ -47,7 +50,9 @@ def persistent_loaded_connection(request):
             'rt',
             encoding='utf-8-sig',
         ) as et_f, open(
-            get_sample_file_path('water_level', sample), 'rt', encoding='utf-8-sig'
+            get_sample_file_path('water_level', sample),
+            'rt',
+            encoding='utf-8-sig',
         ) as zeta_f:
             load_mod.load_data(
                 connection=persistent_connection,
@@ -56,6 +61,7 @@ def persistent_loaded_connection(request):
                 water_level_data_file=zeta_f,
                 time_zone_name='Africa/Lagos',
             )
+            spowtd.test.set_dataset_id(persistent_connection, sample)
             yield persistent_connection
 
 
