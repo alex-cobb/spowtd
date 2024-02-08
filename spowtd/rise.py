@@ -184,7 +184,7 @@ def assemble_rise_covariance(
         for series_id in series_ids
     }
 
-    # f[i, j]m
+    # f[i, j]
     coef = {
         (head_id, series_id): (head_id * head_step - mean_zeta[series_id])
         / rise[series_id]
@@ -254,8 +254,6 @@ def assemble_rise_covariance(
     i_lower = np.tril_indices(number_of_equations, -1)
     omega[i_lower] = omega.T[i_lower]
     assert (omega == omega.T).all(), 'Covariance matrix not symmetric'
-    # Normalize
-    omega /= np.linalg.norm(omega)
     omega += np.identity(number_of_equations) / recharge_error_weight
     # Check that omega is positive definite
     L = np.linalg.cholesky(omega)
@@ -286,7 +284,7 @@ def check_rise_head_mapping(head_mapping, series, index_mapping, head_step):
 
 
 def compute_rise_offsets(cursor, reference_zeta_mm, recharge_error_weight=0):
-    """Compute time offsets to populate rising_interval_zeta
+    """Compute storage offsets to populate rising_interval_zeta
 
     If a reference zeta is not None, the crossing-depth of this water level is
     used as the origin of the axis.  Otherwise, the highest water level in the
