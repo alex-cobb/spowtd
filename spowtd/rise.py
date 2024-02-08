@@ -89,10 +89,10 @@ def assemble_rise_covariance(
             duple and rise is a (zeta_initial, zeta_final) duple.
     head_step: factor by which to multiply integer head_id to get water
                level zeta.
-    zeta_error_factor: ratio of error in zeta measurement to error induced
-                       by recharge depth mismeasurement.  If zero or None, the
-                       K x K identity matrix is returned where K is the total
-                       number of equations.
+    recharge_error_weight: ratio of error induced by recharge depth
+                           mismeasurement to intrinsic error along the storage
+                           axis.  If zero or None, the K x K identity matrix is
+                           returned where K is the total number of equations.
 
     The covariance of rise event errors is a symmetric, positive semidefinite
     matrix with shape (n_equations, n_equations) characterizing the covariance
