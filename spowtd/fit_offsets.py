@@ -224,28 +224,100 @@ def assemble_linear_system(
     )
     # Reference series corresponds to the highest series id; it has the
     #   largest initial head, because we sorted them
-    reference_index = max(series_indices)
-    LOG.info('Reference index: %s', reference_index)
+    ref_sid = max(series_indices)
+    LOG.info('Reference series id: %s', ref_sid)
     A = np.zeros((number_of_equations, number_of_unknowns))
     b = np.zeros((number_of_equations,))
     row_template = np.zeros((number_of_unknowns,))
     row_index = 0
+    # Sorting is what maintains the correspondence between rows and series
+    # indices
     for _, series_at_head in sorted(head_mapping.items()):
         row_template[:] = 0
         sids, times = list(zip(*series_at_head))
         number_of_series_at_head = len(sids)
-        indices = [
-            series_indices[index] for index in sids if index != reference_index
-        ]
+        indices = [series_indices[sid] for sid in sids if sid != ref_sid]
         row_template[indices] = 1.0 / number_of_series_at_head
         mean_time = np.mean(times)
         for series_id, t in series_at_head:
             A[row_index] = row_template
             # !!! some redundancy here
-            if series_id != reference_index:
+            if series_id != ref_sid:
                 series_index = series_indices[series_id]
                 A[row_index, series_index] -= 1
             b[row_index] = t - mean_time
+            row_index += 1
+
+    assert row_index == number_of_equations, row_index
+    return A, b
+
+
+def assemble_weighted_linear_system(
+    head_mapping, series_indices, recharge_error_factor
+):
+    """Assemble linear system for fitting offsets with weighting
+
+    Creates and populates matrix A and vector b representing the overdetermined
+    system Ax = b that will be solved.  The weighting comes into the
+    representation of the mean in A, which here uses the inverse-variance-
+    weighted mean for proportional errors instead of the simple arithmetic
+    mean.  Proportional errors means that the variance of each observation is
+    proportional to the recharge squared.
+
+    Recharge_error_factor (typical order might be 1e3) is the relative weight
+    for errors arising from mismeasurement of recharge depth; its square is
+    proportional to the ratio of the error variance of recharge measurements
+    relative to intrinsic error:
+    recharge_error_factor = k sigma_alpha^2 / sigma_e^2
+    where k is a constant.
+
+    """
+    if recharge_error_factor <= 0:
+        raise ValueError(
+            'Non-positive recharge error factor '
+            f'{recharge_error_factor}. For zero recharge error factor, '
+            'use unweighted calculation.'
+        )
+    # Relative contribution of intrinsic error to variance
+    var_s = recharge_error_factor**-2
+    assert var_s > 0
+    number_of_equations = sum(
+        len(series_at_head) for series_at_head in list(head_mapping.values())
+    )
+    number_of_unknowns = len(series_indices) - 1
+    LOG.info(
+        '%s equations, %s unknowns', number_of_equations, number_of_unknowns
+    )
+    # Reference series corresponds to the highest series id; it has the
+    #   largest initial head, because we sorted them
+    ref_sid = max(series_indices)
+    LOG.info('Reference series id: %s', ref_sid)
+    A = np.zeros((number_of_equations, number_of_unknowns))
+    b = np.zeros((number_of_equations,))
+    row_template = np.zeros((number_of_unknowns,))
+    row_index = 0
+    # Sorting is what maintains the correspondence between rows and series
+    # indices
+    for _, series_at_head in sorted(head_mapping.items()):
+        row_template[:] = 0
+        sids, rijs = list(zip(*series_at_head))
+        all_inverse_variances = np.array(
+            [1 / (rij**2 + var_s) for sid, rij in series_at_head],
+            dtype=float,
+        )
+        normalizing_factor = all_inverse_variances.sum()
+        mask = [i for i, sid in enumerate(sids) if sid != ref_sid]
+        inverse_variances = all_inverse_variances[mask]
+        indices = [series_indices[sid] for sid in sids if sid != ref_sid]
+        row_template[indices] = inverse_variances / normalizing_factor
+        mean_rij = (rijs * all_inverse_variances).sum() / normalizing_factor
+        for series_id, rij in series_at_head:
+            A[row_index] = row_template
+            # !!! some redundancy here
+            if series_id != ref_sid:
+                series_index = series_indices[series_id]
+                A[row_index, series_index] -= 1
+            b[row_index] = rij - mean_rij
             row_index += 1
 
     assert row_index == number_of_equations, row_index
