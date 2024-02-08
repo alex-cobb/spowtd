@@ -331,9 +331,9 @@ def ols_solve(A, b):
 
     """
     number_of_unknowns = A.shape[1]
-    ATA = np.dot(A.transpose(), A)
+    ATA = A.T @ A
     assert ATA.shape == (number_of_unknowns, number_of_unknowns), ATA.shape
-    ATb = np.dot(A.transpose(), b)
+    ATb = A.T @ b
     return linalg_mod.solve(ATA, ATb)  # pylint: disable=E1101
 
 
