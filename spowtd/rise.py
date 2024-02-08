@@ -125,21 +125,7 @@ def assemble_rise_covariance(
         )
     )
 
-    # Check input
-    for head_id, series_at_head in head_mapping.items():
-        zeta = head_id * head_step
-        for series_id, depth_at_head in series_at_head:
-            depth, rise = series[index_mapping[series_id]]
-            assert len(depth) == 2
-            assert len(rise) == 2
-            assert depth[0] == 0, f'depth[0] = {depth[0]}'
-            assert depth_at_head >= 0, depth_at_head
-            assert depth_at_head <= depth[1], f'{depth_at_head} > {depth[1]}'
-            assert (
-                rise[0] <= zeta <= rise[1]
-            ), f'Rise {rise} does not span {zeta}'
-            del depth, rise, series_id, depth_at_head
-        del head_id, zeta, series_at_head
+    check_rise_head_mapping(head_mapping, series, index_mapping, head_step)
 
     number_of_equations = sum(
         len(series_at_head) for series_at_head in list(head_mapping.values())
@@ -275,6 +261,28 @@ def assemble_rise_covariance(
     L = np.linalg.cholesky(omega)
     assert np.allclose(np.dot(L, L.T), omega)
     return omega
+
+
+def check_rise_head_mapping(head_mapping, series, index_mapping, head_step):
+    """Check head mapping for rise curve assembly
+
+    Verify that each rise contains exactly two depths that span the associated
+    water level.
+    """
+    for head_id, series_at_head in head_mapping.items():
+        zeta = head_id * head_step
+        for series_id, depth_at_head in series_at_head:
+            depth, rise = series[index_mapping[series_id]]
+            assert len(depth) == 2
+            assert len(rise) == 2
+            assert depth[0] == 0, f'depth[0] = {depth[0]}'
+            assert depth_at_head >= 0, depth_at_head
+            assert depth_at_head <= depth[1], f'{depth_at_head} > {depth[1]}'
+            assert (
+                rise[0] <= zeta <= rise[1]
+            ), f'Rise {rise} does not span {zeta}'
+            del depth, rise, series_id, depth_at_head
+        del head_id, zeta, series_at_head
 
 
 def compute_rise_offsets(cursor, reference_zeta_mm, recharge_error_weight=0):
