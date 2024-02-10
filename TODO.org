@@ -18,5 +18,3 @@
    which this is inappropriate
  - [ ] Don't create SQLite db if load fails (create in memory, then
    dump)
- - [X] Use fixtures to speed up tests that require assembly of rise
-   and recession curves
