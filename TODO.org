@@ -1,3 +1,4 @@
+ - [ ] Add a fancy header to the User Guide
  - [ ] Add regression test of rise analysis with covariance
  - [ ] Enable use of l1 norm instead of l2 norm when fitting rise
    curves
@@ -17,5 +18,5 @@
    which this is inappropriate
  - [ ] Don't create SQLite db if load fails (create in memory, then
    dump)
- - [ ] Use fixtures to speed up tests that require assembly of rise
+ - [X] Use fixtures to speed up tests that require assembly of rise
    and recession curves
