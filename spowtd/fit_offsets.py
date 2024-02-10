@@ -253,7 +253,7 @@ def assemble_linear_system(
 
 
 def assemble_weighted_linear_system(
-    head_mapping, series_indices, recharge_error_factor
+    head_mapping, series_indices, recharge_error_weight
 ):
     """Assemble linear system for fitting offsets with weighting
 
@@ -264,22 +264,22 @@ def assemble_weighted_linear_system(
     mean.  Proportional errors means that the variance of each observation is
     proportional to the recharge squared.
 
-    Recharge_error_factor (typical order might be 1e3) is the relative weight
+    Recharge_error_weight (typical order might be 1e3) is the relative weight
     for errors arising from mismeasurement of recharge depth; its square is
     proportional to the ratio of the error variance of recharge measurements
     relative to intrinsic error:
-    recharge_error_factor = k sigma_alpha^2 / sigma_e^2
+    recharge_error_weight = k sigma_alpha^2 / sigma_e^2
     where k is a constant.
 
     """
-    if recharge_error_factor <= 0:
+    if recharge_error_weight <= 0:
         raise ValueError(
-            'Non-positive recharge error factor '
-            f'{recharge_error_factor}. For zero recharge error factor, '
+            'Non-positive recharge error weight '
+            f'{recharge_error_weight}. For zero recharge error weight, '
             'use unweighted calculation.'
         )
     # Relative contribution of intrinsic error to variance
-    var_s = recharge_error_factor**-2
+    var_s = recharge_error_weight**-2
     assert var_s > 0
     number_of_equations = sum(
         len(series_at_head) for series_at_head in list(head_mapping.values())

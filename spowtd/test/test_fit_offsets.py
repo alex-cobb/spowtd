@@ -101,7 +101,7 @@ def test_assemble_weighted_linear_system(test_case):
     series_ids = series_ids_expected[test_case]
     series_indices = dict(zip(series_ids, range(len(series_ids))))
     A, b = fo_mod.assemble_weighted_linear_system(
-        head_mapping, series_indices, recharge_error_factor=1
+        head_mapping, series_indices, recharge_error_weight=1
     )
     A_ref = np.array(A_expected[test_case], dtype=float)
     b_ref = np.array(b_expected[test_case], dtype=float)
