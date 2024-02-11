@@ -50,6 +50,19 @@ def get_series_offsets(head_mapping, index_mapping, recharge_error_weight=0):
 
     This function is used in assembly of both recession and rise curves.
 
+    head_mapping data structure:
+    {
+      head_id:  # i
+        [
+         (
+           series_id,  # j
+           x_mean  # r_ij, for rise curves; t, for recession curves
+         )
+         for series_id  # j
+         crossing head_id  # i
+        ]
+    }
+
     """
     series_ids, offsets = find_offsets(head_mapping, recharge_error_weight)
     assert len(series_ids) == len(offsets)
@@ -79,6 +92,16 @@ def build_connected_head_mapping(series_list, head_step):
     head_mapping: maps head_id to a sequence of (series_id, time) pairs
                   indicating when each series crossed that head.
     index_mapping: maps series_id to the index of the series in series_list.
+
+    Example: series_list data structure for rise events:
+    [
+     (
+      (0, total_depth),  # r_j
+      (initial_zeta, final_zeta)  # zeta_j^0, zeta_j^*
+     )
+     for event  # j
+     in events
+    ]
 
     """
     if not series_list:
