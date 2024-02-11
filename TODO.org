@@ -1,5 +1,5 @@
  - [ ] Add a fancy header to the User Guide
- - [ ] Add regression test of rise analysis with covariance
+ - [X] Add regression test of rise analysis with covariance
  - [ ] Enable use of l1 norm instead of l2 norm when fitting rise
    curves
    - Use Cholesky decomposition of covariance matrix to decorrelate.
