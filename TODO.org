@@ -11,6 +11,8 @@
  - [ ] Resolve discrepancy in units between spline and Peatclsm
    transmissivity
  - [ ] Update man page
+ - [ ] Consider adding weighted rise curve assembly test cases to user guide (modify
+   preliminary figure panels to match test cases)
  - [ ] Simpler unit tests to verify functions
  - [ ] Trim test time series to short intervals
  - [ ] Don't create an SQLite db if it doesn't exist for commands for
