@@ -114,7 +114,8 @@ transmissivity:
     - @K_knot_2                @
     - @K_knot_3                @
     - @K_knot_4                @
-  minimum_transmissivity_m2_d: @T_min                   @  # Minimum transmissivity, m2 /d""",
+  minimum_transmissivity_m2_d: @T_min                   @"""
+    '  # Minimum transmissivity, m2 /d',
 }
 
 

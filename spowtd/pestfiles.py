@@ -210,10 +210,22 @@ def generate_rise_pst_file(
         ]
         lines += [
             '* parameter data',
-            'sd          none relative   NaN  0.0   2.0  sd         1.0  0.0 1',
-            'theta_s     none relative   NaN  0.01  1    theta_s    1.0  0.0 1',
-            'b           none relative   NaN  0.01  20.0 b          1.0  0.0 1',
-            'psi_s       none relative   NaN  -1.0  -0.01  psi_s      1.0  0.0 1',
+            (
+                'sd          none relative   NaN  0.0   2.0  '
+                'sd         1.0  0.0 1'
+            ),
+            (
+                'theta_s     none relative   NaN  0.01  1    '
+                'theta_s    1.0  0.0 1'
+            ),
+            (
+                'b           none relative   NaN  0.01  20.0 '
+                'b          1.0  0.0 1'
+            ),
+            (
+                'psi_s       none relative   NaN  -1.0  -0.01  '
+                'psi_s      1.0  0.0 1'
+            ),
         ]
     lines += ['* observation groups', 'storageobs']
     lines += ['* observation data']
@@ -389,15 +401,24 @@ def generate_curves_pst_file(
             '* parameter data',
         ]
         lines += [
-            f'sy_knot_{i + 1}  none relative  NaN  0.01     1       sy_knot  1.0  0.0  1'
+            (
+                f'sy_knot_{i + 1}  none relative  NaN  0.01     1       '
+                'sy_knot  1.0  0.0  1'
+            )
             for i in range(n_Sy)
         ]
         lines += [
-            f'k_knot_{i + 1}   log  factor    NaN  1.0e-04  1.0e+5  k_knot   1.0  0.0  1'
+            (
+                f'k_knot_{i + 1}   log  factor    NaN  1.0e-04  1.0e+5  '
+                'k_knot   1.0  0.0  1'
+            )
             for i in range(n_T)
         ]
         lines += [
-            'T_min      log  factor    NaN  1.0e-04  1.0e+5  T_min    1.0  0.0  1'
+            (
+                'T_min      log  factor    NaN  1.0e-04  1.0e+5  '
+                'T_min    1.0  0.0  1'
+            )
         ]
     else:
         lines += [
@@ -411,12 +432,30 @@ def generate_curves_pst_file(
         ]
         lines += [
             '* parameter data',
-            'sd          none relative   NaN  0.0      2.0        sd         1.0  0.0  1',
-            'theta_s     none relative   NaN  0.01     1          theta_s    1.0  0.0  1',
-            'b           none relative   NaN  0.01     20.0       b          1.0  0.0  1',
-            'psi_s       none relative   NaN  -1.0     -0.01      psi_s      1.0  0.0  1',
-            'Ksmacz0     log  factor     NaN  1.0e-04  1.0e+5  Ksmacz0    1.0  0.0  1',
-            'alpha       none relative   NaN  1        20.0       alpha      1.0  0.0  1',
+            (
+                'sd          none relative   NaN  0.0      2.0        '
+                'sd         1.0  0.0  1'
+            ),
+            (
+                'theta_s     none relative   NaN  0.01     1          '
+                'theta_s    1.0  0.0  1'
+            ),
+            (
+                'b           none relative   NaN  0.01     20.0       '
+                'b          1.0  0.0  1'
+            ),
+            (
+                'psi_s       none relative   NaN  -1.0     -0.01      '
+                'psi_s      1.0  0.0  1'
+            ),
+            (
+                'Ksmacz0     log  factor     NaN  1.0e-04  1.0e+5  '
+                'Ksmacz0    1.0  0.0  1'
+            ),
+            (
+                'alpha       none relative   NaN  1        20.0       '
+                'alpha      1.0  0.0  1'
+            ),
         ]
     lines += ['* observation groups', 'storageobs', 'timeobs']
     lines += ['* observation data']
