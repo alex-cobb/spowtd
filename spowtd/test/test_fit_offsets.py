@@ -267,6 +267,30 @@ def test_find_offsets_unweighted(test_case):
 
 
 @pytest.mark.parametrize("test_case", [1, 2, 3, 4])
+def test_find_offsets_relabeled_unweighted(test_case):
+    """find_offsets with altered series ids"""
+    head_mapping = head_mapping_test_cases[test_case]
+    relabeled_head_mapping = {
+        head_id: [(-sid * 2, depth) for sid, depth in events]
+        for head_id, events in head_mapping.items()
+    }
+    series_ids, offsets = fo_mod.find_offsets(
+        relabeled_head_mapping, recharge_error_weight=0
+    )
+    assert (
+        series_ids
+        == [-sid * 2 for sid in series_ids_expected[test_case]][::-1]
+    )
+    assert np.allclose(
+        offsets,
+        # Order will be reversed, and reference series will instead by the
+        # first
+        np.array(offsets_expected_u[test_case], dtype=float)[::-1]
+        - offsets_expected_u[test_case][0],
+    )
+
+
+@pytest.mark.parametrize("test_case", [1, 2, 3, 4])
 def test_event_incidence_matrix(test_case):
     """Assembly of equation-event incidence matrix"""
     head_mapping = head_mapping_test_cases[test_case]
@@ -315,3 +339,27 @@ def test_find_offsets_weighted(test_case):
     assert isinstance(offsets, np.ndarray)
     assert offsets.shape == (len(series_ids),)
     assert np.allclose(offsets, offsets_expected[test_case])
+
+
+@pytest.mark.parametrize("test_case", [1, 2, 3, 4])
+def test_find_offsets_relabeled_weighted(test_case):
+    """find_offsets with altered series ids"""
+    head_mapping = head_mapping_test_cases[test_case]
+    relabeled_head_mapping = {
+        head_id: [(-sid * 2, depth) for sid, depth in events]
+        for head_id, events in head_mapping.items()
+    }
+    series_ids, offsets = fo_mod.find_offsets(
+        relabeled_head_mapping, recharge_error_weight=1
+    )
+    assert (
+        series_ids
+        == [-sid * 2 for sid in series_ids_expected[test_case]][::-1]
+    )
+    assert np.allclose(
+        offsets,
+        # Order will be reversed, and reference series will instead by the
+        # first
+        np.array(offsets_expected[test_case], dtype=float)[::-1]
+        - offsets_expected[test_case][0],
+    )
