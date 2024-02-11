@@ -7,6 +7,7 @@ import logging
 import numpy as np
 
 from spowtd.fit_offsets import (
+    assemble_weighted_linear_system,
     get_series_offsets,
     build_connected_head_mapping,
 )
@@ -46,17 +47,10 @@ def get_series_storage_offsets(
     head_mapping, index_mapping = build_connected_head_mapping(
         series_list, head_step
     )
-    if not recharge_error_weight:
-        return get_series_offsets(head_mapping, index_mapping)
-    covariance = assemble_rise_covariance(
+    return get_series_offsets(
         head_mapping,
         index_mapping,
-        series_list,
-        head_step,
-        recharge_error_weight,
-    )
-    return get_series_offsets(
-        head_mapping, index_mapping, covariance=covariance
+        recharge_error_weight=recharge_error_weight,
     )
 
 
@@ -103,162 +97,14 @@ def assemble_rise_covariance(
     recharge_error_weight, is added to the rise event error covariance to make
     it positive definite.
 
-    This function does not verify that the computed covariance matrix is
-    positive definite.  However, it does verify that the matrix is symmetric,
-    and therefore successful Cholesky decomposition of the matrix
-    (numpy.linalg.cholesky) will confirm that it is positive definite.  See
-    Press et al. (2021) Numerical Recipes, 3rd ed.
-
     """
-    # XXX Partly duplicates code in find_offsets
-
-    # Assemble mapping of series ids to row numbers (unknowns) for the offset-
-    #   finding problem.  Note that these are not the same as indices in the
-    #   series list, which must be obtained via index_mapping:
-    #   a_series = series[index_mapping[series_id]]
-    series_ids = sorted(
-        set().union(
-            *(
-                (series_id for series_id, _ in seq)
-                for seq in list(head_mapping.values())
-            )
-        )
-    )
-
     check_rise_head_mapping(head_mapping, series, index_mapping, head_step)
-
-    number_of_equations = sum(
-        len(series_at_head) for series_at_head in list(head_mapping.values())
+    _, _, Omega = assemble_weighted_linear_system(
+        head_mapping,
+        index_mapping,
+        recharge_error_weight=recharge_error_weight,
     )
-    if not recharge_error_weight:
-        return np.identity(number_of_equations)
-    number_of_unknowns = len(series_ids) - 1
-    # XXX /Duplicate code
-    # (i, j)(k)
-    ij = [
-        (head_id, series_id)
-        for head_id, series_at_head in sorted(head_mapping.items())
-        for series_id, _ in series_at_head
-    ]
-    assert len(ij) == number_of_equations
-    # k[i, j]
-    eqn_no = {
-        (head_id, series_id): eqn
-        for eqn, (head_id, series_id) in enumerate(ij)
-    }
-    assert max(eqn_no.values()) == number_of_equations - 1
-
-    omega = np.zeros(
-        (number_of_equations, number_of_equations), dtype=np.float64
-    )
-
-    # R[j]
-    rain_depth = {
-        # Retrieving rain depth: obtain index, retrieve series;
-        #   total_depth is the 2nd element of the first tuple
-        series_id: series[index_mapping[series_id]][0][1]
-        for series_id in series_ids
-    }
-
-    mean_rain_depth = sum(value for value in rain_depth.values()) / len(
-        rain_depth
-    )
-    normalized_rain_depth = {
-        key: value / mean_rain_depth for key, value in rain_depth.items()
-    }
-    del rain_depth
-    # zeta_j^* - zeta_j^o
-    rise = {
-        # Retrieving rise: obtain index, retrieve series;
-        #   initial_zeta, final_zeta is the second tuple
-        series_id: (
-            series[index_mapping[series_id]][1][1]
-            - series[index_mapping[series_id]][1][0]
-        )
-        for series_id in series_ids
-    }
-
-    # zeta_bar
-    mean_zeta = {
-        series_id: sum(series[index_mapping[series_id]][1]) / 2
-        for series_id in series_ids
-    }
-
-    # f[i, j]
-    coef = {
-        (head_id, series_id): (head_id * head_step - mean_zeta[series_id])
-        / rise[series_id]
-        for head_id, series_at_head in head_mapping.items()
-        for series_id, _ in series_at_head
-    }
-    assert min(coef.values()) >= -0.5, min(coef.values())
-    assert max(coef.values()) <= 0.5, max(coef.values())
-
-    # To compute the terms in the covariance matrix, we need sets of heads
-    # crossed by each series
-    # I[j]
-    series_heads = {}
-    for head_id, series_at_head in head_mapping.items():
-        for sid, _ in series_at_head:
-            series_heads.setdefault(sid, []).append(head_id)
-    # We also need sets of series crossing each head
-    # J[i]
-    Ji = {}
-    for head_id, series_at_head in head_mapping.items():
-        for sid, _ in series_at_head:
-            Ji.setdefault(head_id, []).append(sid)
-
-    # Terms
-    # Rff[(j, i1, i2)] = R[j]^2 f[i_1, j] f[i_2, j]
-    Rff = {}
-    for series_id, head_ids in series_heads.items():
-        for head_id_1 in head_ids:
-            for head_id_2 in head_ids:
-                Rff[(series_id, head_id_1, head_id_2)] = (
-                    normalized_rain_depth[series_id] ** 2
-                    * coef[(head_id_1, series_id)]
-                    * coef[(head_id_2, series_id)]
-                )
-
-    # Populate covariance matrix
-    for k1 in range(number_of_equations):
-        i1, j1 = ij[k1]
-        Ji1 = set(Ji[i1])
-        for k2 in range(number_of_equations):
-            i2, j2 = ij[k2]
-            Ji2 = set(Ji[i2])
-            if j1 == j2:
-                omega[k1, k2] += Rff[(j1, i1, i2)]
-            if j1 in Ji2:
-                omega[k1, k2] -= Rff[(j1, i1, i2)] / len(Ji2)
-            if j2 in Ji1:
-                omega[k1, k2] -= Rff[(j2, i2, i1)] / len(Ji1)
-            omega[k1, k2] += sum(
-                Rff[(j, i1, i2)] for j in Ji1.intersection(Ji2)
-            ) / (len(Ji1) * len(Ji2))
-
-    # Basic checks
-    assert omega.shape == (
-        number_of_equations,
-        number_of_equations,
-    ), f'Covariance matrix shape {omega.shape} != (# eqs, #eqs)'
-    assert np.isfinite(omega).all(), (
-        'Covariance matrix contains non-finite values: '
-        f'{omega[~np.isfinite(omega)]}'
-    )
-    # Matrix may not be exactly symmetric due to roundoff
-    assert np.allclose(
-        omega, omega.T
-    ), 'Covariance matrix not nearly symmetric'
-    # Make exactly symmetric
-    i_lower = np.tril_indices(number_of_equations, -1)
-    omega[i_lower] = omega.T[i_lower]
-    assert (omega == omega.T).all(), 'Covariance matrix not symmetric'
-    omega += np.identity(number_of_equations) / recharge_error_weight
-    # Check that omega is positive definite
-    L = np.linalg.cholesky(omega)
-    assert np.allclose(np.dot(L, L.T), omega)
-    return omega
+    return Omega
 
 
 def check_rise_head_mapping(head_mapping, series, index_mapping, head_step):

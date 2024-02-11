@@ -27,7 +27,7 @@ def get_series_time_offsets(series_list, head_step):
     return get_series_offsets(head_mapping, index_mapping)
 
 
-def get_series_offsets(head_mapping, index_mapping, covariance=None):
+def get_series_offsets(head_mapping, index_mapping, recharge_error_weight=0):
     """Find offsets that minimizes difference in head crossing times
 
     Given a sequence of (x, head) data series, rediscretize to get an
@@ -51,7 +51,7 @@ def get_series_offsets(head_mapping, index_mapping, covariance=None):
     This function is used in assembly of both recession and rise curves.
 
     """
-    series_ids, offsets = find_offsets(head_mapping, covariance)
+    series_ids, offsets = find_offsets(head_mapping, recharge_error_weight)
     assert len(series_ids) == len(offsets)
     original_indices = [index_mapping[series_id] for series_id in series_ids]
     # We need to map series ids in head_mapping back to their original
@@ -157,7 +157,7 @@ def build_exhaustive_head_mapping(series, head_step=1):
     return head_mapping
 
 
-def find_offsets(head_mapping, covariance=None):
+def find_offsets(head_mapping, recharge_error_weight=0):
     """Find the time offsets that align the series in head_mapping
 
     Finds the set of time offsets that minimize the sum of squared differences
@@ -171,29 +171,34 @@ def find_offsets(head_mapping, covariance=None):
     treated as the reference and given an offset of zero; all other offsets
     are relative to that one.
 
+    Recharge_error_weight (typical order might be 1e3) is the relative weight
+    for errors arising from mismeasurement of recharge depth; its square is
+    proportional to the ratio of the error variance of recharge measurements
+    relative to intrinsic error:
+    recharge_error_weight = k sigma_alpha^2 / sigma_e^2
+    where k is a constant.
+    If recharge_error_weight is 0, the calculation is unweighted.
+
     Returns series_ids, offsets where series_ids are the identifiers
 
     """
-    # Assemble mapping of series ids to row numbers for the offset-finding
-    #   problem
-    series_ids = sorted(
-        set().union(
-            *(
-                (series_id for series_id, _ in seq)
-                for seq in list(head_mapping.values())
-            )
-        )
-    )
+    series_ids = get_series_ids(head_mapping)
+    # Mapping of series ids to row numbers
     series_indices = dict(zip(series_ids, range(len(series_ids))))
-    A, b = assemble_linear_system(
-        head_mapping,
-        series_indices,
-    )
-    if covariance is not None:
-        assert covariance.shape == (len(b), len(b))
-        offsets = gls_solve(A, b, covariance)
-    else:
+    if not recharge_error_weight:
+        A, b = assemble_linear_system(
+            head_mapping,
+            series_indices,
+        )
         offsets = ols_solve(A, b)
+    else:
+        A, b, Omega = assemble_weighted_linear_system(
+            head_mapping,
+            series_indices,
+            recharge_error_weight=recharge_error_weight,
+        )
+        assert Omega.shape == (len(b), len(b))
+        offsets = gls_solve(A, b, Omega)
     assert offsets.shape == (A.shape[1],)
     # This was the boundary condition, zero offset for reference (last) id
     offsets = np.concatenate((offsets, [0]))
@@ -203,6 +208,86 @@ def find_offsets(head_mapping, covariance=None):
         offsets
     ), f'{len(series_ids)} != {len(offsets)}'
     return (series_ids, offsets)
+
+
+def assemble_event_incidence_matrix(head_mapping):
+    """Assemble equation-event incidence matrix D"""
+    series_ids = get_series_ids(head_mapping)
+    series_indices = dict(zip(series_ids, range(len(series_ids))))
+    D = []
+    for _, series_at_head in sorted(head_mapping.items()):
+        for series_id, _ in series_at_head:
+            D.append([0] * len(series_ids))
+            D[-1][series_indices[series_id]] = 1
+    return np.array(D, dtype=int)
+
+
+def assemble_weighted_mean_matrix(head_mapping, recharge_error_weight):
+    """Assemble weighted mean operator matrix M
+
+    Recharge_error_weight (typical order might be 1e3) is the relative weight
+    for errors arising from mismeasurement of recharge depth; its square is
+    proportional to the ratio of the error variance of recharge measurements
+    relative to intrinsic error:
+    recharge_error_weight = k sigma_alpha^2 / sigma_e^2
+    where k is a constant.
+    """
+    # Relative contribution of intrinsic error to variance
+    var_s = recharge_error_weight**-2
+    series_ids = get_series_ids(head_mapping)
+    series_indices = dict(zip(series_ids, range(len(series_ids))))
+    del series_ids
+    head_ids = sorted(set(head_mapping.keys()))
+    head_indices = dict(zip(head_ids, range(len(head_ids))))
+    del head_ids
+
+    # Build k((i, j))
+    k_of_ij = {}
+    k = 0
+    for head_id, series_at_head in sorted(head_mapping.items()):
+        i = head_indices[head_id]
+        for sid, _ in series_at_head:
+            j = series_indices[sid]
+            k_of_ij[(i, j)] = k
+            k += 1
+    del k
+
+    K = len(k_of_ij)
+    M = np.zeros((K, K), dtype=float)
+    del K
+    k = 0
+    for head_id, series_at_head in sorted(head_mapping.items()):
+        all_inverse_variances = np.array(
+            [1 / (rij**2 + var_s) for sid, rij in series_at_head],
+            dtype=float,
+        )
+        nonzero_terms = all_inverse_variances / all_inverse_variances.sum()
+        i = head_indices[head_id]
+        js = [series_indices[sid] for sid, _ in series_at_head]
+        ks = [k_of_ij[(i, j)] for j in js]
+        for _ in js:
+            M[k, ks] = nonzero_terms
+            k += 1
+        del all_inverse_variances, nonzero_terms, i, js, ks
+    del k
+    return M
+
+
+def get_series_ids(head_mapping):
+    """Arrange series ids in sequence for matrix equations
+
+    Assembles series (event) ids in a sequence representing the order in which
+    they will appear in vectors and matrices.  Returns a list of series ids in
+    this consistent order.
+    """
+    return sorted(
+        set().union(
+            *(
+                (series_id for series_id, _ in seq)
+                for seq in list(head_mapping.values())
+            )
+        )
+    )
 
 
 def assemble_linear_system(
@@ -278,9 +363,6 @@ def assemble_weighted_linear_system(
             f'{recharge_error_weight}. For zero recharge error weight, '
             'use unweighted calculation.'
         )
-    # Relative contribution of intrinsic error to variance
-    var_s = recharge_error_weight**-2
-    assert var_s > 0
     number_of_equations = sum(
         len(series_at_head) for series_at_head in list(head_mapping.values())
     )
@@ -288,40 +370,81 @@ def assemble_weighted_linear_system(
     LOG.info(
         '%s equations, %s unknowns', number_of_equations, number_of_unknowns
     )
-    # Reference series corresponds to the highest series id; it has the
-    #   largest initial head, because we sorted them
-    ref_sid = max(series_indices)
-    LOG.info('Reference series id: %s', ref_sid)
-    A = np.zeros((number_of_equations, number_of_unknowns))
-    b = np.zeros((number_of_equations,))
-    row_template = np.zeros((number_of_unknowns,))
-    row_index = 0
+    D = assemble_event_incidence_matrix(head_mapping)
+    M = assemble_weighted_mean_matrix(head_mapping, recharge_error_weight)
+    assert M.shape == (D.shape[0], D.shape[0])
+    dev = np.identity(D.shape[0]) - M
+    assert dev.shape == (D.shape[0], D.shape[0])
+    A = (-dev @ D)[:, :-1]
+    FD_diag_r = assemble_FD_diag_r(head_mapping, series_indices)
+    FDr = np.zeros((number_of_equations,), dtype=float)
+    # Take the nonzero value, if any, from each row of FD_diag_r.
+    #   Some rij are zero, so some rows may be empty.
+    FDr[FD_diag_r.nonzero()[0]] = FD_diag_r[FD_diag_r != 0]
+    b = dev @ FDr
+    Omega = assemble_covariance(dev, FD_diag_r, recharge_error_weight)
+    return A, b, Omega
+
+
+def assemble_covariance(dev, FD_diag_r, recharge_error_weight):
+    """Assemble and check covariance matrix
+
+    Normalizes covariance so that root-mean-square of nonzero values is close
+    to 1.
+
+    Checks: first, verifies that the matrix is symmetric. Then, successful
+    Cholesky decomposition of the matrix (numpy.linalg.cholesky) confirms that
+    it is positive definite.  See Press et al. (2021) Numerical Recipes, 3rd
+    ed.
+
+    """
+    number_of_equations = dev.shape[0]
+    # B2 is implicitly normalized by sigma_alpha here, deviating slightly from
+    # the notation in the paper
+    B2 = dev @ FD_diag_r
+    # Relative contribution of intrinsic error to variance
+    var_s = recharge_error_weight**-2
+    Omega = B2 @ B2.T + np.identity(number_of_equations, dtype=float) * var_s
+    # Normalize
+    Omega /= (Omega[Omega != 0] ** 2).mean() ** 0.5
+    # Basic checks
+    assert Omega.shape == (
+        number_of_equations,
+        number_of_equations,
+    ), f'Covariance matrix shape {Omega.shape} != (# eqs, #eqs)'
+    assert np.isfinite(Omega).all(), (
+        'Covariance matrix contains non-finite values: '
+        f'{Omega[~np.isfinite(Omega)]}'
+    )
+    # Matrix may not be exactly symmetric due to roundoff
+    assert np.allclose(
+        Omega, Omega.T
+    ), 'Covariance matrix not nearly symmetric'
+    # Make exactly symmetric
+    i_lower = np.tril_indices(number_of_equations, -1)
+    Omega[i_lower] = Omega.T[i_lower]
+    assert (Omega == Omega.T).all(), 'Covariance matrix not symmetric'
+    # Check that Omega is positive definite
+    L = np.linalg.cholesky(Omega)
+    assert np.allclose(np.dot(L, L.T), Omega)
+    return Omega
+
+
+def assemble_FD_diag_r(head_mapping, series_indices):
+    """Assemble the product FD diag(r)"""
     # Sorting is what maintains the correspondence between rows and series
     # indices
+    number_of_equations = sum(
+        len(series_at_head) for series_at_head in list(head_mapping.values())
+    )
+    number_of_events = len(series_indices)
+    FD_diag_r = np.zeros((number_of_equations, number_of_events), dtype=float)
+    k = 0
     for _, series_at_head in sorted(head_mapping.items()):
-        row_template[:] = 0
-        sids, rijs = list(zip(*series_at_head))
-        all_inverse_variances = np.array(
-            [1 / (rij**2 + var_s) for sid, rij in series_at_head],
-            dtype=float,
-        )
-        normalizing_factor = all_inverse_variances.sum()
-        mask = [i for i, sid in enumerate(sids) if sid != ref_sid]
-        inverse_variances = all_inverse_variances[mask]
-        indices = [series_indices[sid] for sid in sids if sid != ref_sid]
-        row_template[indices] = inverse_variances / normalizing_factor
-        mean_rij = (rijs * all_inverse_variances).sum() / normalizing_factor
         for series_id, rij in series_at_head:
-            A[row_index] = row_template
-            # !!! some redundancy here
-            if series_id != ref_sid:
-                series_index = series_indices[series_id]
-                A[row_index, series_index] -= 1
-            b[row_index] = rij - mean_rij
-            row_index += 1
-
-    assert row_index == number_of_equations, row_index
-    return A, b
+            FD_diag_r[k, series_indices[series_id]] = rij
+            k += 1
+    return FD_diag_r
 
 
 def ols_solve(A, b):
@@ -337,24 +460,24 @@ def ols_solve(A, b):
     return linalg_mod.solve(ATA, ATb)  # pylint: disable=E1101
 
 
-def gls_solve(A, b, O):
-    """Solve Ax = b with covariance matrix O by generalized least squares
+def gls_solve(A, b, V):
+    """Solve Ax = b with covariance matrix V by generalized least squares
 
     Returns x, the solution to the linear system
 
     """
     number_of_unknowns = A.shape[1]
-    assert O.shape == (A.shape[0], A.shape[0])
-    Oinv = np.linalg.inv(O)
-    assert Oinv.shape == (A.shape[0], A.shape[0])
-    ATOinvA = A.T @ Oinv @ A
-    assert ATOinvA.shape == (
+    assert V.shape == (A.shape[0], A.shape[0])
+    Vinv = np.linalg.inv(V)
+    assert Vinv.shape == (A.shape[0], A.shape[0])
+    ATVinvA = A.T @ Vinv @ A
+    assert ATVinvA.shape == (
         number_of_unknowns,
         number_of_unknowns,
-    ), ATOinvA.shape
-    ATOinvb = A.T @ Oinv @ b
-    assert ATOinvb.shape == (number_of_unknowns,)
-    return linalg_mod.solve(ATOinvA, ATOinvb)  # pylint: disable=E1101
+    ), ATVinvA.shape
+    ATVinvb = A.T @ Vinv @ b
+    assert ATVinvb.shape == (number_of_unknowns,)
+    return linalg_mod.solve(ATVinvA, ATVinvb)  # pylint: disable=E1101
 
 
 def split_mapping_by_keys(mapping, key_lists):

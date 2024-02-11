@@ -11,9 +11,11 @@ import spowtd.fit_offsets as fo_mod
 
 head_mapping_test_cases = {
     # Uniform R = 4
+    # 3 water levels, 2 events
     # 5 equations, 1 unknown
     1: {1: [(1, -2), (2, -2)], 2: [(1, 2), (2, 0)], 3: [(2, 2)]},
     # Uniform R = 6
+    # 3 water levels, 3 events
     # 7 equations, 2 unknowns.
     # In this case b (rhs) is the same for weighted and unweighted assembly.
     2: {
@@ -22,9 +24,11 @@ head_mapping_test_cases = {
         3: [(2, 3), (3, 3)],
     },
     # Uniform R = 6
+    # 4 water levels, 2 events
     # 6 equations, 1 unknown
     3: {1: [(1, -3), (2, -3)], 2: [(1, 3), (2, -1)], 3: [(2, 1)], 4: [(2, 3)]},
     # Nonuniform R: R_1 = 6, R_2 = 1
+    # 4 water levels, 2 events
     # 6 equations, 1 unknown
     4: {1: [(1, -3)], 2: [(1, 0), (2, -1)], 3: [(1, 3), (2, 0)], 4: [(2, 1)]},
 }
@@ -75,7 +79,143 @@ A_expected = {
 }
 
 offsets_expected_u = {1: [-1, 0], 2: [-4, -2, 0], 3: [-2, 0], 4: [-2, 0]}
-offsets_expected = {}
+offsets_expected = {
+    1: [-1.19736842, 0],
+    # Note that this is the same as the unweighted solution. This is also the
+    # only case where the expected outcome is exact.
+    2: [-4, -2, 0],
+    3: [-2.39716312, 0],
+    4: [-1.43083486, 0],
+}
+
+D_expected = {
+    1: [
+        [1, 0],
+        [0, 1],
+        [1, 0],
+        [0, 1],
+        [0, 1],
+    ],
+    2: [
+        [1, 0, 0],
+        [0, 1, 0],
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1],
+        [0, 1, 0],
+        [0, 0, 1],
+    ],
+    3: [
+        [1, 0],
+        [0, 1],
+        [1, 0],
+        [0, 1],
+        [0, 1],
+        [0, 1],
+    ],
+    4: [
+        [1, 0],
+        [1, 0],
+        [0, 1],
+        [1, 0],
+        [0, 1],
+        [0, 1],
+    ],
+}
+
+
+MT_expected = {
+    1: [[1 / 2, 1 / 2], [1 / 6, 5 / 6], [0, 1]],
+    2: [
+        [1 / 2, 1 / 2, 0],
+        [1 / 12, 5 / 6, 1 / 12],
+        [0, 1 / 2, 1 / 2],
+    ],
+    3: [
+        [1 / 2, 1 / 2],
+        [1 / 6, 5 / 6],
+        [0, 1],
+        [0, 1],
+    ],
+    4: [
+        [1, 0],
+        [2 / 3, 1 / 3],
+        [1 / 11, 10 / 11],
+        [0, 1],
+    ],
+}
+
+
+M_expected = {
+    1: [
+        [1 / 2, 1 / 2, 0, 0, 0],
+        [1 / 2, 1 / 2, 0, 0, 0],
+        [0, 0, 1 / 6, 5 / 6, 0],
+        [0, 0, 1 / 6, 5 / 6, 0],
+        [0, 0, 0, 0, 1],
+    ],
+    2: [
+        [1 / 2, 1 / 2, 0, 0, 0, 0, 0],
+        [1 / 2, 1 / 2, 0, 0, 0, 0, 0],
+        [0, 0, 1 / 12, 5 / 6, 1 / 12, 0, 0],
+        [0, 0, 1 / 12, 5 / 6, 1 / 12, 0, 0],
+        [0, 0, 1 / 12, 5 / 6, 1 / 12, 0, 0],
+        [0, 0, 0, 0, 0, 1 / 2, 1 / 2],
+        [0, 0, 0, 0, 0, 1 / 2, 1 / 2],
+    ],
+    3: [
+        [1 / 2, 1 / 2, 0, 0, 0, 0],
+        [1 / 2, 1 / 2, 0, 0, 0, 0],
+        [0, 0, 1 / 6, 5 / 6, 0, 0],
+        [0, 0, 1 / 6, 5 / 6, 0, 0],
+        [0, 0, 0, 0, 1, 0],
+        [0, 0, 0, 0, 0, 1],
+    ],
+    4: [
+        [1, 0, 0, 0, 0, 0],
+        [0, 2 / 3, 1 / 3, 0, 0, 0],
+        [0, 2 / 3, 1 / 3, 0, 0, 0],
+        [0, 0, 0, 1 / 11, 10 / 11, 0],
+        [0, 0, 0, 1 / 11, 10 / 11, 0],
+        [0, 0, 0, 0, 0, 1],
+    ],
+}
+
+
+FD_diag_r_expected = {
+    1: [
+        [-2, 0],
+        [0, -2],
+        [2, 0],
+        [0, 0],
+        [0, 2],
+    ],
+    2: [
+        [-3, 0, 0],
+        [0, -3, 0],
+        [3, 0, 0],
+        [0, 0, 0],
+        [0, 0, -3],
+        [0, 3, 0],
+        [0, 0, 3],
+    ],
+    3: [
+        [-3, 0],
+        [0, -3],
+        [3, 0],
+        [0, -1],
+        [0, 1],
+        [0, 3],
+    ],
+    4: [
+        [-3, 0],
+        [0, 0],
+        [0, -1],
+        [3, 0],
+        [0, 0],
+        [0, 1],
+    ],
+}
 
 
 @pytest.mark.parametrize("test_case", [1, 2, 3, 4])
@@ -100,7 +240,7 @@ def test_assemble_weighted_linear_system(test_case):
     head_mapping = head_mapping_test_cases[test_case]
     series_ids = series_ids_expected[test_case]
     series_indices = dict(zip(series_ids, range(len(series_ids))))
-    A, b = fo_mod.assemble_weighted_linear_system(
+    A, b, Omega = fo_mod.assemble_weighted_linear_system(
         head_mapping, series_indices, recharge_error_weight=1
     )
     A_ref = np.array(A_expected[test_case], dtype=float)
@@ -110,26 +250,68 @@ def test_assemble_weighted_linear_system(test_case):
     assert A.shape == A_ref.shape
     for i, ref in enumerate(A_ref):
         assert np.allclose(ref, A[i]), i
+    # XXX Check Omega
 
 
 @pytest.mark.parametrize("test_case", [1, 2, 3, 4])
 def test_find_offsets_unweighted(test_case):
     """Unweighted test cases for find_offsets"""
     head_mapping = head_mapping_test_cases[test_case]
-    series_ids, offsets = fo_mod.find_offsets(head_mapping, covariance=None)
+    series_ids, offsets = fo_mod.find_offsets(
+        head_mapping, recharge_error_weight=0
+    )
     assert series_ids == series_ids_expected[test_case]
     assert isinstance(offsets, np.ndarray)
     assert offsets.shape == (len(series_ids),)
     assert np.allclose(offsets, offsets_expected_u[test_case])
 
 
-@pytest.mark.parametrize("test_case", [1])
+@pytest.mark.parametrize("test_case", [1, 2, 3, 4])
+def test_event_incidence_matrix(test_case):
+    """Assembly of equation-event incidence matrix"""
+    head_mapping = head_mapping_test_cases[test_case]
+    D_ref = np.array(D_expected[test_case], dtype=int)
+    D = fo_mod.assemble_event_incidence_matrix(head_mapping)
+    assert D.shape == D_ref.shape
+    assert (D_ref == D).all()
+
+
+@pytest.mark.parametrize("test_case", [1, 2, 3, 4])
+def test_weighted_mean_matrix(test_case):
+    """Test construction of expanded weighted mean matrix"""
+    M_ref = np.array(M_expected[test_case], dtype=float)
+    for row in M_ref:
+        assert np.allclose(row.sum(), 1)
+    head_mapping = head_mapping_test_cases[test_case]
+    M = fo_mod.assemble_weighted_mean_matrix(
+        head_mapping, recharge_error_weight=1
+    )
+    assert M.shape == M_ref.shape
+    for row in M:
+        assert np.allclose(row.sum(), 1)
+    assert np.allclose(M_ref, M)
+
+
+@pytest.mark.parametrize("test_case", [1, 2, 3, 4])
+def test_FD_diag_r(test_case):
+    """Test assembly of the product FD diag(r)"""
+    FD_diag_r_ref = np.array(FD_diag_r_expected[test_case], dtype=float)
+    head_mapping = head_mapping_test_cases[test_case]
+    series_ids = series_ids_expected[test_case]
+    series_indices = dict(zip(series_ids, range(len(series_ids))))
+    FD_diag_r = fo_mod.assemble_FD_diag_r(head_mapping, series_indices)
+    assert FD_diag_r.shape == FD_diag_r_ref.shape
+    assert np.allclose(FD_diag_r_ref, FD_diag_r)
+
+
+@pytest.mark.parametrize("test_case", [1, 2, 3, 4])
 def test_find_offsets_weighted(test_case):
     """Weighted test cases for find_offsets"""
-    pytest.skip('Not implemented yet: finding offsets with covariance matrix')
     head_mapping = head_mapping_test_cases[test_case]
-    series_ids, offsets = fo_mod.find_offsets(head_mapping, covariance=None)
+    series_ids, offsets = fo_mod.find_offsets(
+        head_mapping, recharge_error_weight=1
+    )
     assert series_ids == series_ids_expected[test_case]
     assert isinstance(offsets, np.ndarray)
     assert offsets.shape == (len(series_ids),)
-    assert np.allclose(offsets, offsets_expected_u[test_case])
+    assert np.allclose(offsets, offsets_expected[test_case])
