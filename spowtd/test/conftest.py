@@ -36,9 +36,7 @@ def persistent_loaded_connection(request):
     with copies.
 
     """
-    with sqlite3.connect(
-        ':memory:', autocommit=False
-    ) as persistent_connection:
+    with sqlite3.connect(':memory:') as persistent_connection:
         sample = request.param
         with open(
             get_sample_file_path('precipitation', sample),
