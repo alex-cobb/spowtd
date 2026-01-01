@@ -1,6 +1,4 @@
-"""Specific yield classes
-
-"""
+"""Specific yield classes"""
 
 import numpy as np
 
@@ -18,13 +16,11 @@ def create_specific_yield_function(parameters):
 
     """
     if 'type' not in parameters:
-        raise ValueError(
-            f'"type" field is required in parameters; got {parameters}'
-        )
+        raise ValueError(f'"type" field is required in parameters; got {parameters}')
     sy_type = parameters.pop('type', None)
-    return {'peatclsm': PeatclsmSpecificYield, 'spline': SplineSpecificYield}[
-        sy_type
-    ](**parameters)
+    return {'peatclsm': PeatclsmSpecificYield, 'spline': SplineSpecificYield}[sy_type](
+        **parameters
+    )
 
 
 class SpecificYield:
@@ -60,9 +56,7 @@ class SplineSpecificYield(SpecificYield):
         self.sy_knots = sy_knots
         SpecificYield.__init__(
             self,
-            spline_mod.Spline.from_points(
-                zip(zeta_knots_mm, sy_knots), order=3
-            ),
+            spline_mod.Spline.from_points(zip(zeta_knots_mm, sy_knots), order=3),
         )
 
 
@@ -102,7 +96,7 @@ class PeatclsmSpecificYield(SpecificYield):
         zl_ = np.linspace(-1, 1, 201)
         zu_ = np.linspace(-0.99, 1.01, 201)
         Sy1_soil = np.empty((201,), dtype='float64')
-        Sy1_soil[:] = np.NaN
+        Sy1_soil[:] = np.nan
         self.get_Sy_soil(Sy1_soil, zl_, zu_)
         zeta_knots_m = 0.5 * (zu_ + zl_)
         Sy1_surface = scipy.stats.norm.cdf(zeta_knots_m, loc=0, scale=self.sd)

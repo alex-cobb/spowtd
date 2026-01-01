@@ -1,6 +1,4 @@
-"""Regrid x, y points so that they are uniformly spaced on y
-
-"""
+"""Regrid x, y points so that they are uniformly spaced on y"""
 
 import numpy as np
 from scipy.interpolate import interp1d
@@ -33,13 +31,11 @@ def regrid(x, y, y_step, interpolant='linear'):
     #   (y_i+1, y_i) depending on which is bigger.
     #
     if len(x) != len(y):
-        raise ValueError(
-            f'Argument lengths unequal: {len(x)} != {len(y)}'
-        )
+        raise ValueError(f'Argument lengths unequal: {len(x)} != {len(y)}')
     # Don't use "if x" here, this is an ndarray
     if len(x) == 0:  # pylint: disable=len-as-condition
         return
-    if not np.alltrue(np.isfinite(y)):
+    if not np.all(np.isfinite(y)):
         raise ValueError('non-finite values in y vector')
     Y = y / y_step
     spline = interp1d(x, Y, kind=interpolant)
@@ -51,9 +47,7 @@ def regrid(x, y, y_step, interpolant='linear'):
         else:
             targets = reversed(list(range(stop, start)))
         for y_target in targets:
-            x_target = brentq(
-                lambda x, y=y_target: spline(x) - y, x[i], x[i + 1]
-            )
+            x_target = brentq(lambda x, y=y_target: spline(x) - y, x[i], x[i + 1])
             yield (y_target, x_target)
 
 

@@ -1,11 +1,10 @@
-"""User interface for Spowtd
-
-"""
+"""User interface for Spowtd"""
 
 import argparse
 import json
 import logging
 import os
+import pathlib
 import sqlite3
 import sys
 
@@ -40,17 +39,30 @@ def main(argv):
         parser.print_help()
         parser.exit()
 
-    set_up_logging(args.logfile, args.verbosity)
+    # Refactor to use a context handler?
+    logfile = (
+        open(args.logfile, 'wt') if isinstance(args.logfile, str) else args.logfile
+    )
+    set_up_logging(logfile=logfile, verbosity=args.verbosity)
+    del logfile
 
     if args.task == 'load':
-        with sqlite3.connect(args.db) as connection:
+        with (
+            sqlite3.connect(args.db) as connection,
+            open(args.precipitation, 'rt', encoding='utf-8-sig') as precipitation,
+            open(
+                args.evapotranspiration, 'rt', encoding='utf-8-sig'
+            ) as evapotranspiration,
+            open(args.water_level, 'rt', encoding='utf-8-sig') as water_level,
+        ):
             load_mod.load_data(
                 connection=connection,
-                precipitation_data_file=args.precipitation,
-                evapotranspiration_data_file=args.evapotranspiration,
-                water_level_data_file=args.water_level,
+                precipitation_data_file=precipitation,
+                evapotranspiration_data_file=evapotranspiration,
+                water_level_data_file=water_level,
                 time_zone_name=args.timezone,
             )
+            del connection, precipitation
     elif args.task == 'classify':
         with sqlite3.connect(args.db) as connection:
             classify_mod.classify_intervals(
@@ -76,8 +88,8 @@ def main(argv):
                 reference_zeta_mm=args.reference_zeta_mm,
                 recharge_error_weight=args.recharge_error_weight,
             )
-            if args.dump_covariance:
-                with args.dump_covariance as dumpfile:
+            if args.dump_covariance and isinstance(args.dump_covariance, pathlib.Path):
+                with open(args.dump_covariance, 'wt', encoding='ascii') as dumpfile:
                     json.dump(
                         rise_mod.get_rise_covariance(
                             connection,
@@ -85,6 +97,15 @@ def main(argv):
                         ).tolist(),
                         dumpfile,
                     )
+            elif args.dump_covariance:
+                json.dump(
+                    rise_mod.get_rise_covariance(
+                        connection,
+                        recharge_error_weight=args.recharge_error_weight,
+                    ).tolist(),
+                    args.dump_covariance,
+                )
+
     elif args.task == 'plot':
         if args.subtask is None:
             plot_parser.print_help()
@@ -221,9 +242,7 @@ def plot(connection, args):
             connection=connection, parameters=args.parameters
         )
     elif args.subtask == 'rise':
-        rise_plot_mod.plot_rise(
-            connection=connection, parameters=args.parameters
-        )
+        rise_plot_mod.plot_rise(connection=connection, parameters=args.parameters)
     elif args.subtask == 'specific-yield':
         if args.dump is not None:
             specific_yield_plot_mod.dump_specific_yield(
@@ -264,9 +283,7 @@ def plot(connection, args):
 
 def set_curvature(connection, args):
     """Command-line interface to set curvature"""
-    set_curvature_mod.set_curvature(
-        connection, curvature_m_km2=args.curvature_m_km2
-    )
+    set_curvature_mod.set_curvature(connection, curvature_m_km2=args.curvature_m_km2)
 
 
 def simulate(connection, args):
@@ -324,7 +341,6 @@ def add_shared_args(parser):
     parser.add_argument(
         '--logfile',
         metavar='FILE',
-        type=argparse.FileType('wt'),
         default=sys.stderr,
         help='File to write status messages, default stderr',
     )
@@ -337,21 +353,21 @@ def add_load_args(parser):
         '-p',
         '--precipitation',
         help='Precipitation data file',
-        type=argparse.FileType('rt', encoding='utf-8-sig'),
+        type=pathlib.Path,
         required=True,
     )
     parser.add_argument(
         '-e',
         '--evapotranspiration',
         help='Evapotranspiration data file',
-        type=argparse.FileType('rt', encoding='utf-8-sig'),
+        type=pathlib.Path,
         required=True,
     )
     parser.add_argument(
         '-z',
         '--water-level',
         help='Water level data file',
-        type=argparse.FileType('rt', encoding='utf-8-sig'),
+        type=pathlib.Path,
         required=True,
     )
     parser.add_argument(
@@ -426,7 +442,7 @@ def add_rise_args(parser):
         '--dump-covariance',
         metavar='FILE',
         help='Dump error covariance matrix as JSON to a file, default stdout',
-        type=argparse.FileType('wt', encoding='ascii'),
+        type=pathlib.Path,
         default=sys.stdout,
     )
 
@@ -534,9 +550,7 @@ def add_plot_args(parser):
     )
     del recession_plot_parser
 
-    rise_plot_parser = plot_subparsers.add_parser(
-        'rise', help='Plot master rise curve'
-    )
+    rise_plot_parser = plot_subparsers.add_parser('rise', help='Plot master rise curve')
     rise_plot_parser.add_argument(
         'db', metavar='SQLITE', help='Path to SQLite database'
     )
@@ -565,12 +579,8 @@ def add_simulate_args(parser):
     simulate_subparsers = parser.add_subparsers(
         help='simulate sub-command help', dest='subtask'
     )
-    rise_parser = simulate_subparsers.add_parser(
-        'rise', help='Simulate rise curve'
-    )
-    rise_parser.add_argument(
-        'db', metavar='SQLITE', help='Path to SQLite database'
-    )
+    rise_parser = simulate_subparsers.add_parser('rise', help='Simulate rise curve')
+    rise_parser.add_argument('db', metavar='SQLITE', help='Path to SQLite database')
     rise_parser.add_argument(
         'parameters',
         metavar='YAML',
@@ -627,9 +637,7 @@ def add_pestfiles_args(parser):
     rise_parser = subparsers.add_parser(
         'rise', help='Generate PEST files for calibration against rise curve'
     )
-    rise_parser.add_argument(
-        'db', metavar='SQLITE', help='Path to SQLite database'
-    )
+    rise_parser.add_argument('db', metavar='SQLITE', help='Path to SQLite database')
     rise_parser.add_argument(
         'parameters',
         metavar='YAML',
@@ -662,9 +670,7 @@ def add_pestfiles_args(parser):
         'curves',
         help='Generate PEST files for calibration against master curves',
     )
-    curves_parser.add_argument(
-        'db', metavar='SQLITE', help='Path to SQLite database'
-    )
+    curves_parser.add_argument('db', metavar='SQLITE', help='Path to SQLite database')
     curves_parser.add_argument(
         'parameters',
         metavar='YAML',

@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
-"""Plot water level and precipitation time series
-
-"""
+"""Plot water level and precipitation time series"""
 
 from dataclasses import dataclass
 
@@ -49,7 +47,7 @@ def plot_time_series(
     cursor = connection.cursor()
 
     if time_zone_name is None:
-        cursor.execute("SELECT source_time_zone FROM time_grid")
+        cursor.execute('SELECT source_time_zone FROM time_grid')
         time_zone_name = cursor.fetchone()[0]
     time_zone = pytz.timezone(time_zone_name)
 
@@ -106,7 +104,7 @@ def plot_time_series(
         columns = tuple(zip(*cursor))
         data_intervals.append(
             DataInterval(
-                mpl_time=dates_mod.epoch2num(columns[0]),
+                mpl_time=epoch2num(columns[0]),
                 zeta_cm=np.array(columns[1], dtype=float),
                 rain_mm_h=np.array(columns[2], dtype=float),
                 et_mm_h=np.array(columns[3], dtype=float),
@@ -124,7 +122,7 @@ def plot_time_series(
     FROM zeta_interval
     WHERE interval_type = 'interstorm'"""
     )
-    zeta_interstorm_intervals = [dates_mod.epoch2num(v) for v in zip(*cursor)]
+    zeta_interstorm_intervals = [epoch2num(v) for v in zip(*cursor)]
     cursor.execute(
         """
     SELECT start_epoch,
@@ -132,14 +130,14 @@ def plot_time_series(
     FROM zeta_interval
     WHERE interval_type = 'storm'"""
     )
-    zeta_storm_intervals = [dates_mod.epoch2num(v) for v in zip(*cursor)]
+    zeta_storm_intervals = [epoch2num(v) for v in zip(*cursor)]
     cursor.execute(
         """
     SELECT start_epoch,
            thru_epoch
     FROM storm"""
     )
-    rain_storm_intervals = [dates_mod.epoch2num(v) for v in zip(*cursor)]
+    rain_storm_intervals = [epoch2num(v) for v in zip(*cursor)]
 
     for series in data_intervals:
         # PyLint false positive
@@ -244,5 +242,15 @@ def mask_from_list(array_to_mask, mask):
 
     """
     masked = array_to_mask[:]
-    masked[~mask] = np.NaN
+    masked[~mask] = np.nan
     return masked
+
+
+def epoch2num(timestamp):
+    """Convert UNIX timestamps to Matplotlib dates
+
+    Matplotlib dates are days since the "Proleptic Gregorian ordinal" (epoch
+    0001-01-01), 719163 days before the UNIX epoch (1970-01-01).
+
+    """
+    return (timestamp / 86400.0) + 719163
