@@ -238,45 +238,57 @@ def plot(connection, args):
             plot_evapotranspiration=args.plot_evapotranspiration,
         )
     elif args.subtask == 'recession':
-        recession_plot_mod.plot_recession(
-            connection=connection, parameters=args.parameters
-        )
+        with open(args.parameters, 'rt') as parameters:
+            recession_plot_mod.plot_recession(
+                connection=connection, parameters=parameters
+            )
+            del parameters
     elif args.subtask == 'rise':
-        rise_plot_mod.plot_rise(connection=connection, parameters=args.parameters)
+        with open(args.parameters, 'rt') as parameters:
+            rise_plot_mod.plot_rise(connection=connection, parameters=parameters)
+            del parameters
     elif args.subtask == 'specific-yield':
-        if args.dump is not None:
-            specific_yield_plot_mod.dump_specific_yield(
-                parameters=args.parameters,
-                water_level_min_cm=args.water_level_min_cm,
-                water_level_max_cm=args.water_level_max_cm,
-                n_points=args.n_points,
-                outfile=args.dump,
-            )
-        else:
-            specific_yield_plot_mod.plot_specific_yield(
-                parameters=args.parameters,
-                water_level_min_cm=args.water_level_min_cm,
-                water_level_max_cm=args.water_level_max_cm,
-                n_points=args.n_points,
-            )
+        with open(args.parameters, 'rt') as parameters:
+            if args.dump is not None:
+                with open(args.dump, 'wt') as outfile:
+                    specific_yield_plot_mod.dump_specific_yield(
+                        parameters=parameters,
+                        water_level_min_cm=args.water_level_min_cm,
+                        water_level_max_cm=args.water_level_max_cm,
+                        n_points=args.n_points,
+                        outfile=outfile,
+                    )
+                    del outfile
+            else:
+                specific_yield_plot_mod.plot_specific_yield(
+                    parameters=parameters,
+                    water_level_min_cm=args.water_level_min_cm,
+                    water_level_max_cm=args.water_level_max_cm,
+                    n_points=args.n_points,
+                )
+            del parameters
     elif args.subtask == 'conductivity':
         raise NotImplementedError
     elif args.subtask == 'transmissivity':
-        if args.dump is not None:
-            transmissivity_plot_mod.dump_transmissivity(
-                parameters=args.parameters,
-                water_level_min_cm=args.water_level_min_cm,
-                water_level_max_cm=args.water_level_max_cm,
-                n_points=args.n_points,
-                outfile=args.dump,
-            )
-        else:
-            transmissivity_plot_mod.plot_transmissivity(
-                parameters=args.parameters,
-                water_level_min_cm=args.water_level_min_cm,
-                water_level_max_cm=args.water_level_max_cm,
-                n_points=args.n_points,
-            )
+        with open(args.parameters, 'rt') as parameters:
+            if args.dump is not None:
+                with open(args.dump, 'wt') as outfile:
+                    transmissivity_plot_mod.dump_transmissivity(
+                        parameters=parameters,
+                        water_level_min_cm=args.water_level_min_cm,
+                        water_level_max_cm=args.water_level_max_cm,
+                        n_points=args.n_points,
+                        outfile=args.dump,
+                    )
+                    del outfile
+            else:
+                transmissivity_plot_mod.plot_transmissivity(
+                    parameters=parameters,
+                    water_level_min_cm=args.water_level_min_cm,
+                    water_level_max_cm=args.water_level_max_cm,
+                    n_points=args.n_points,
+                )
+        del parameters
     else:
         raise AssertionError(f'Bad plot task {args.subtask}')
 
@@ -289,43 +301,74 @@ def set_curvature(connection, args):
 def simulate(connection, args):
     """Dispatch to simulation scripts"""
     if args.subtask == 'rise':
-        simulate_rise_mod.simulate_rise(
-            connection=connection,
-            parameters=args.parameters,
-            outfile=args.output,
-            observations_only=args.observations,
-        )
+        with open(args.parameters, 'rt') as parameters:
+            if isinstance(args.output, str):
+                with open(args.output, 'wt') as output:
+                    simulate_rise_mod.simulate_rise(
+                        connection=connection,
+                        parameters=parameters,
+                        outfile=output,
+                        observations_only=args.observations,
+                    )
+                    del output
+            else:
+                simulate_rise_mod.simulate_rise(
+                    connection=connection,
+                    parameters=parameters,
+                    outfile=output,
+                    observations_only=args.observations,
+                )
+            del parameters
     elif args.subtask == 'recession':
-        simulate_recession_mod.dump_simulated_recession(
-            connection=connection,
-            parameter_file=args.parameters,
-            outfile=args.output,
-            observations_only=args.observations,
-        )
+        if isinstance(args.output, str):
+            with open(args.output, 'wt') as output:
+                simulate_recession_mod.dump_simulated_recession(
+                    connection=connection,
+                    parameter_file=args.parameters,
+                    outfile=output,
+                    observations_only=args.observations,
+                )
+                del output
+        else:
+            simulate_recession_mod.dump_simulated_recession(
+                connection=connection,
+                parameter_file=args.parameters,
+                outfile=args.output,
+                observations_only=args.observations,
+            )
     else:
         raise AssertionError(f'Bad simulate task {args.subtask}')
 
 
 def pestfiles(connection, args):
     """Dispatch to generate pestfile scripts"""
-    if args.subtask == 'rise':
-        pestfiles_mod.generate_rise_pestfiles(
-            connection=connection,
-            parameter_file=args.parameters,
-            outfile_type=args.outfile_type,
-            configuration_file=args.configuration,
-            outfile=args.output,
+    with (
+        open(args.parameters, 'rt') as parameters,
+        open(args.configuration, 'rt') as configuration,
+    ):
+        # Refactor to use a context handler?
+        outfile = (
+            open(args.output, 'wt') if isinstance(args.output, str) else args.output
         )
-    elif args.subtask == 'curves':
-        pestfiles_mod.generate_curves_pestfiles(
-            connection=connection,
-            parameter_file=args.parameters,
-            outfile_type=args.outfile_type,
-            configuration_file=args.configuration,
-            outfile=args.output,
-        )
-    else:
-        raise AssertionError(f'Bad simulate task {args.subtask}')
+        if args.subtask == 'rise':
+            pestfiles_mod.generate_rise_pestfiles(
+                connection=connection,
+                parameter_file=parameters,
+                outfile_type=args.outfile_type,
+                configuration_file=configuration,
+                outfile=outfile,
+            )
+        elif args.subtask == 'curves':
+            pestfiles_mod.generate_curves_pestfiles(
+                connection=connection,
+                parameter_file=parameters,
+                outfile_type=args.outfile_type,
+                configuration_file=configuration,
+                outfile=outfile,
+            )
+        else:
+            raise AssertionError(f'Bad simulate task {args.subtask}')
+        del parameters, configuration
 
 
 def add_shared_args(parser):
@@ -470,7 +513,6 @@ def add_plot_args(parser):
         subparser.add_argument(
             'parameters',
             metavar='YAML',
-            type=argparse.FileType('rt'),
             help='YAML hydraulic parameters',
         )
         subparser.add_argument(
@@ -496,12 +538,11 @@ def add_plot_args(parser):
         subparser.add_argument(
             '-d',
             '--dump',
-            type=argparse.FileType('wt'),
             help='Do not plot; dump curve to file as delimited text',
         )
         del subparser
     del specific_yield_plot_parser
-    del (conductivity_plot_parser,)
+    del conductivity_plot_parser
     del transmissivity_plot_parser
 
     time_series_plot_parser = plot_subparsers.add_parser(
@@ -545,7 +586,6 @@ def add_plot_args(parser):
         '-p',
         '--parameters',
         metavar='YAML',
-        type=argparse.FileType('rt'),
         help='YAML hydraulic parameters',
     )
     del recession_plot_parser
@@ -558,7 +598,6 @@ def add_plot_args(parser):
         '-p',
         '--parameters',
         metavar='YAML',
-        type=argparse.FileType('rt'),
         help='YAML hydraulic parameters',
     )
     del rise_plot_parser
@@ -584,7 +623,6 @@ def add_simulate_args(parser):
     rise_parser.add_argument(
         'parameters',
         metavar='YAML',
-        type=argparse.FileType('rt'),
         help='YAML hydraulic parameters',
     )
     rise_parser.add_argument(
@@ -592,7 +630,6 @@ def add_simulate_args(parser):
         '--output',
         metavar='FILE',
         help='Write output to file, default stdout',
-        type=argparse.FileType('wt'),
         default=sys.stdout,
     )
     rise_parser.add_argument(
@@ -610,7 +647,6 @@ def add_simulate_args(parser):
     recession_parser.add_argument(
         'parameters',
         metavar='YAML',
-        type=argparse.FileType('rt'),
         help='YAML hydraulic parameters',
     )
     recession_parser.add_argument(
@@ -618,7 +654,6 @@ def add_simulate_args(parser):
         '--output',
         metavar='FILE',
         help='Write output to file, default stdout',
-        type=argparse.FileType('wt'),
         default=sys.stdout,
     )
     recession_parser.add_argument(
@@ -641,7 +676,6 @@ def add_pestfiles_args(parser):
     rise_parser.add_argument(
         'parameters',
         metavar='YAML',
-        type=argparse.FileType('rt'),
         help='Initial parameter file',
     )
     rise_parser.add_argument(
@@ -654,7 +688,6 @@ def add_pestfiles_args(parser):
         '-c',
         '--configuration',
         metavar='YAML',
-        type=argparse.FileType('rt'),
         help='Configuration values to populate PEST files',
     )
     rise_parser.add_argument(
@@ -662,7 +695,6 @@ def add_pestfiles_args(parser):
         '--output',
         metavar='FILE',
         help='Write output to file, default stdout',
-        type=argparse.FileType('wt'),
         default=sys.stdout,
     )
     del rise_parser
@@ -674,7 +706,6 @@ def add_pestfiles_args(parser):
     curves_parser.add_argument(
         'parameters',
         metavar='YAML',
-        type=argparse.FileType('rt'),
         help='Initial parameter file',
     )
     curves_parser.add_argument(
@@ -687,7 +718,6 @@ def add_pestfiles_args(parser):
         '-c',
         '--configuration',
         metavar='YAML',
-        type=argparse.FileType('rt'),
         help='Configuration values to populate PEST files',
     )
     curves_parser.add_argument(
@@ -695,7 +725,6 @@ def add_pestfiles_args(parser):
         '--output',
         metavar='FILE',
         help='Write output to file, default stdout',
-        type=argparse.FileType('wt'),
         default=sys.stdout,
     )
     del curves_parser
