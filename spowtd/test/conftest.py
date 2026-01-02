@@ -1,6 +1,4 @@
-"""Fixtures for spowtd tests
-
-"""
+"""Fixtures for spowtd tests"""
 
 import os
 import sqlite3
@@ -27,7 +25,7 @@ for dirpath, dirnames, filenames in os.walk(os.path.dirname(__file__)):
 
 
 # pylint: disable=redefined-outer-name
-@pytest.fixture(scope="session", params=[1, 2])
+@pytest.fixture(scope='session', params=[1, 2])
 def persistent_loaded_connection(request):
     """Connection to in-memory database with loaded data
 
@@ -38,19 +36,23 @@ def persistent_loaded_connection(request):
     """
     with sqlite3.connect(':memory:') as persistent_connection:
         sample = request.param
-        with open(
-            get_sample_file_path('precipitation', sample),
-            'rt',
-            encoding='utf-8-sig',
-        ) as precip_f, open(
-            get_sample_file_path('evapotranspiration', sample),
-            'rt',
-            encoding='utf-8-sig',
-        ) as et_f, open(
-            get_sample_file_path('water_level', sample),
-            'rt',
-            encoding='utf-8-sig',
-        ) as zeta_f:
+        with (
+            open(
+                get_sample_file_path('precipitation', sample),
+                'rt',
+                encoding='utf-8-sig',
+            ) as precip_f,
+            open(
+                get_sample_file_path('evapotranspiration', sample),
+                'rt',
+                encoding='utf-8-sig',
+            ) as et_f,
+            open(
+                get_sample_file_path('water_level', sample),
+                'rt',
+                encoding='utf-8-sig',
+            ) as zeta_f,
+        ):
             load_mod.load_data(
                 connection=persistent_connection,
                 precipitation_data_file=precip_f,
@@ -61,21 +63,21 @@ def persistent_loaded_connection(request):
             yield persistent_connection
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope='function')
 def connection():
     """Connection to an in-memory database"""
     with sqlite3.connect(':memory:') as in_memory_db:
         yield in_memory_db
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope='function')
 def loaded_connection(connection, persistent_loaded_connection):
     """Connection to in-memory database with loaded data"""
     persistent_loaded_connection.backup(connection)
     yield connection
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope='function')
 def classified_connection(loaded_connection):
     """Connection to in-memory database with classified data"""
     classify_mod.classify_intervals(
@@ -117,9 +119,7 @@ def get_peatclsm_data_table(variable, expected_header):
         [
             'Rscript',
             '--vanilla',
-            os.path.join(
-                os.path.dirname(__file__), 'peatclsm_hydraulic_functions.R'
-            ),
+            os.path.join(os.path.dirname(__file__), 'peatclsm_hydraulic_functions.R'),
             variable,
         ],
         encoding='utf-8',

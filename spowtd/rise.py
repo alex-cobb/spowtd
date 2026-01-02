@@ -1,6 +1,4 @@
-"""Determine rising curves
-
-"""
+"""Determine rising curves"""
 
 import logging
 
@@ -16,9 +14,7 @@ from spowtd.fit_offsets import (
 LOG = logging.getLogger('spowtd.rise')
 
 
-def find_rise_offsets(
-    connection, reference_zeta_mm=None, recharge_error_weight=0
-):
+def find_rise_offsets(connection, reference_zeta_mm=None, recharge_error_weight=0):
     """Determine rising curves
 
     If recharge_error_weight is provided, an estimated variance-covariance
@@ -32,9 +28,7 @@ def find_rise_offsets(
     connection.commit()
 
 
-def get_series_storage_offsets(
-    series_list, head_step, recharge_error_weight=0
-):
+def get_series_storage_offsets(series_list, head_step, recharge_error_weight=0):
     """Find a storage offset that minimizes difference in head crossing times
 
     This function is used in assembly of rise curves.  See further
@@ -44,9 +38,7 @@ def get_series_storage_offsets(
     is assembled and used when solving the rise curve assembly problem.
 
     """
-    head_mapping, index_mapping = build_connected_head_mapping(
-        series_list, head_step
-    )
+    head_mapping, index_mapping = build_connected_head_mapping(series_list, head_step)
     return get_series_offsets(
         head_mapping,
         index_mapping,
@@ -60,9 +52,7 @@ def get_rise_covariance(connection, recharge_error_weight):
     series, _, _ = assemble_rise_series(cursor)
     head_step = get_head_step(cursor)
     cursor.close()
-    head_mapping, index_mapping = build_connected_head_mapping(
-        series, head_step
-    )
+    head_mapping, index_mapping = build_connected_head_mapping(series, head_step)
     return assemble_rise_covariance(
         head_mapping, index_mapping, series, head_step, recharge_error_weight
     )
@@ -122,9 +112,7 @@ def check_rise_head_mapping(head_mapping, series, index_mapping, head_step):
             assert depth[0] == 0, f'depth[0] = {depth[0]}'
             assert depth_at_head >= 0, depth_at_head
             assert depth_at_head <= depth[1], f'{depth_at_head} > {depth[1]}'
-            assert (
-                rise[0] <= zeta <= rise[1]
-            ), f'Rise {rise} does not span {zeta}'
+            assert rise[0] <= zeta <= rise[1], f'Rise {rise} does not span {zeta}'
             del depth, rise, series_id, depth_at_head
         del head_id, zeta, series_at_head
 
@@ -144,9 +132,8 @@ def compute_rise_offsets(cursor, reference_zeta_mm, recharge_error_weight=0):
         series, delta_z_mm, recharge_error_weight=recharge_error_weight
     )
 
-    reference_zeta_off_grid = (
-        reference_zeta_mm is not None
-        and not np.allclose(reference_zeta_mm % delta_z_mm, 0)
+    reference_zeta_off_grid = reference_zeta_mm is not None and not np.allclose(
+        reference_zeta_mm % delta_z_mm, 0
     )
     if reference_zeta_off_grid:
         raise ValueError(
@@ -176,9 +163,7 @@ def compute_rise_offsets(cursor, reference_zeta_mm, recharge_error_weight=0):
                :rain_depth_offset_mm""",
             {
                 'start_epoch': epoch[interval[0]],
-                'rain_depth_offset_mm': (
-                    offsets[i] - mean_zero_crossing_depth_mm
-                ),
+                'rain_depth_offset_mm': (offsets[i] - mean_zero_crossing_depth_mm),
             },
         )
         del interval
@@ -220,7 +205,7 @@ def get_head_step(cursor):
         ).fetchone()[0]
     except TypeError:
         raise ValueError(  # pylint: disable=raise-missing-from
-            "Discrete water level interval not yet set"
+            'Discrete water level interval not yet set'
         )
     return delta_z_mm
 
@@ -287,17 +272,11 @@ ORDER BY s.start_epoch"""
         total_depth = cursor.fetchone()[0]
         assert zeta_thru > zeta_start
         zeta_seq = zeta_mm[zeta_start : zeta_thru + 1]
-        assert (
-            len(zeta_seq) >= 2
-        ), 'A jump is defined by at least two zeta values'
-        assert (
-            np.diff(zeta_seq) > 0
-        ).all(), f'{zeta_seq} is not strictly increasing'
+        assert len(zeta_seq) >= 2, 'A jump is defined by at least two zeta values'
+        assert (np.diff(zeta_seq) > 0).all(), f'{zeta_seq} is not strictly increasing'
         initial_zeta = zeta_seq[0]
         final_zeta = zeta_seq[-1]
-        assert (
-            len(zeta_seq) > 0
-        ), 'empty sequence'  # pylint:disable=len-as-condition
+        assert len(zeta_seq) > 0, 'empty sequence'  # pylint:disable=len-as-condition
         rain_intervals.append((rain_start, rain_stop))
         zeta_intervals.append((zeta_start, zeta_thru + 1))
         series.append(

@@ -1,6 +1,4 @@
-"""Test code for recession module
-
-"""
+"""Test code for recession module"""
 
 import spowtd.recession as recession_mod
 

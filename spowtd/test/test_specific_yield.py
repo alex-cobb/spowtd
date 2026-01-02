@@ -1,6 +1,4 @@
-"""Test code for specific yield classes
-
-"""
+"""Test code for specific yield classes"""
 
 import numpy as np
 
@@ -39,9 +37,7 @@ def test_specific_yield(sy_type, expected_sy):
         conftest.get_parameter_file_path(sy_type), 'rt', encoding='utf-8'
     ) as sy_file:
         sy_parameters = yaml.safe_load(sy_file)['specific_yield']
-    specific_yield = specific_yield_mod.create_specific_yield_function(
-        sy_parameters
-    )
+    specific_yield = specific_yield_mod.create_specific_yield_function(sy_parameters)
     if sy_type == 'spline':
         zeta_mm = np.linspace(-0.9, 0.2, 10) * 1000
         assert np.allclose(specific_yield(zeta_mm), expected_sy)

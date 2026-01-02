@@ -1,6 +1,4 @@
-"""Determine recession curves
-
-"""
+"""Determine recession curves"""
 
 import logging
 
@@ -52,12 +50,12 @@ def compute_offsets(cursor, reference_zeta_mm):
         indices = np.argwhere(
             (epoch >= interval_start_epoch) & (epoch <= interval_thru_epoch)
         )[:, 0]
-        assert (
-            epoch[indices][0] == interval_start_epoch
-        ), f'{epoch[indices][0]} != {interval_start_epoch}'
-        assert (
-            epoch[indices][-1] == interval_thru_epoch
-        ), f'{epoch[indices][-1]} != {interval_thru_epoch}'
+        assert epoch[indices][0] == interval_start_epoch, (
+            f'{epoch[indices][0]} != {interval_start_epoch}'
+        )
+        assert epoch[indices][-1] == interval_thru_epoch, (
+            f'{epoch[indices][-1]} != {interval_thru_epoch}'
+        )
         series.append((epoch[indices], zeta_mm[indices]))
         del indices
         del i, interval_start_epoch, interval_thru_epoch
@@ -70,16 +68,13 @@ def compute_offsets(cursor, reference_zeta_mm):
         ).fetchone()[0]
     except TypeError:
         raise ValueError(  # pylint:disable=raise-missing-from
-            "Discrete water level interval not yet set"
+            'Discrete water level interval not yet set'
         )
 
-    (indices, offsets, head_mapping) = get_series_time_offsets(
-        series, delta_z_mm
-    )
+    (indices, offsets, head_mapping) = get_series_time_offsets(series, delta_z_mm)
 
-    reference_zeta_off_grid = (
-        reference_zeta_mm is not None
-        and not np.allclose(reference_zeta_mm % delta_z_mm, 0)
+    reference_zeta_off_grid = reference_zeta_mm is not None and not np.allclose(
+        reference_zeta_mm % delta_z_mm, 0
     )
     if reference_zeta_off_grid:
         raise ValueError(

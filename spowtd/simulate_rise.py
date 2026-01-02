@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
-"""Simulate master rise curve
-
-"""
+"""Simulate master rise curve"""
 
 import numpy as np
 
@@ -14,9 +12,7 @@ import spowtd.specific_yield as specific_yield_mod
 def simulate_rise(connection, parameters, outfile, observations_only):
     """Simulate master rise curve"""
     sy_parameters = yaml.safe_load(parameters)['specific_yield']
-    specific_yield = specific_yield_mod.create_specific_yield_function(
-        sy_parameters
-    )
+    specific_yield = specific_yield_mod.create_specific_yield_function(sy_parameters)
     cursor = connection.cursor()
     cursor.execute(
         """
@@ -25,9 +21,7 @@ def simulate_rise(connection, parameters, outfile, observations_only):
     FROM average_rising_depth
     ORDER BY zeta_mm"""
     )
-    (avg_storage_mm, avg_zeta_mm) = (
-        np.array(a, dtype=float) for a in zip(*cursor)
-    )
+    (avg_storage_mm, avg_zeta_mm) = (np.array(a, dtype=float) for a in zip(*cursor))
     W_mm = compute_rise_curve(
         specific_yield,
         zeta_grid_mm=avg_zeta_mm,
@@ -71,9 +65,7 @@ def compute_rise_curve(specific_yield, zeta_grid_mm, mean_storage_mm=0.0):
     dW_mm = np.empty(zeta_grid_mm.shape, dtype=float)
     dW_mm[0] = 0.0
     for i in range(1, len(zeta_grid_mm)):
-        dW_mm[i] = specific_yield.integrate(
-            zeta_grid_mm[i - 1], zeta_grid_mm[i]
-        )
+        dW_mm[i] = specific_yield.integrate(zeta_grid_mm[i - 1], zeta_grid_mm[i])
     W_mm = np.cumsum(dW_mm)
     W_mm += mean_storage_mm - W_mm.mean()
     return W_mm

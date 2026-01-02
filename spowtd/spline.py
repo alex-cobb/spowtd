@@ -1,6 +1,4 @@
-"""Non-parametric 1D spline
-
-"""
+"""Non-parametric 1D spline"""
 
 import scipy.interpolate as interpolate_mod
 import numpy as np
@@ -54,9 +52,7 @@ class Spline:
         to the smallest or largest knot (constant extrapolation).
 
         """
-        x_clamped = np.minimum(
-            np.maximum(x, self._tck[0][0]), self._tck[0][-1]
-        )
+        x_clamped = np.minimum(np.maximum(x, self._tck[0][0]), self._tck[0][-1])
         return splev(x_clamped, self._tck, der=der)
 
     def integrate(self, a, b):

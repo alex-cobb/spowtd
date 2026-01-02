@@ -1,6 +1,4 @@
-"""Load data into Spowtd data file
-
-"""
+"""Load data into Spowtd data file"""
 
 import csv as csv_mod
 import datetime as datetime_mod
@@ -26,15 +24,13 @@ def load_data(
     """Load data into Spowtd data file"""
     time_zone = pytz.timezone(time_zone_name)
 
-    connection.execute("PRAGMA foreign_keys = 1")
+    connection.execute('PRAGMA foreign_keys = 1')
     cursor = connection.cursor()
 
     # Error out if database is populated
     tables = [
         row[0]
-        for row in cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='table'"
-        )
+        for row in cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
     ]
     if tables:
         raise ValueError('Database already populated; remove before loading')
@@ -111,9 +107,7 @@ def populate_water_level(cursor, time_grid):
     )
     valid_boundaries = (
         [time_grid[0]]
-        + sum(
-            (list(pair) for pair in zip(zeta_t[gap_i], zeta_t[gap_i + 1])), []
-        )
+        + sum((list(pair) for pair in zip(zeta_t[gap_i], zeta_t[gap_i + 1])), [])
         + [time_grid[-1]]
     )
     assert len(valid_boundaries) % 2 == 0
@@ -131,9 +125,7 @@ def populate_water_level(cursor, time_grid):
     UPDATE grid_time
     SET data_interval = ?
     WHERE epoch = ?""",
-        zip(
-            data_intervals[valid_mask].tolist(), time_grid[valid_mask].tolist()
-        ),
+        zip(data_intervals[valid_mask].tolist(), time_grid[valid_mask].tolist()),
     )
 
     # Interpolate
@@ -158,7 +150,7 @@ def populate_grid_time(cursor, time_zone_name):
     """
     time_grid = [
         epoch
-        for epoch, in cursor.execute(
+        for (epoch,) in cursor.execute(
             """
         WITH a AS (
           SELECT min(epoch) AS min_t_zeta,
@@ -175,9 +167,7 @@ def populate_grid_time(cursor, time_zone_name):
     ]
     delta_t = sorted(set(np.diff(time_grid)))
     if len(delta_t) != 1:
-        raise ValueError(
-            f'Nonuniform time steps in rainfall data: {delta_t} s'
-        )
+        raise ValueError(f'Nonuniform time steps in rainfall data: {delta_t} s')
     time_step = int(delta_t[0])
     del delta_t
     cursor.execute(
@@ -272,7 +262,5 @@ def generate_timestamped_rows(rows, tz):
         assert is_aware
         epoch = local_datetime.timestamp()
         if not epoch.is_integer():
-            raise ValueError(
-                f'Non-integer seconds in datetime {row[0]}'
-            )
+            raise ValueError(f'Non-integer seconds in datetime {row[0]}')
         yield [int(epoch)] + row[1:]

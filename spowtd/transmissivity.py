@@ -1,6 +1,4 @@
-"""Transmissivity classes
-
-"""
+"""Transmissivity classes"""
 
 import numpy as np
 
@@ -18,9 +16,7 @@ def create_transmissivity_function(parameters):
 
     """
     if 'type' not in parameters:
-        raise ValueError(
-            f'"type" field is required in parameters; got {parameters}'
-        )
+        raise ValueError(f'"type" field is required in parameters; got {parameters}')
     sy_type = parameters.pop('type', None)
     return {
         'peatclsm': PeatclsmTransmissivity,
@@ -53,9 +49,7 @@ class SplineTransmissivity:
         '_spline',
     ]
 
-    def __init__(
-        self, zeta_knots_mm, K_knots_km_d, minimum_transmissivity_m2_d
-    ):
+    def __init__(self, zeta_knots_mm, K_knots_km_d, minimum_transmissivity_m2_d):
         self.zeta_knots_mm = np.asarray(zeta_knots_mm, dtype='float64')
         self.K_knots_km_d = np.asarray(K_knots_km_d, dtype='float64')
         self.minimum_transmissivity_m2_d = minimum_transmissivity_m2_d
@@ -117,6 +111,6 @@ class PeatclsmTransmissivity:
                 f'T undefined at water level > {zeta_max_cm} cm '
                 f'in {water_level_mm / 10}'
             )
-        return (
-            Ksmacz0 * (zeta_max_cm - water_level_mm / 10) ** (1 - alpha)
-        ) / (100 * (alpha - 1))
+        return (Ksmacz0 * (zeta_max_cm - water_level_mm / 10) ** (1 - alpha)) / (
+            100 * (alpha - 1)
+        )

@@ -1,6 +1,4 @@
-"""Test code for generating PEST files
-
-"""
+"""Test code for generating PEST files"""
 
 import io
 
@@ -148,9 +146,7 @@ def test_generate_rise_tpl(
             configuration_file=None,
             outfile=outfile,
         )
-    assert (
-        outfile.getvalue().splitlines() == reference_file_contents.splitlines()
-    )
+    assert outfile.getvalue().splitlines() == reference_file_contents.splitlines()
 
 
 def test_generate_rise_ins(classified_connection):
@@ -261,9 +257,7 @@ def test_generate_curves_tpl(
             configuration_file=None,
             outfile=outfile,
         )
-    assert (
-        outfile.getvalue().splitlines() == reference_file_contents.splitlines()
-    )
+    assert outfile.getvalue().splitlines() == reference_file_contents.splitlines()
 
 
 def test_generate_curves_ins(classified_connection):
@@ -372,8 +366,7 @@ def extract_observations(pestfile_lines):
     obs_start = pestfile_lines.index('* observation data')
     obs_end = pestfile_lines.index('* model command line')
     observation_rows = [
-        line.strip().split()
-        for line in pestfile_lines[obs_start + 1 : obs_end]
+        line.strip().split() for line in pestfile_lines[obs_start + 1 : obs_end]
     ]
     return (
         np.array([float(row[1]) for row in observation_rows], dtype='float64'),

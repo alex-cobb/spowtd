@@ -1,6 +1,4 @@
-"""Test code for command-line interface
-
-"""
+"""Test code for command-line interface"""
 
 import os
 import tempfile

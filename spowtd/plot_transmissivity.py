@@ -1,6 +1,4 @@
-"""Plot transmissivity
-
-"""
+"""Plot transmissivity"""
 
 import matplotlib.pyplot as plt
 
@@ -25,9 +23,7 @@ def dump_transmissivity(
         outfile.write(f'{water_level_cm}, {transmissivity}\n')
 
 
-def plot_transmissivity(
-    parameters, water_level_min_cm, water_level_max_cm, n_points
-):
+def plot_transmissivity(parameters, water_level_min_cm, water_level_max_cm, n_points):
     """Plot specific yield"""
     fig = plt.figure()
     axes = fig.add_subplot(1, 1, 1)
@@ -44,14 +40,10 @@ def plot_transmissivity(
     return 0
 
 
-def grid_transmissivity(
-    parameters, water_level_min_cm, water_level_max_cm, n_points
-):
+def grid_transmissivity(parameters, water_level_min_cm, water_level_max_cm, n_points):
     """Compute specific yield on a grid"""
     T_parameters = yaml.safe_load(parameters)['transmissivity']
-    transmissivity = transmissivity_mod.create_transmissivity_function(
-        T_parameters
-    )
+    transmissivity = transmissivity_mod.create_transmissivity_function(T_parameters)
     water_level_cm = np.linspace(
         water_level_min_cm, water_level_max_cm, n_points, dtype=float
     )

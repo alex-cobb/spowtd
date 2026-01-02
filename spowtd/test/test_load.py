@@ -1,6 +1,4 @@
-"""Test code for data loading module
-
-"""
+"""Test code for data loading module"""
 
 
 def test_load_sample_data(loaded_connection):

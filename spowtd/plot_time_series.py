@@ -4,7 +4,6 @@
 
 from dataclasses import dataclass
 
-import matplotlib.dates as dates_mod
 import matplotlib.pyplot as plt
 
 import numpy as np

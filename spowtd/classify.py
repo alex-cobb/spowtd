@@ -22,7 +22,7 @@ from collections import defaultdict
 import numpy as np
 
 
-LOG = logging.getLogger("spowtd.classify")
+LOG = logging.getLogger('spowtd.classify')
 
 
 def classify_intervals(
@@ -37,8 +37,8 @@ def classify_intervals(
     VALUES
       (:storm_rain_threshold_mm_h, :rising_jump_threshold_mm_h)""",
         {
-            "storm_rain_threshold_mm_h": storm_rain_threshold_mm_h,
-            "rising_jump_threshold_mm_h": rising_jump_threshold_mm_h,
+            'storm_rain_threshold_mm_h': storm_rain_threshold_mm_h,
+            'rising_jump_threshold_mm_h': rising_jump_threshold_mm_h,
         },
     )
     cursor.execute(
@@ -50,7 +50,7 @@ def classify_intervals(
     )
     data_intervals = [row[0] for row in cursor.fetchall()]
     if not data_intervals:
-        raise ValueError("No valid data intervals found")
+        raise ValueError('No valid data intervals found')
     for data_interval in data_intervals:
         populate_zeta_interval(
             cursor,
@@ -107,9 +107,7 @@ def classify_interstorms(cursor, data_interval, rising_jump_threshold_mm_h):
     # Look for jumps in head much bigger than noise, which could
     # indicate the onset of rain, and mark everything after the jump
     # until the next rain as a "mystery jump".
-    rates = np.concatenate(
-        ([0], (zeta_mm[1:] - zeta_mm[:-1]) / (hour[1:] - hour[:-1]))
-    )
+    rates = np.concatenate(([0], (zeta_mm[1:] - zeta_mm[:-1]) / (hour[1:] - hour[:-1])))
     is_jump = (rates > rising_jump_threshold_mm_h).astype(bool)
     is_mystery_jump = get_mystery_jump_mask(is_jump, is_raining)
     is_interstorm = (~is_mystery_jump) & (~is_raining)
@@ -137,12 +135,10 @@ def classify_interstorms(cursor, data_interval, rising_jump_threshold_mm_h):
     series_indices = [np.nonzero(mask)[0] for mask in masks]
     del mask, masks
     indices = None
-    series_indices = [
-        indices for indices in series_indices if len(indices) > 1
-    ]
+    series_indices = [indices for indices in series_indices if len(indices) > 1]
     del indices
 
-    LOG.info("%s series found", len(series_indices))
+    LOG.info('%s series found', len(series_indices))
 
     for indices in series_indices:
         cursor.execute(
@@ -152,9 +148,9 @@ def classify_interstorms(cursor, data_interval, rising_jump_threshold_mm_h):
         SELECT
           :start_epoch, :interval_type, :thru_epoch""",
             {
-                "interval_type": "interstorm",
-                "start_epoch": int(epoch[indices[0]]),
-                "thru_epoch": int(epoch[indices[-1]]),
+                'interval_type': 'interstorm',
+                'start_epoch': int(epoch[indices[0]]),
+                'thru_epoch': int(epoch[indices[-1]]),
             },
         )
     del hour, zeta_mm
@@ -215,9 +211,7 @@ def match_all_storms(
             'includes only raining time steps'
         )
         jump_start, jump_stop = jump_intervals[i]
-        assert (
-            np.diff(zeta_mm[jump_start:jump_stop]) > jump_delta_threshold
-        ).all()
+        assert (np.diff(zeta_mm[jump_start:jump_stop]) > jump_delta_threshold).all()
 
         # Times associated with rainfall intensities are *start* times
         # for the interval, so the time slice that *starts* at the
@@ -238,20 +232,20 @@ def match_all_storms(
           WHERE start_epoch = :start_epoch
           AND thru_epoch = :thru_epoch
         )""",
-            {"start_epoch": storm_start_epoch, "thru_epoch": storm_thru_epoch},
+            {'start_epoch': storm_start_epoch, 'thru_epoch': storm_thru_epoch},
         ).fetchone()[0]
         assert not already_seen, (
-            f"Storm at {convert_epoch_to_datetime_text(storm_start_epoch)}"
-            f"--{convert_epoch_to_datetime_text(storm_thru_epoch)} UTC "
-            "matched with more than one rise"
+            f'Storm at {convert_epoch_to_datetime_text(storm_start_epoch)}'
+            f'--{convert_epoch_to_datetime_text(storm_thru_epoch)} UTC '
+            'matched with more than one rise'
         )
         cursor.execute(
             """
         INSERT INTO storm (start_epoch, thru_epoch)
         SELECT :start_epoch, :thru_epoch""",
             {
-                "start_epoch": storm_start_epoch,
-                "thru_epoch": storm_thru_epoch,
+                'start_epoch': storm_start_epoch,
+                'thru_epoch': storm_thru_epoch,
             },
         )
         cursor.execute(
@@ -261,9 +255,9 @@ def match_all_storms(
         VALUES
           (:start_epoch, :interval_type, :thru_epoch)""",
             {
-                "interval_type": "storm",
-                "start_epoch": jump_start_epoch,
-                "thru_epoch": jump_thru_epoch,
+                'interval_type': 'storm',
+                'start_epoch': jump_start_epoch,
+                'thru_epoch': jump_thru_epoch,
             },
         )
         cursor.execute(
@@ -273,9 +267,9 @@ def match_all_storms(
         VALUES
           (:interval_start_epoch, :interval_type, :storm_start_epoch)""",
             {
-                "interval_type": "storm",
-                "interval_start_epoch": jump_start_epoch,
-                "storm_start_epoch": storm_start_epoch,
+                'interval_type': 'storm',
+                'interval_start_epoch': jump_start_epoch,
+                'storm_start_epoch': storm_start_epoch,
             },
         )
 
@@ -297,7 +291,7 @@ def match_storms(rain, head, rain_threshold, jump_threshold):
     is_raining = rain > rain_threshold
     rain_masks = list(get_true_interval_masks(is_raining))
     LOG.info(
-        "%s intervals of rain above threshold %s mm / h",
+        '%s intervals of rain above threshold %s mm / h',
         len(rain_masks),
         rain_threshold,
     )
@@ -328,7 +322,7 @@ def match_storms(rain, head, rain_threshold, jump_threshold):
     is_jump = head_increments > jump_threshold
     jump_masks = list(get_true_interval_masks(is_jump))
     LOG.info(
-        "%s intervals of water level increment above threshold %s mm",
+        '%s intervals of water level increment above threshold %s mm',
         len(jump_masks),
         jump_threshold,
     )
@@ -358,12 +352,12 @@ def match_storms(rain, head, rain_threshold, jump_threshold):
     assert_equal(
         len(set(rain_intervals)),
         len(rain_intervals),
-        "Rain intervals in matches not unique",
+        'Rain intervals in matches not unique',
     )
     assert_equal(
         len(set(head_intervals)),
         len(head_intervals),
-        "Head intervals in matches not unique",
+        'Head intervals in matches not unique',
     )
     return (rain_intervals, head_intervals)
 
@@ -373,15 +367,13 @@ def get_candidate_match_intervals(
 ):
     """Identify rain and head intervals for a match between jump and storms"""
     rain_indices = np.nonzero(rain_masks[storm_index])[0]
-    assert is_raining[
-        rain_indices
-    ].all(), "Storm includes only raining time steps"
+    assert is_raining[rain_indices].all(), 'Storm includes only raining time steps'
     rain_start = rain_indices[0]
     rain_stop = rain_indices[-1] + 1
-    assert (
-        rain_start == 0 or not is_raining[rain_start - 1]
-    ), "No heavy rain just before slice"
-    assert not is_raining[rain_stop], "No heavy rain at end of slice"
+    assert rain_start == 0 or not is_raining[rain_start - 1], (
+        'No heavy rain just before slice'
+    )
+    assert not is_raining[rain_stop], 'No heavy rain at end of slice'
     jump_indices = np.nonzero(jump_mask)[0]
     jump_start = jump_indices[0]
     jump_stop = jump_indices[-1] + 2
@@ -390,8 +382,7 @@ def get_candidate_match_intervals(
         f'meets jump threshold {jump_threshold} mm'
     )
     assert (
-        jump_start == 0
-        or head[jump_start] - head[jump_start - 1] <= jump_threshold
+        jump_start == 0 or head[jump_start] - head[jump_start - 1] <= jump_threshold
     ), (
         f'Jump <= {jump_threshold} starts at jump_start: '
         f'{jump_start}, {head[jump_start] - head[jump_start - 1]}'
@@ -428,9 +419,7 @@ def disambiguate_matching(rain_intervals, jump_intervals):
     jump_stops = dict(jump_intervals)
     candidate_matches = [
         (rain_start, jump_start)
-        for (rain_start, _), (jump_start, _) in zip(
-            rain_intervals, jump_intervals
-        )
+        for (rain_start, _), (jump_start, _) in zip(rain_intervals, jump_intervals)
     ]
     duration_differences = {
         (rain_start, jump_start): float(
@@ -511,10 +500,7 @@ def find_stable_matching(storm_candidates, jump_preferences):
         assert storm_candidates[storm]
         jump = storm_candidates[storm].pop()
         if jump in matches:
-            if (
-                jump_preferences[jump][storm]
-                > jump_preferences[jump][matches[jump]]
-            ):
+            if jump_preferences[jump][storm] > jump_preferences[jump][matches[jump]]:
                 assert matches[jump] not in matchable_storms
                 matchable_storms.add(matches[jump])
                 matches[jump] = storm
@@ -581,15 +567,15 @@ def get_true_interval_masks(boolean_vector):
 
     """
     if not boolean_vector.dtype == bool:
-        raise ValueError("non-boolean input vector")
+        raise ValueError('non-boolean input vector')
     int_vector = boolean_vector.astype(np.int64)
     is_start = np.concatenate(([0], int_vector[1:] - int_vector[:-1])) > 0
     # Indices increment for each block of True values in input vector
     indices = np.cumsum(is_start.astype(np.int64))
     indices[~boolean_vector] = 0
-    assert (
-        indices.astype(bool) == boolean_vector
-    ).all(), "Non-zero indices correspond to True elements of input vector"
+    assert (indices.astype(bool) == boolean_vector).all(), (
+        'Non-zero indices correspond to True elements of input vector'
+    )
     unique_indices = sorted(set(indices))
     assert unique_indices[0] == 0
     del unique_indices[0]
@@ -604,4 +590,4 @@ def assert_equal(a, b, message=None):  # pylint:disable=invalid-name
 
 def convert_epoch_to_datetime_text(epoch):
     """Convert UNIX epoch to ISO 8601 datetime text"""
-    return datetime.datetime.fromtimestamp(epoch).strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.datetime.fromtimestamp(epoch).strftime('%Y-%m-%d %H:%M:%S')

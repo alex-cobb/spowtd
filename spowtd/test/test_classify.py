@@ -1,6 +1,4 @@
-"""Test code for interval classification module
-
-"""
+"""Test code for interval classification module"""
 
 
 def test_classify(classified_connection):

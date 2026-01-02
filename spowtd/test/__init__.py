@@ -1,6 +1,4 @@
-"""Test code for Spowtd
-
-"""
+"""Test code for Spowtd"""
 
 
 def get_dataset_id(request):

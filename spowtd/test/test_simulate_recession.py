@@ -1,6 +1,4 @@
-"""Test code for simulating recession curves
-
-"""
+"""Test code for simulating recession curves"""
 
 import numpy as np
 
@@ -17,9 +15,7 @@ from spowtd.test import conftest
 
 
 @pytest.mark.parametrize('parameterization_type', ['peatclsm', 'spline'])
-def test_simulate_recession_curve(
-    classified_connection, parameterization_type
-):
+def test_simulate_recession_curve(classified_connection, parameterization_type):
     """Test simulation of recession curve"""
     # XXX Use a fixture
     recession_mod.find_recession_offsets(classified_connection)

@@ -1,6 +1,4 @@
-"""Determine time offsets that align pieces of a hydrograph
-
-"""
+"""Determine time offsets that align pieces of a hydrograph"""
 
 import logging
 
@@ -20,9 +18,7 @@ def get_series_time_offsets(series_list, head_step):
     documentation under get_series_offsets.
 
     """
-    head_mapping, index_mapping = build_connected_head_mapping(
-        series_list, head_step
-    )
+    head_mapping, index_mapping = build_connected_head_mapping(series_list, head_step)
     del series_list, head_step
     return get_series_offsets(head_mapping, index_mapping)
 
@@ -72,8 +68,7 @@ def get_series_offsets(head_mapping, index_mapping, recharge_error_weight=0):
     output_mapping = {}
     for head_id, crossings in list(head_mapping.items()):
         output_mapping[head_id] = [
-            (index_mapping[series_id], t_mean)
-            for series_id, t_mean in crossings
+            (index_mapping[series_id], t_mean) for series_id, t_mean in crossings
         ]
     return (original_indices, offsets, output_mapping)
 
@@ -111,10 +106,7 @@ def build_connected_head_mapping(series_list, head_step):
     # head; so, retain a mapping from the series_id we use for finding offsets
     # to index in sorted_list
     dec = sorted(
-        (
-            (t - t.min(), H, index)
-            for (index, (t, H)) in enumerate(series_list)
-        ),
+        ((t - t.min(), H, index) for (index, (t, H)) in enumerate(series_list)),
         key=lambda t_H_index: t_H_index[1][0],
     )
     del series_list
@@ -135,14 +127,11 @@ def build_connected_head_mapping(series_list, head_step):
     del series_at_head
     if len(connected_components) > 1:
         LOG.info(
-            '%s connected sets of head of sizes '
-            '%s; will keep only largest component.',
+            '%s connected sets of head of sizes %s; will keep only largest component.',
             len(connected_components),
             tuple(len(cc) for cc in connected_components),
         )
-    head_mappings = split_mapping_by_keys(
-        head_mapping, connected_components[:1]
-    )
+    head_mappings = split_mapping_by_keys(head_mapping, connected_components[:1])
     del connected_components
     assert len(head_mappings) == 1
     head_mapping = head_mappings[0]
@@ -227,9 +216,7 @@ def find_offsets(head_mapping, recharge_error_weight=0):
     offsets = np.concatenate((offsets, [0]))
     # Offsets are by index, but reverse mapping is trivial because series ids
     #   are sorted
-    assert len(series_ids) == len(
-        offsets
-    ), f'{len(series_ids)} != {len(offsets)}'
+    assert len(series_ids) == len(offsets), f'{len(series_ids)} != {len(offsets)}'
     return (series_ids, offsets)
 
 
@@ -327,9 +314,7 @@ def assemble_linear_system(
         len(series_at_head) for series_at_head in list(head_mapping.values())
     )
     number_of_unknowns = len(series_indices) - 1
-    LOG.info(
-        '%s equations, %s unknowns', number_of_equations, number_of_unknowns
-    )
+    LOG.info('%s equations, %s unknowns', number_of_equations, number_of_unknowns)
     # Reference series corresponds to the highest series id; it has the
     #   largest initial head, because we sorted them
     ref_sid = max(series_indices)
@@ -390,9 +375,7 @@ def assemble_weighted_linear_system(
         len(series_at_head) for series_at_head in list(head_mapping.values())
     )
     number_of_unknowns = len(series_indices) - 1
-    LOG.info(
-        '%s equations, %s unknowns', number_of_equations, number_of_unknowns
-    )
+    LOG.info('%s equations, %s unknowns', number_of_equations, number_of_unknowns)
     D = assemble_event_incidence_matrix(head_mapping)
     M = assemble_weighted_mean_matrix(head_mapping, recharge_error_weight)
     assert M.shape == (D.shape[0], D.shape[0])
@@ -436,13 +419,10 @@ def assemble_covariance(dev, FD_diag_r, recharge_error_weight):
         number_of_equations,
     ), f'Covariance matrix shape {Omega.shape} != (# eqs, #eqs)'
     assert np.isfinite(Omega).all(), (
-        'Covariance matrix contains non-finite values: '
-        f'{Omega[~np.isfinite(Omega)]}'
+        f'Covariance matrix contains non-finite values: {Omega[~np.isfinite(Omega)]}'
     )
     # Matrix may not be exactly symmetric due to roundoff
-    assert np.allclose(
-        Omega, Omega.T
-    ), 'Covariance matrix not nearly symmetric'
+    assert np.allclose(Omega, Omega.T), 'Covariance matrix not nearly symmetric'
     # Make exactly symmetric
     i_lower = np.tril_indices(number_of_equations, -1)
     Omega[i_lower] = Omega.T[i_lower]
@@ -549,7 +529,5 @@ def get_connected_components(head_mapping):
     connected_components = sorted(list(groups.keys()), key=len, reverse=True)
     # Sanity check: union should include all head_id ids
     assert sum(len(cc) for cc in connected_components) == len(head_mapping)
-    assert set().union(*[set(cc) for cc in connected_components]) == set(
-        head_mapping
-    )
+    assert set().union(*[set(cc) for cc in connected_components]) == set(head_mapping)
     return connected_components

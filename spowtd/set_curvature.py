@@ -1,6 +1,4 @@
-"""Setting site curvature in database
-
-"""
+"""Setting site curvature in database"""
 
 
 def set_curvature(connection, curvature_m_km2):
