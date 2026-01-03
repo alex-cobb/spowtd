@@ -10,9 +10,9 @@ import spowtd.spline as spline_mod
 def create_specific_yield_function(parameters):
     """Create a specific yield function
 
-    Returns a callable object that returns specific yield at a given water
-    level.  The class of the object depends on the "type" field in the
-    parameters provided, and must be either "peatclsm" or "spline".
+    Returns a callable object that returns specific yield at a given water level.  The
+    class of the object depends on the "type" field in the parameters provided, and must
+    be either "peatclsm" or "spline".
 
     """
     if 'type' not in parameters:
@@ -91,8 +91,8 @@ class PeatclsmSpecificYield(SpecificYield):
 
     def _construct_spline(self):
         """Construct specific yield spline"""
-        # Calculate the specific yield (Dettmann and Bechtold 2015,
-        # Hydrological Processes)
+        # Calculate the specific yield (Dettmann and Bechtold 2015, Hydrological
+        # Processes)
         zl_ = np.linspace(-1, 1, 201)
         zu_ = np.linspace(-0.99, 1.01, 201)
         Sy1_soil = np.empty((201,), dtype='float64')
@@ -126,11 +126,11 @@ class PeatclsmSpecificYield(SpecificYield):
             A = 0
             for j in range(len(Sy_soil)):
                 zm = zm_a[j]
-                # Apply Campbell function to get soil moisture profile
-                # for lower (zl) water level
+                # Apply Campbell function to get soil moisture profile for lower (zl)
+                # water level
                 Azl = campbell_1d_az(Fs_a[j], zm, zl, theta_s, psi_s, b, sd)
-                # Apply Campbell function to get soil moisture profile
-                # for upper (zu) water level
+                # Apply Campbell function to get soil moisture profile for upper (zu)
+                # water level
                 Azu = campbell_1d_az(Fs_a[j], zm, zu, theta_s, psi_s, b, sd)
                 A = A + dz[j] * (Azu - Azl)
             Sy_soil[i] = 1 / (1 * dz[i]) * A

@@ -58,8 +58,8 @@ def compute_rise_curve(specific_yield, zeta_grid_mm, mean_storage_mm=0.0):
 
     Returns dynamic storage on the given grid.
 
-    If the desired mean storage is given, the rise curve is adjusted so its
-    mean matches this value.
+    If the desired mean storage is given, the rise curve is adjusted so its mean matches
+    this value.
 
     """
     dW_mm = np.empty(zeta_grid_mm.shape, dtype=float)

@@ -85,8 +85,7 @@ def simulate_recession(connection, parameter_file):
     del connection
 
     parameters = yaml.safe_load(parameter_file)
-    # XXX Hack for PEATCLSM parameterization, which gives
-    # XXX transmissivity in m2 / s
+    # XXX Hack for PEATCLSM parameterization, which gives transmissivity in m2 / s
     if parameters['transmissivity']['type'] == 'peatclsm':
         transmissivity_m2_s = transmissivity_mod.create_transmissivity_function(
             parameters['transmissivity']
@@ -133,8 +132,8 @@ def compute_recession_curve(
 
     Returns elapsed time in days on the given grid.
 
-    If the desired mean elapsed time is given, the recession curve is adjusted
-    so its mean matches this value.
+    If the desired mean elapsed time is given, the recession curve is adjusted so its
+    mean matches this value.
 
     """
     assert et_mm_d >= 0

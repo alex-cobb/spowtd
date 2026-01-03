@@ -26,23 +26,21 @@ def get_series_time_offsets(series_list, head_step):
 def get_series_offsets(head_mapping, index_mapping, recharge_error_weight=0):
     """Find offsets that minimizes difference in head crossing times
 
-    Given a sequence of (x, head) data series, rediscretize to get an
-    average crossing x of each integer multiple of head_step for each
-    series.  Then find an x offset for each data series that minimizes the
-    sum of squared differences in times when all data series cross those head
-    values.  This offset *replaces* the existing offset of the series,
-    x_new = x - min(x) + time_offset
+    Given a sequence of (x, head) data series, rediscretize to get an average crossing x
+    of each integer multiple of head_step for each series.  Then find an x offset for
+    each data series that minimizes the sum of squared differences in times when all
+    data series cross those head values.  This offset *replaces* the existing offset of
+    the series, x_new = x - min(x) + time_offset
 
-    The series in the list with the largest initial head is treated as the
-    reference series, and assigned an offset of zero.
+    The series in the list with the largest initial head is treated as the reference
+    series, and assigned an offset of zero.
 
-    Returns (indices, offsets, head_mapping) connecting indices of series in
-    series_list to their corresponding offset.  In general, these will be a
-    subset of series_list if there were some heads at which there was no
-    overlap.  The head mapping is a mapping between discrete head ids and
-    sequences of (series_id, x_mean) pairs, representing the mean x at which
-    that series crossed that head.  Head ids are integers which, when
-    multiplied by head_step, will give once more a head with units.
+    Returns (indices, offsets, head_mapping) connecting indices of series in series_list
+    to their corresponding offset.  In general, these will be a subset of series_list if
+    there were some heads at which there was no overlap.  The head mapping is a mapping
+    between discrete head ids and sequences of (series_id, x_mean) pairs, representing
+    the mean x at which that series crossed that head.  Head ids are integers which,
+    when multiplied by head_step, will give once more a head with units.
 
     This function is used in assembly of both recession and rise curves.
 
@@ -63,8 +61,7 @@ def get_series_offsets(head_mapping, index_mapping, recharge_error_weight=0):
     series_ids, offsets = find_offsets(head_mapping, recharge_error_weight)
     assert len(series_ids) == len(offsets)
     original_indices = [index_mapping[series_id] for series_id in series_ids]
-    # We need to map series ids in head_mapping back to their original
-    #   indices
+    # We need to map series ids in head_mapping back to their original indices
     output_mapping = {}
     for head_id, crossings in list(head_mapping.items()):
         output_mapping[head_id] = [
@@ -76,16 +73,16 @@ def get_series_offsets(head_mapping, index_mapping, recharge_error_weight=0):
 def build_connected_head_mapping(series_list, head_step):
     """Construct a mapping between head ids and series crossing times
 
-    Calls build_exhaustive_head_mapping to create an initial mapping between
-    head ids and series crossing times, and then identifies and retains just
-    the largest connected component of overlapping events.  Heads with only one
-    series are also removed as these are uninformative.  Series are identified
-    by an id that sorts the series by initial head.
+    Calls build_exhaustive_head_mapping to create an initial mapping between head ids
+    and series crossing times, and then identifies and retains just the largest
+    connected component of overlapping events.  Heads with only one series are also
+    removed as these are uninformative.  Series are identified by an id that sorts the
+    series by initial head.
 
     The output is two dicts:
 
-    head_mapping: maps head_id to a sequence of (series_id, time) pairs
-                  indicating when each series crossed that head.
+    head_mapping: maps head_id to a sequence of (series_id, time) pairs indicating when
+                  each series crossed that head.
     index_mapping: maps series_id to the index of the series in series_list.
 
     Example: series_list data structure for rise events:
@@ -101,10 +98,9 @@ def build_connected_head_mapping(series_list, head_step):
     """
     if not series_list:
         raise ValueError('empty series list')
-    # We need to retain the indices in series_list so that the caller knows
-    # which offsets go with which series, but we also need to sort by initial
-    # head; so, retain a mapping from the series_id we use for finding offsets
-    # to index in sorted_list
+    # We need to retain the indices in series_list so that the caller knows which
+    # offsets go with which series, but we also need to sort by initial head; so, retain
+    # a mapping from the series_id we use for finding offsets to index in sorted_list
     dec = sorted(
         ((t - t.min(), H, index) for (index, (t, H)) in enumerate(series_list)),
         key=lambda t_H_index: t_H_index[1][0],
@@ -148,13 +144,12 @@ def build_connected_head_mapping(series_list, head_step):
 def build_exhaustive_head_mapping(series, head_step=1):
     """Construct a mapping between head ids and series crossing times
 
-    series is a sequence of (time, head) data series.  Each series is
-    regridded via interpolation to instead give times at which the head time
-    series crosses an integer multiple of head_step.  That integer multiple
-    (head id) is the key to the returned mapping, which maps between head_id
-    and a sequence of (series_id, time) pairs indicating when each series
-    crossed that head.  The series id is just the index of the series passed
-    in.
+    series is a sequence of (time, head) data series.  Each series is regridded via
+    interpolation to instead give times at which the head time series crosses an integer
+    multiple of head_step.  That integer multiple (head id) is the key to the returned
+    mapping, which maps between head_id and a sequence of (series_id, time) pairs
+    indicating when each series crossed that head.  The series id is just the index of
+    the series passed in.
 
     """
     head_mapping = {}
@@ -172,21 +167,18 @@ def build_exhaustive_head_mapping(series, head_step=1):
 def find_offsets(head_mapping, recharge_error_weight=0):
     """Find the time offsets that align the series in head_mapping
 
-    Finds the set of time offsets that minimize the sum of squared differences
-    in times at which each series crosses a particular head.  Input is a
-    mapping of head id (a hashable value corresponding to a head, normally an
-    integer) to a sequence of (series_id, time) pairs wherein series_id is an
-    identifier for a sequence and time is the time at which the series crossed
-    the corresponding head value.
+    Finds the set of time offsets that minimize the sum of squared differences in times
+    at which each series crosses a particular head.  Input is a mapping of head id (a
+    hashable value corresponding to a head, normally an integer) to a sequence of
+    (series_id, time) pairs wherein series_id is an identifier for a sequence and time
+    is the time at which the series crossed the corresponding head value.
 
-    The series with the series_id that is largest (last in sort order) is
-    treated as the reference and given an offset of zero; all other offsets
-    are relative to that one.
+    The series with the series_id that is largest (last in sort order) is treated as the
+    reference and given an offset of zero; all other offsets are relative to that one.
 
-    Recharge_error_weight (typical order might be 1e3) is the relative weight
-    for errors arising from mismeasurement of recharge depth; its square is
-    proportional to the ratio of the error variance of recharge measurements
-    relative to intrinsic error:
+    Recharge_error_weight (typical order might be 1e3) is the relative weight for errors
+    arising from mismeasurement of recharge depth; its square is proportional to the
+    ratio of the error variance of recharge measurements relative to intrinsic error:
     recharge_error_weight = k sigma_alpha^2 / sigma_e^2
     where k is a constant.
     If recharge_error_weight is 0, the calculation is unweighted.
@@ -235,12 +227,12 @@ def assemble_event_incidence_matrix(head_mapping):
 def assemble_weighted_mean_matrix(head_mapping, recharge_error_weight):
     """Assemble weighted mean operator matrix M
 
-    Recharge_error_weight (typical order might be 1e3) is the relative weight
-    for errors arising from mismeasurement of recharge depth; its square is
-    proportional to the ratio of the error variance of recharge measurements
-    relative to intrinsic error:
+    Recharge_error_weight (typical order might be 1e3) is the relative weight for errors
+    arising from mismeasurement of recharge depth; its square is proportional to the
+    ratio of the error variance of recharge measurements relative to intrinsic error:
     recharge_error_weight = k sigma_alpha^2 / sigma_e^2
     where k is a constant.
+
     """
     # Relative contribution of intrinsic error to variance
     var_s = recharge_error_weight**-2
@@ -286,9 +278,10 @@ def assemble_weighted_mean_matrix(head_mapping, recharge_error_weight):
 def get_series_ids(head_mapping):
     """Arrange series ids in sequence for matrix equations
 
-    Assembles series (event) ids in a sequence representing the order in which
-    they will appear in vectors and matrices.  Returns a list of series ids in
-    this consistent order.
+    Assembles series (event) ids in a sequence representing the order in which they will
+    appear in vectors and matrices.  Returns a list of series ids in this consistent
+    order.
+
     """
     return sorted(
         set().union(
@@ -306,8 +299,8 @@ def assemble_linear_system(
 ):
     """Assemble linear system for fitting offsets
 
-    Creates and populates matrix A and vector b representing the overdetermined
-    system Ax = b that will be solved.
+    Creates and populates matrix A and vector b representing the overdetermined system
+    Ax = b that will be solved.
 
     """
     number_of_equations = sum(
@@ -315,16 +308,15 @@ def assemble_linear_system(
     )
     number_of_unknowns = len(series_indices) - 1
     LOG.info('%s equations, %s unknowns', number_of_equations, number_of_unknowns)
-    # Reference series corresponds to the highest series id; it has the
-    #   largest initial head, because we sorted them
+    # Reference series corresponds to the highest series id; it has the largest initial
+    #   head, because we sorted them
     ref_sid = max(series_indices)
     LOG.info('Reference series id: %s', ref_sid)
     A = np.zeros((number_of_equations, number_of_unknowns))
     b = np.zeros((number_of_equations,))
     row_template = np.zeros((number_of_unknowns,))
     row_index = 0
-    # Sorting is what maintains the correspondence between rows and series
-    # indices
+    # Sorting is what maintains the correspondence between rows and series indices
     for _, series_at_head in sorted(head_mapping.items()):
         row_template[:] = 0
         sids, times = list(zip(*series_at_head))
@@ -350,17 +342,15 @@ def assemble_weighted_linear_system(
 ):
     """Assemble linear system for fitting offsets with weighting
 
-    Creates and populates matrix A and vector b representing the overdetermined
-    system Ax = b that will be solved.  The weighting comes into the
-    representation of the mean in A, which here uses the inverse-variance-
-    weighted mean for proportional errors instead of the simple arithmetic
-    mean.  Proportional errors means that the variance of each observation is
-    proportional to the recharge squared.
+    Creates and populates matrix A and vector b representing the overdetermined system
+    Ax = b that will be solved.  The weighting comes into the representation of the mean
+    in A, which here uses the inverse-variance- weighted mean for proportional errors
+    instead of the simple arithmetic mean.  Proportional errors means that the variance
+    of each observation is proportional to the recharge squared.
 
-    Recharge_error_weight (typical order might be 1e3) is the relative weight
-    for errors arising from mismeasurement of recharge depth; its square is
-    proportional to the ratio of the error variance of recharge measurements
-    relative to intrinsic error:
+    Recharge_error_weight (typical order might be 1e3) is the relative weight for errors
+    arising from mismeasurement of recharge depth; its square is proportional to the
+    ratio of the error variance of recharge measurements relative to intrinsic error:
     recharge_error_weight = k sigma_alpha^2 / sigma_e^2
     where k is a constant.
 
@@ -395,18 +385,16 @@ def assemble_weighted_linear_system(
 def assemble_covariance(dev, FD_diag_r, recharge_error_weight):
     """Assemble and check covariance matrix
 
-    Normalizes covariance so that root-mean-square of nonzero values is close
-    to 1.
+    Normalizes covariance so that root-mean-square of nonzero values is close to 1.
 
-    Checks: first, verifies that the matrix is symmetric. Then, successful
-    Cholesky decomposition of the matrix (numpy.linalg.cholesky) confirms that
-    it is positive definite.  See Press et al. (2021) Numerical Recipes, 3rd
-    ed.
+    Checks: first, verifies that the matrix is symmetric. Then, successful Cholesky
+    decomposition of the matrix (numpy.linalg.cholesky) confirms that it is positive
+    definite.  See Press et al. (2021) Numerical Recipes, 3rd ed.
 
     """
     number_of_equations = dev.shape[0]
-    # B2 is implicitly normalized by sigma_alpha here, deviating slightly from
-    # the notation in the paper
+    # B2 is implicitly normalized by sigma_alpha here, deviating slightly from the
+    # notation in the paper
     B2 = dev @ FD_diag_r
     # Relative contribution of intrinsic error to variance
     var_s = recharge_error_weight**-2
@@ -435,8 +423,7 @@ def assemble_covariance(dev, FD_diag_r, recharge_error_weight):
 
 def assemble_FD_diag_r(head_mapping, series_indices):
     """Assemble the product FD diag(r)"""
-    # Sorting is what maintains the correspondence between rows and series
-    # indices
+    # Sorting is what maintains the correspondence between rows and series indices
     number_of_equations = sum(
         len(series_at_head) for series_at_head in list(head_mapping.values())
     )
@@ -486,9 +473,8 @@ def gls_solve(A, b, V):
 def split_mapping_by_keys(mapping, key_lists):
     """Split up a mapping (dict) according to connected components
 
-    Each connected component is a sequence of keys from mapping; returns a
-    corresponding sequence of head mappings, each with only the keys from that
-    connected component.
+    Each connected component is a sequence of keys from mapping; returns a corresponding
+    sequence of head mappings, each with only the keys from that connected component.
 
     """
     mappings = []
@@ -506,9 +492,9 @@ def split_mapping_by_keys(mapping, key_lists):
 def get_connected_components(head_mapping):
     """Find all overlapping sequences of heads in head_mapping
 
-    Head_mapping is a mapping between head_ids and sets of ids for series that
-    have data at that head_id.  Connected components are tuples of series ids
-    that overlap in head.
+    Head_mapping is a mapping between head_ids and sets of ids for series that have data
+    at that head_id.  Connected components are tuples of series ids that overlap in
+    head.
 
     Series id sequences are returned sorted from longest to shortest.
 

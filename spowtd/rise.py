@@ -17,8 +17,9 @@ LOG = logging.getLogger('spowtd.rise')
 def find_rise_offsets(connection, reference_zeta_mm=None, recharge_error_weight=0):
     """Determine rising curves
 
-    If recharge_error_weight is provided, an estimated variance-covariance
-    matrix is assembled and used when solving the rise curve assembly problem.
+    If recharge_error_weight is provided, an estimated variance-covariance matrix is
+    assembled and used when solving the rise curve assembly problem.
+
     """
     cursor = connection.cursor()
     compute_rise_offsets(
@@ -31,11 +32,11 @@ def find_rise_offsets(connection, reference_zeta_mm=None, recharge_error_weight=
 def get_series_storage_offsets(series_list, head_step, recharge_error_weight=0):
     """Find a storage offset that minimizes difference in head crossing times
 
-    This function is used in assembly of rise curves.  See further
-    documentation under get_series_offsets.
+    This function is used in assembly of rise curves.  See further documentation under
+    get_series_offsets.
 
-    If recharge_error_weight is given, an estimated variance-covariance matrix
-    is assembled and used when solving the rise curve assembly problem.
+    If recharge_error_weight is given, an estimated variance-covariance matrix is
+    assembled and used when solving the rise curve assembly problem.
 
     """
     head_mapping, index_mapping = build_connected_head_mapping(series_list, head_step)
@@ -63,29 +64,28 @@ def assemble_rise_covariance(
 ):
     """Assemble covariance of rise event errors
 
-    Creates and populates matrix omega representing the errors in the
-    overdetermined system Ax = b for the rise curve assembly problem.
+    Creates and populates matrix omega representing the errors in the overdetermined
+    system Ax = b for the rise curve assembly problem.
 
-    head_mapping: maps head_id to a sequence of (series_id, time) pairs
-                  indicating when each series crossed that head.
+    head_mapping: maps head_id to a sequence of (series_id, time) pairs indicating when
+                  each series crossed that head.
     index_mapping: maps series_id to the index of the series in series_list.
-    series: list of (depth, rise) pairs where depth is a (0, storm_depth)
-            duple and rise is a (zeta_initial, zeta_final) duple.
-    head_step: factor by which to multiply integer head_id to get water
-               level zeta.
-    recharge_error_weight: ratio of error induced by recharge depth
-                           mismeasurement to intrinsic error along the storage
-                           axis.  If zero or None, the K x K identity matrix is
-                           returned where K is the total number of equations.
+    series: list of (depth, rise) pairs where depth is a (0, storm_depth) duple and rise
+            is a (zeta_initial, zeta_final) duple.
 
-    The covariance of rise event errors is a symmetric, positive semidefinite
-    matrix with shape (n_equations, n_equations) characterizing the covariance
-    among errors in each equation of the rise curve assembly problem.
+    head_step: factor by which to multiply integer head_id to get water level zeta.
+    recharge_error_weight: ratio of error induced by recharge depth mismeasurement to
+                           intrinsic error along the storage axis.  If zero or None, the
+                           K x K identity matrix is returned where K is the total number
+                           of equations.
 
-    Recharge_error_weight is the relative weight for errors arising from
-    mismeasurement of recharge depth.  The identity matrix, divided by
-    recharge_error_weight, is added to the rise event error covariance to make
-    it positive definite.
+    The covariance of rise event errors is a symmetric, positive semidefinite matrix
+    with shape (n_equations, n_equations) characterizing the covariance among errors in
+    each equation of the rise curve assembly problem.
+
+    Recharge_error_weight is the relative weight for errors arising from mismeasurement
+    of recharge depth.  The identity matrix, divided by recharge_error_weight, is added
+    to the rise event error covariance to make it positive definite.
 
     """
     check_rise_head_mapping(head_mapping, series, index_mapping, head_step)
@@ -100,8 +100,9 @@ def assemble_rise_covariance(
 def check_rise_head_mapping(head_mapping, series, index_mapping, head_step):
     """Check head mapping for rise curve assembly
 
-    Verify that each rise contains exactly two depths that span the associated
-    water level.
+    Verify that each rise contains exactly two depths that span the associated water
+    level.
+
     """
     for head_id, series_at_head in head_mapping.items():
         zeta = head_id * head_step
@@ -120,9 +121,9 @@ def check_rise_head_mapping(head_mapping, series, index_mapping, head_step):
 def compute_rise_offsets(cursor, reference_zeta_mm, recharge_error_weight=0):
     """Compute storage offsets to populate rising_interval_zeta
 
-    If a reference zeta is not None, the crossing-depth of this water level is
-    used as the origin of the axis.  Otherwise, the highest water level in the
-    longest assembled rise is used.
+    If a reference zeta is not None, the crossing-depth of this water level is used as
+    the origin of the axis.  Otherwise, the highest water level in the longest assembled
+    rise is used.
 
     """
     series, epoch, zeta_intervals = assemble_rise_series(cursor)
@@ -218,8 +219,8 @@ def assemble_rise_series(cursor):
                ((0, total_depth), (initial_zeta, final_zeta)),
                each representing a distinct rise event.
       epoch:  Time vector as seconds since the UNIX epoch
-      zeta_intervals:  A list of (start, thru) indices in the epoch vector,
-                       one for each series
+      zeta_intervals:  A list of (start, thru) indices in the epoch vector, one for
+                       each series
 
     """
     epoch, zeta_mm = [

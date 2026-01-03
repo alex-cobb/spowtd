@@ -43,10 +43,9 @@ def test_specific_yield(sy_type, expected_sy):
         assert np.allclose(specific_yield(zeta_mm), expected_sy)
     else:
         assert sy_type == 'peatclsm'
-        # In this case, expected_sy is provided by an R script, and is
-        # large (201 values), so we load it from a file produced by
-        # the R script instead of including it in the pytest
-        # decorator.
+        # In this case, expected_sy is provided by an R script, and is large (201
+        # values), so we load it from a file produced by the R script instead of
+        # including it in the pytest decorator.
         del expected_sy
         sy_table = conftest.peatclsm_specific_yield_table()
         zeta_m = np.linspace(-0.995, 1.005, 201)

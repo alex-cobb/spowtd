@@ -35,8 +35,8 @@ ENV.Command(
         'pdflatex -halt-on-error --output-directory=build/doc '
         '-recorder '
         '${SOURCES[0]} '
-        # This is important so that SCons doesn't see the pdf and
-        # assume it doesn't need to run pdflatex a bunch of times.
+        # This is important so that SCons doesn't see the pdf and assume it doesn't need
+        # to run pdflatex a bunch of times.
         '; rm -f build/doc/user_guide.pdf'
     ),
 )
