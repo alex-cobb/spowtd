@@ -1,6 +1,4 @@
-"""Transmissivity classes
-
-"""
+"""Transmissivity classes"""
 
 import numpy as np
 
@@ -12,16 +10,13 @@ import spowtd.spline as spline_mod
 def create_transmissivity_function(parameters):
     """Create a transmissivity function
 
-    Returns a callable object that returns transmissivity at a given
-    water level.  The class of the object depends on the "type" field
-    in the parameters provided, and must be either "peatclsm" or
-    "spline".
+    Returns a callable object that returns transmissivity at a given water
+    level.  The class of the object depends on the "type" field in the
+    parameters provided, and must be either "peatclsm" or "spline".
 
     """
     if 'type' not in parameters:
-        raise ValueError(
-            '"type" field is required in parameters; got {}'.format(parameters)
-        )
+        raise ValueError(f'"type" field is required in parameters; got {parameters}')
     sy_type = parameters.pop('type', None)
     return {
         'peatclsm': PeatclsmTransmissivity,
@@ -35,15 +30,15 @@ class SplineTransmissivity:
     zeta_knots_mm: Sequence of water levels in mm
     K_knots: Condutivity values at those water levels
 
-    Stores a set of knots representing hydraulic conductivity at water
-    table heights (relative to surface) zeta.  When called, takes a
-    water table height and returns a transmissivity obtained by linear
-    interpolation of log-conductivity.
+    Stores a set of knots representing hydraulic conductivity at water table
+    heights (relative to surface) zeta.  When called, takes a water table
+    height and returns a transmissivity obtained by linear interpolation of
+    log-conductivity.
 
-    This is an extended value function that returns
-    minimum_transmissivity below min(zeta) and extrapolates
-    exponentially or linearly above max(zeta), according to whether
-    the last two knots have the same or different conductivity.
+    This is an extended value function that returns minimum_transmissivity
+    below min(zeta) and extrapolates exponentially or linearly above
+    max(zeta), according to whether the last two knots have the same or
+    different conductivity.
 
     """
 
@@ -54,9 +49,7 @@ class SplineTransmissivity:
         '_spline',
     ]
 
-    def __init__(
-        self, zeta_knots_mm, K_knots_km_d, minimum_transmissivity_m2_d
-    ):
+    def __init__(self, zeta_knots_mm, K_knots_km_d, minimum_transmissivity_m2_d):
         self.zeta_knots_mm = np.asarray(zeta_knots_mm, dtype='float64')
         self.K_knots_km_d = np.asarray(K_knots_km_d, dtype='float64')
         self.minimum_transmissivity_m2_d = minimum_transmissivity_m2_d
@@ -66,6 +59,7 @@ class SplineTransmissivity:
         )
 
     def conductivity(self, water_level_mm):
+        """Compute conductivity for a scalar argument"""
         assert water_level_mm >= self.zeta_knots_mm.min()
         if water_level_mm >= self.zeta_knots_mm.max():
             raise NotImplementedError('Extrapolation above highest knot')
@@ -114,10 +108,9 @@ class PeatclsmTransmissivity:
         water_level_mm = np.asarray(water_level_mm)
         if (water_level_mm / 10 > zeta_max_cm).any():
             raise ValueError(
-                'T undefined at water level > {} cm in {}'.format(
-                    zeta_max_cm, water_level_mm / 10
-                )
+                f'T undefined at water level > {zeta_max_cm} cm '
+                f'in {water_level_mm / 10}'
             )
-        return (
-            Ksmacz0 * (zeta_max_cm - water_level_mm / 10) ** (1 - alpha)
-        ) / (100 * (alpha - 1))
+        return (Ksmacz0 * (zeta_max_cm - water_level_mm / 10) ** (1 - alpha)) / (
+            100 * (alpha - 1)
+        )

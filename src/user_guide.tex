@@ -1,4 +1,4 @@
-\documentclass[11pt,a4paper]{article}
+ \documentclass[11pt,a4paper]{article}
 
 \usepackage{pslatex}
 \usepackage{inconsolata}
@@ -9,6 +9,8 @@
 \usepackage{parskip}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{bm}
+\usepackage{graphicx}
 
 \usepackage{color}
 \definecolor{bluish}{rgb}{0.20,0.29,0.46}
@@ -57,7 +59,7 @@
 \begin{document}
 \lstset{language=bash}
 
-{\huge User Guide for Spowtd v0.5.0}\\[2ex]
+{\huge User Guide for Spowtd v0.6.0}\\[2ex]
 {\large Alex Cobb}\\[0ex]
 
 \renewcommand{\baselinestretch}{1.18}\normalsize
@@ -183,6 +185,19 @@ spowtd recession -vvv ekolongouma.sqlite3
 \begin{lstlisting}[frame=single]
 spowtd rise -vvv ekolongouma.sqlite3
 \end{lstlisting}
+If desired, the correlated errors produced by imprecision in recharge
+depth measurement can be taken into account when assembling the rise
+curve (see Appendix~\ref{b:rise_weighting}, ``Event weighting in rise
+analysis'').  To do so, pass in a relative weight to assign to these
+errors, vs.\ direct errors in water level measurement, via
+\texttt{--recharge-error-weight}:
+\begin{lstlisting}[frame=single]
+spowtd rise -vvv ekolongouma.sqlite3 --recharge-error-weight=1e3
+\end{lstlisting}
+To examine the error covariance matrix used in the rise curve
+assembly, append the \texttt{--dump-covariance} flag and the error
+covariance matrix will be written to a file (default is standard
+output) as JSON.
 
 The recession and rise curves are now assembled, and can be plotted.
 \begin{lstlisting}[frame=single]
@@ -497,5 +512,362 @@ rain (for storms) and rapid increase in water level (for rises).  If
 differences between storm and rise duration are larger than you think
 they should be, try adjusting one of these thresholds to get better
 agreement.
+
+\section{Event weighting in rise analysis}
+\label{b:rise_weighting}
+
+Assembly of recession curves benefits from the fact that both water
+level and time usually can be measured fairly accurately.  In
+contrast, rise events may be affected by large errors in measurement
+of the recharge depth, either because of the difficulties in measuring
+the precipitation that passes through the canopy and litter to reach
+the water table, or because of spatial separation or scale differences
+between where precipitation is measured and where the water table
+response is evaluated.
+
+In some cases the error in recharge depth measurement may be large
+enough to cause problems in assembling a reasonable rise curve.
+Because each rise event is represented as a straight line segment
+between the water level and dynamic storage at the beginning and end
+of the event, an error in the recharge depth is manifested as an error
+in slope of this segment.  In the case of a range of water levels
+where specific yield is approximately uniform so that the true slope
+of the rise curve is approximately constant, this error in slope
+causes an error in observed cumulative recharge that increases in
+proportion to distance from the center of the rise event line segment
+(Fig.~\ref{fig:rise_event_error}).  A single event spans multiple
+water levels, and thus affects multiple equations.  In addition,
+previous work on precipitation measurement indicates larger error for
+higher precipitation, suggesting proportional errors.
+
+Here we extend the unweighted approach to rise curve assembly in
+\citet{Cobb_et_al_2017} and \citet{Cobb_and_Harvey_2019} to increase
+its applicability to cases with larger errors in recharge measurement.
+We first re-express the unweighted equations in the general form for a
+linear estimation problem given by \citet{Paige_1979_computer}.  This
+form includes explicit terms for the additive uncorrelated errors that
+were minimized with that approach.  We then show how we modified the
+approach to accommodate large, proportional errors in recharge
+observations.
+
+\begin{figure}[b!]
+  \centerline{\includegraphics[scale=1]{build/doc/rise_event_error.pdf}}
+  \caption{Model for error in recharge depth observations.}
+  \label{fig:rise_event_error}
+\end{figure}
+
+Any linear estimation problem can be written in the following general
+form \cite{Paige_1979_computer}:
+\begin{equation}
+  \label{eq:linear_estimation_problem}
+  \begin{aligned}
+    \min_{\vec{s},\vec{v}} \hspace{0.6em} & \vec{v}^\mathsf{T}\vec{v}\\
+    \text{subject to} \hspace{0.6em} & \vec{y} = \vec{As} + \vec{Bv}
+  \end{aligned}
+\end{equation}
+where $\vec{y} = \vec{As}$ is the overdetermined system of linear
+equations to be solved for the unknowns $\vec{s}$, and $\vec{v}$ is a
+vector of errors with zero mean and unit variance, which is then
+appropriately scaled and distributed across equations by the matrix
+$\vec{B}$.  When $\vec{B}$ is a square matrix with full rank, a
+typical approach to solving the linear estimation problem
+(\ref{eq:linear_estimation_problem}) is to assemble the error
+covariance matrix $\bm\Omega = \vec{BB}^\mathsf{T}$, which will then be
+symmetric and positive definite and therefore invertible, and solve
+the generalized least-squares system
+\begin{equation}
+  \label{eq:gls}
+  \vec{A}^\mathsf{T}\bm\Omega^{-1}\vec{A}\,\vec{s} = \vec{A}^\mathsf{T}\bm\Omega^{-1}\vec{y}
+\end{equation}
+for the unknowns $\vec{s}$.
+
+We now show how the the unweighted rise curve assembly problem
+\cite{Cobb_et_al_2017, Cobb_and_Harvey_2019} corresponds to the
+general form of the linear estimation problem above
+(\ref{eq:linear_estimation_problem}).  The unweighted rise curve
+assembly problem involves finding a storage offset $s_j$ for each rise
+event $j$ (Fig.~\ref{fig:rise_event_error}).  Each rise event $j$ and
+water level $i$ (Table~\ref{tab:rise_notation}) yield a single
+equation that can be written as
+\begin{equation}
+  \label{eq:single_unweighted_eqn}
+  f_{ij} r_j + s_j - \frac{1}{|J_i|} \sum_{j'\in J_i} \left(r_{ij'} + s_{j'}\right) = e_k
+\end{equation}
+where $J_i$ is the set of rises crossing $\zeta_i$, $|J_i|$ is the
+size (cardinality) of $J_i$ and $j'$ is a dummy index of summation.
+The weighting coefficient $f_{ij}$ defined as
+\begin{equation}
+f_{ij} = \frac{\zeta_i - \overline{\zeta_j}}{\zeta_j^* - \zeta^o_j}
+\end{equation}
+where $\zeta^o_j$ is the water level at the beginning and $\zeta^*_j$ the water level at
+the end of event $j$ (Fig.~\ref{fig:rise_event_error}).
+
+In (\ref{eq:single_unweighted_eqn}), the first two terms on the left represent the
+dynamic storage for event $j$ when it crosses water level $i$, while the summation term
+in the round brackets computes the unweighted mean dynamic storage at water level $i$
+over all events.  The error $e_k$ in the $k$th equation represents the deviation of the
+dynamic storage for the $j$th event, when it crosses water level $i$, from the mean
+dynamic storage across all events crossing that water level.  These deviations can arise
+due to complexities that are ignored in the simple scalar model underlying rise curve
+assembly, and from the approximation of the rise curve with straight line segments.  For
+simplicity, in the unweighted implementation these factors were assumed to lead to
+uncorrelated errors with a similar typical magnitude across all equations.
+
+Note that the mean dynamic storage at $i$ (the term in the round
+brackets in (\ref{eq:single_unweighted_eqn})) is not known a priori
+because it itself depends on the offsets $\vec{s}$ for which we solve.
+However, the mean is completely specified by any particular choice of
+offsets $\vec{s}$; in fact it is a linear function of them.
+Therefore, unweighted rise curve assembly \cite{Cobb_et_al_2017,
+  Cobb_and_Harvey_2019} was able to incorporate the calculation of the
+mean into the overdetermined system of linear equations that is then
+solved by least squares.
+
+The mean dynamic storage $s_J$ for rise event $J$ is set to 0 and
+excluded from the unknowns to make the problem nonsingular; after
+solving for the other dynamic storage values, a constant is subtracted
+from all of these to define the dynamic storage as zero when the water
+level is at the peat surface ($\zeta = 0$), as described in
+\citet{Cobb_and_Harvey_2019}.
+
+The entire system of $K$ unweighted equations can be written
+\begin{equation}
+  \label{eq:unweighted_equations}
+  \vec{FD} \vec{r} + \vec{DTs} - \vec{M}_u(\vec{FDr} + \vec{DTs}) = \vec{e}
+\end{equation}
+where, in this unweighted case, the averaging operator $\vec{M}_u$ is
+a simple arithmetic mean
+\begin{equation}
+  \label{eq:unweighted_mean}
+  \vec{M}_u = \left[
+    \begin{array}{ccc}
+      \frac{1}{|J_{i_1}|}[j_1\in J_{i_1}] & \cdots & \frac{1}{|J_{i_1}|} [j_K\in J_{i_1}] \\
+      \vdots & \ddots & \vdots \\
+      \frac{1}{|J_{i_K}|}[j_1\in J_{i_K}] & \cdots & \frac{1}{|J_{i_K}|}[j_K\in J_{i_K}] \\
+    \end{array}
+  \right],
+\end{equation}
+which computes a mean across all events that cross each water level, and then
+distributes each mean to all of the $K$ equations for that water level.  Here we use the
+Iverson bracket $[P\,]$ to denote the indicator function that takes the value 1 if the
+statement $P$ within the brackets is true and 0 otherwise, so that only the relevant
+events are selected in each row.  The $K\times J$ equation-event incidence matrix
+$\vec{D}$ records the event $j$ associated with each equation $j$ and has exactly one
+nonzero value (equal to 1) in each row
+\begin{equation}
+  \label{eq:equation_event_incidence_matrix}
+  \vec{D} = \left[
+    \begin{array}{ccc}
+      \left[j_1 = 1\right] & \cdots & \left[j_1 = J\right] \\ 
+      \vdots & \ddots & \vdots \\
+      \left[j_K = 1\right] & \cdots & \left[j_K = J\right]
+    \end{array}
+  \right].
+\end{equation}
+Operating on a $J$-vector of event-specific values, $\vec{D}$ distributes these to the
+corresponding equations in a $K$-vector.  The truncation matrix $\vec{T}$
+\begin{equation}
+  \label{eq:truncation_matrix}
+  \vec{T} = \left[
+    \begin{array}{c}
+      \vec{I}_{J-1}\\
+      \vec{0}_{1,J-1}
+    \end{array}
+  \right]
+\end{equation}
+enforces the boundary condition $s_J = 0$ by transforming the $J-1$-vector of unknowns
+$s$ into a $J$-vector with its last element set to $0$ ($\vec{T}\,\vec{s}$ is $\vec{s}$
+with a zero concatenated to its end).
+
+Rearranging (\ref{eq:unweighted_equations}) to put the unknown vector
+with errors $\vec{e}$ on the right-hand-side, we have
+\begin{equation}
+  \label{eq:unweighted_equations_rearranged}
+  \left(\vec{I} - \vec{M}_u\right)\vec{FD}\,\vec{r} = -\left(\vec{I} - \vec{M}_u\right)\vec{DT}\,\vec{s} + \vec{e}
+\end{equation}
+If we then define
+$\vec{y}_u = \left(\vec{I} - \vec{M}_u\right)\vec{FD}\,\vec{r}$,
+$\vec{A}_u = -\left(\vec{I} - \vec{M}_u\right)\vec{DT}$,
+and $\vec{B}_u = \sigma_e\vec{I}$ where
+$\sigma_e$ is the positive square root of the (uniform) variance of
+the errors $\vec{e}$, so that $\vec{e} = \vec{B}_u\vec{v}$, we have
+expressed the unweighted problem in the standard form
+(\ref{eq:linear_estimation_problem}).  Because the covariance
+$\bm\Omega_u = \vec{B}_u\vec{B}_u^\mathsf{T} = \sigma_e^2\vec{I}$ in
+this unweighted case is just a positive multiple of the identity
+matrix, so too is its inverse $\bm\Omega_u^{-1}$, and it cancels from
+(\ref{eq:gls}) yielding the ordinary least-squares problem
+\begin{equation}
+  \label{eq:ols}
+  \vec{A}_u^\mathsf{T}\vec{A}_u\,\vec{s} = \vec{A}_u^\mathsf{T}\,\vec{y}_u.
+\end{equation}
+Solving this ordinary least-squares problem (\ref{eq:ols}) for
+$\vec{s}$ is equivalent to what was done in \citet{Cobb_et_al_2017}
+and \citet{Cobb_and_Harvey_2019}; what we have outlined, then, is the
+same procedure but with more general notation.
+
+\begin{table}[b!]
+  \centering
+  \begin{tabular}{clp{9.8cm}}
+    \emph{Symbol} & \emph{Dimensions} & \emph{Definition} \\
+    \hline
+    $\vec{e}$ & $K\times 1$ & Deviation of storage at water level $i$ for event $j$ from mean across all events at that water level \\
+    $\vec{f}$ & $K\times 1$ & Weighting coefficient for error in cumulative
+                              recharge for each water level $i$ and event $j$\\
+    $i$ & & Index over discrete water levels $\zeta_i$\\
+    $j$ & & Index over rise events\\
+    $J_i$ & & Set of rise events crossing water level $i$\\
+    $k$ & & Index over equations; enumerates $(i, j)$ pairs identifying water levels crossed by recharge events \\
+    $\tilde{\vec{r}}$ & $J\times 1$ & Observed recharge for each event \\
+    $\vec{r}$ & $J\times 1$ & True recharge depth for each event \\
+    $\vec{s}$ & $(J - 1)\times 1$ & Dynamic storage offset for each event \\
+    $\vec{D}$ & $K\times J$ & Equation-event incidence matrix \\
+    $\vec{F}$ & $K\times K$ & $\text{diag}(\vec{f})$ \\
+    $I$ & & Total number of water levels \\
+    $\vec{I}$ & $K\times K$ & Identity matrix \\
+    $J$ & & Total number of events \\
+    $K$ & & Total number of equations $\sum_i |J_i|$ \\
+    $\vec{M}$ & $K\times K$ & Weighted averaging operator \\
+    $S_y$ & & Specific yield \\
+    $\vec{T}$ & $J\times (J - 1)$ & Truncation matrix to set boundary condition $s_J = 0$ \\
+    $\bm\alpha$ & $J\times 1$ & Multiplicative error in each recharge depth observation \\
+    $\sigma_\alpha^2$ & & Variance of components of $\bm\alpha$ \\
+    $\sigma_e^2$ & & Variance of components of $\vec{e}$ \\
+    $\zeta$ & & Water level \\
+    $\bm{\Omega}$ & $K\times K$ & Error covariance matrix \\
+  \end{tabular}
+  \caption{Notation for assembly of rise curves}
+  \label{tab:rise_notation}
+\end{table}
+
+We now extend this analysis to the weighted case with large,
+proportional errors in recharge observations.  Suppose recharge depth
+observations $\tilde{\vec{r}}$ are affected by multiplicative
+independent errors $\bm{\alpha}$, each identically distributed with
+mean 1 and variance $\sigma_\alpha^2$.  In this case, for an event
+$j$, instead of the true recharge $r_j$ we measure an observed
+recharge $\tilde{r}_j = \alpha_j r_j$, so that the true recharge
+$\vec{r}$ is related to observed recharge $\tilde{\vec{r}}$ by
+\begin{equation}
+  \label{eq:recharge_with_error}
+  \vec{r} = \tilde{\vec{r}} - \text{diag}(\vec{r})\left(\bm\alpha - \vec{1}\right).
+\end{equation}
+
+In addition, because the variance of errors in recharge is no longer
+the same for each event $j$ crossing a water level $i$, we will
+replace the unweighted averaging operator $\vec{M}_u$ by the
+inverse-variance-weighted-mean operator $\vec{M}$.  The
+inverse-variance-weighted mean dynamic storage at water level $i$ is
+computed as
+\begin{equation}
+  \label{eq:inverse_variance_weighted_mean_storage}
+  \frac{\sum_{j\in J_i} (f_{ij} \tilde{r}_j + s_j) \sigma^{-2}_{ij}}
+       {\sum_{j\in J_i} \sigma^{-2}_{ij}}
+\end{equation}
+where $\sigma^2_{ij} = \text{var}(f_{ij} \tilde{r}_j + s_j)$. Because
+errors in observed recharge $\tilde{r}_j$ and storage $s_j$ are
+uncorrelated,
+\begin{equation}
+  \sigma^2_{ij} = \text{var}(\alpha_j f_{ij} \tilde{r}_j) + \text{var}(s_j) = f_{ij}^2 r_j^2\sigma_\alpha^2 + \sigma_e^2.
+\end{equation}
+By (\ref{eq:inverse_variance_weighted_mean_storage}), the weighted
+mean operator is given by
+\begin{equation}
+  \label{eq:weighted_mean_operator}
+  \vec{M} = \left[
+    \begin{array}{ccc}
+      \frac{\sigma^{-2}_{i_1 j_1}}{\sum_{j\in J_{i_1}}\sigma^{-2}_{i_1 j}} [j_1\in J_{i_1}] & \cdots & \frac{\sigma^{-2}_{i_1 j_K}}{\sum_{j\in J_{i_1}}\sigma^{-2}_{i_1 j}} [j_K \in J_{i_1}] \\
+      \vdots & \ddots & \vdots \\
+      \frac{\sigma^{-2}_{i_K j_1}}{\sum_{j\in J_{i_K}}\sigma^{-2}_{i_K j}}[j_1 \in J_{i_K}] & \cdots & \frac{\sigma^{-2}_{i_K j_K}}{\sum_{j\in J_{i_K}}\sigma^{-2}_{i_K j}}[j_K \in J_{i_K}]
+    \end{array}
+  \right]
+\end{equation}
+
+Substituting the weighted mean operator $\vec{M}$
+(\ref{eq:weighted_mean_operator}) and the expression for the recharge
+with observation error $\tilde{\vec{r}}$
+(\ref{eq:recharge_with_error}) into the unweighted system of equations
+(\ref{eq:unweighted_equations_rearranged}) yields
+\begin{equation}
+  \left(\vec{I} - \vec{M}\right)\vec{FD}\,\left(\tilde{\vec{r}} - \text{diag}(\vec{r})\left(\bm\alpha - \vec{1}\right)\right) = -\left(\vec{I} - \vec{M}\right)\vec{DT}\,\vec{s} + \vec{e}
+\end{equation}
+Because of the multiplicative errors $\bm\alpha$ in recharge, we now
+have an additional error term on the left-hand-side.  To express our
+problem in the general form for a linear estimation problem
+(\ref{eq:linear_estimation_problem}), we will absorb the recharge
+errors into the error term $\vec{B}\vec{v}$.
+
+Accordingly, we define a submatrix
+\begin{equation}
+  \label{eq:B_2}
+  \vec{B}_2 = \sigma_\alpha\left(\vec{I} - \vec{M}\right)\vec{FD}\,\text{diag}(\vec{r})
+\end{equation}
+and a subvector $\vec{v}_2$ for the recharge errors, normalized to
+zero mean and unit variance
+\begin{equation}
+  \label{eq:v_2}
+  \vec{v}_2 = \frac{\bm\alpha - \vec{1}}{\sigma_\alpha}
+\end{equation}
+so that we can write
+\begin{equation}
+  \label{eq:weighted_mess}
+  \left(\vec{I} - \vec{M}\right)\vec{FD}\,\tilde{\vec{r}} = -\left(\vec{I} - \vec{M}\right)\vec{DT}\,\vec{s} + \vec{e} + \vec{B}_2\vec{v}_2
+\end{equation}
+Then, defining a second submatrix $\vec{B}_1 = \sigma_e\vec{I}$ and
+subvector $\vec{v}_1 = \vec{e} / \sigma_e$ to deal with the
+uncorrelated errors, we combine these in a block matrix
+$\vec{B} = \left[ \vec{B}_1 \vec{B}_2\right]$ and a block vector
+\begin{equation}
+  \label{eq:v_block}
+  \vec{v} = \left[
+    \begin{array}{c}
+      \vec{v}_1\\
+      \vec{v}_2
+    \end{array}
+  \right].
+\end{equation}
+Finally, after defining
+$\vec{y} = \left(\vec{I} - \vec{M}\right)\vec{FD}\tilde{\vec{r}}$ and
+$\vec{A} = -\left(\vec{I} - \vec{M}\right)\vec{DT}$ and substituting into
+(\ref{eq:weighted_mess}), we arrive back at the general form for a linear estimation
+problem (\ref{eq:linear_estimation_problem}).
+
+The resulting weighted linear estimation problem can again be solved
+by the typical approach to generalized least squares (\ref{eq:gls})
+because its error covariance matrix
+$\bm\Omega = \vec{B}\vec{B}^\mathsf{T}$ is invertible.  Expanding,
+$\vec{B}\vec{B}^\mathsf{T} = \vec{B}_1\vec{B}_1^\mathsf{T} +
+\vec{B}_2\vec{B}_2^\mathsf{T} = \sigma_e^2\vec{I} +
+\vec{B}_2\vec{B}_2^\mathsf{T}$.  The addition of a positive multiple of
+the identity matrix $\sigma_e^2\vec{I}$ to the symmetric positive
+semidefinite matrix $\vec{B}_2\vec{B}_2^\mathsf{T}$ results in a
+symmetric positive definite, and therefore invertible, covariance
+matrix $\bm\Omega$.
+
+So far we have ignored the fact that assembling the covariance matrix
+factor $\vec{B}_2$ (\ref{eq:B_2}) requires the true recharge
+$\vec{r}$, which we do not know.  Nonetheless, we initially have as an
+estimate the imperfect observations $\tilde{\vec{r}}$, and by solving
+the linear estimation problem (\ref{eq:linear_estimation_problem}) we
+arrive at an estimate of the recharge errors $\bm\alpha$
+(\ref{eq:v_2}), which we can use to improve our recharge estimates.
+In practice, we found that repeatedly solving the weighted estimation
+problem and updating the recharge $\tilde{\vec{r}}$ resulted in
+convergence within a few iterations to a self-consistent solution for
+storage offsets $\vec{s}$ and errors $\vec{v}$.
+
+\begin{figure}[t!]
+  \centerline{\includegraphics[scale=1]{build/doc/rise_event_test.pdf}}
+  \caption{Effect of recharge error weighting in some simple test cases.}
+  \label{fig:rise_event_test}
+\end{figure}
+
+\begin{figure}[t!]
+  \centerline{\includegraphics[scale=1]{build/doc/multiplicative_error_test.pdf}}
+  \caption{Effect of multiplicative vs.\ additive error in some simple
+    test cases.}
+  \label{fig:multiplicative_error_test}
+\end{figure}
+
 
 \end{document}

@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
-"""Plot master rise curve
-
-"""
+"""Plot master rise curve"""
 
 import itertools
 
@@ -38,9 +36,7 @@ def plot_rise(connection, parameters):
     FROM rising_curve_line_segment
     ORDER BY rise_interval, storage_cm"""
     )
-    for _, group in itertools.groupby(
-        cursor.fetchall(), key=lambda row: row[0]
-    ):
+    for _, group in itertools.groupby(cursor.fetchall(), key=lambda row: row[0]):
         (storage_cm, zeta_cm) = zip(*((t, z) for _, t, z in group))
         axes.plot(storage_cm, zeta_cm, '-', color='magenta')
 
@@ -56,9 +52,7 @@ def plot_rise(connection, parameters):
     axes.plot(avg_storm_depth_cm, avg_zeta_cm, 'b-')
 
     if parameters is not None:
-        plot_simulated_rise(
-            axes, parameters, avg_zeta_cm, np.mean(avg_storm_depth_cm)
-        )
+        plot_simulated_rise(axes, parameters, avg_zeta_cm, np.mean(avg_storm_depth_cm))
 
     cursor.close()
     plt.show()
@@ -69,9 +63,7 @@ def plot_simulated_rise(axes, parameters, zeta_grid_cm, mean_storage_cm):
     """Plot simulated rise curve"""
     sy_parameters = yaml.safe_load(parameters)['specific_yield']
     W_mm = simulate_rise_mod.compute_rise_curve(
-        specific_yield=specific_yield_mod.create_specific_yield_function(
-            sy_parameters
-        ),
+        specific_yield=specific_yield_mod.create_specific_yield_function(sy_parameters),
         zeta_grid_mm=np.array(zeta_grid_cm, dtype=float) * 10,
         mean_storage_mm=mean_storage_cm * 10,
     )

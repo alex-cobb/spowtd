@@ -1,6 +1,4 @@
-"""Plot specific yield
-
-"""
+"""Plot specific yield"""
 
 import matplotlib.pyplot as plt
 
@@ -22,12 +20,10 @@ def dump_specific_yield(
             parameters, water_level_min_cm, water_level_max_cm, n_points
         )
     ):
-        outfile.write('{}, {}\n'.format(water_level_cm, specific_yield))
+        outfile.write(f'{water_level_cm}, {specific_yield}\n')
 
 
-def plot_specific_yield(
-    parameters, water_level_min_cm, water_level_max_cm, n_points
-):
+def plot_specific_yield(parameters, water_level_min_cm, water_level_max_cm, n_points):
     """Plot specific yield"""
     fig = plt.figure()
     axes = fig.add_subplot(1, 1, 1)
@@ -43,14 +39,10 @@ def plot_specific_yield(
     return 0
 
 
-def grid_specific_yield(
-    parameters, water_level_min_cm, water_level_max_cm, n_points
-):
+def grid_specific_yield(parameters, water_level_min_cm, water_level_max_cm, n_points):
     """Compute specific yield on a grid"""
     sy_parameters = yaml.safe_load(parameters)['specific_yield']
-    specific_yield = specific_yield_mod.create_specific_yield_function(
-        sy_parameters
-    )
+    specific_yield = specific_yield_mod.create_specific_yield_function(sy_parameters)
     water_level_cm = np.linspace(
         water_level_min_cm, water_level_max_cm, n_points, dtype=float
     )

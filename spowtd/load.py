@@ -1,6 +1,4 @@
-"""Load data into Spowtd data file
-
-"""
+"""Load data into Spowtd data file"""
 
 import csv as csv_mod
 import datetime as datetime_mod
@@ -26,20 +24,18 @@ def load_data(
     """Load data into Spowtd data file"""
     time_zone = pytz.timezone(time_zone_name)
 
-    connection.execute("PRAGMA foreign_keys = 1")
+    connection.execute('PRAGMA foreign_keys = 1')
     cursor = connection.cursor()
 
     # Error out if database is populated
     tables = [
         row[0]
-        for row in cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='table'"
-        )
+        for row in cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
     ]
     if tables:
         raise ValueError('Database already populated; remove before loading')
 
-    with open(SCHEMA_PATH, 'rt') as schema_file:
+    with open(SCHEMA_PATH, 'rt', encoding='utf-8') as schema_file:
         cursor.executescript(schema_file.read())
     # Format: Datetime, precipitation intensity (mm / h)
     precip_csv = csv_mod.reader(precipitation_data_file, delimiter=',')
@@ -111,9 +107,7 @@ def populate_water_level(cursor, time_grid):
     )
     valid_boundaries = (
         [time_grid[0]]
-        + sum(
-            (list(pair) for pair in zip(zeta_t[gap_i], zeta_t[gap_i + 1])), []
-        )
+        + sum((list(pair) for pair in zip(zeta_t[gap_i], zeta_t[gap_i + 1])), [])
         + [time_grid[-1]]
     )
     assert len(valid_boundaries) % 2 == 0
@@ -131,9 +125,7 @@ def populate_water_level(cursor, time_grid):
     UPDATE grid_time
     SET data_interval = ?
     WHERE epoch = ?""",
-        zip(
-            data_intervals[valid_mask].tolist(), time_grid[valid_mask].tolist()
-        ),
+        zip(data_intervals[valid_mask].tolist(), time_grid[valid_mask].tolist()),
     )
 
     # Interpolate
@@ -152,13 +144,13 @@ def populate_water_level(cursor, time_grid):
 def populate_grid_time(cursor, time_zone_name):
     """Determine and populate grid_time
 
-    Identifies interval with both precipitation and water level data,
-    and returns the time grid array and time step as a tuple.
+    Identifies interval with both precipitation and water level data, and
+    returns the time grid array and time step as a tuple.
 
     """
     time_grid = [
         epoch
-        for epoch, in cursor.execute(
+        for (epoch,) in cursor.execute(
             """
         WITH a AS (
           SELECT min(epoch) AS min_t_zeta,
@@ -175,9 +167,7 @@ def populate_grid_time(cursor, time_zone_name):
     ]
     delta_t = sorted(set(np.diff(time_grid)))
     if len(delta_t) != 1:
-        raise ValueError(
-            'Nonuniform time steps in rainfall data: {} s'.format(delta_t)
-        )
+        raise ValueError(f'Nonuniform time steps in rainfall data: {delta_t} s')
     time_step = int(delta_t[0])
     del delta_t
     cursor.execute(
@@ -237,9 +227,8 @@ def populate_evapotranspiration(cursor, time_grid, time_step, tz):
             for epoch in missing_epochs
         ]
         raise ValueError(
-            'No ET data at {} grid datetimes (showing up to 3): {}'.format(
-                len(missing_datetimes), missing_datetimes[:3]
-            )
+            f'No ET data at {len(missing_datetimes)} grid datetimes '
+            f'(showing up to 3): {missing_datetimes[:3]}'
         )
     cursor.execute(
         """
@@ -257,12 +246,12 @@ def populate_evapotranspiration(cursor, time_grid, time_step, tz):
 def generate_timestamped_rows(rows, tz):
     """Generate rows with the first value replaced by a UNIX timestamp
 
-    The first item in each row is assumed to be a text datetime
-    in ISO 8601 format.
+    The first item in each row is assumed to be a text datetime in ISO 8601
+    format.
 
-    The pytz object passed as the second argument is used to convert
-    the datetime to UTC (if necessary) and convert to a UNIX timestamp
-    (seconds since 1970-01-01 00:00:00).
+    The pytz object passed as the second argument is used to convert the
+    datetime to UTC (if necessary) and convert to a UNIX timestamp (seconds
+    since 1970-01-01 00:00:00).
 
     """
     for row in rows:
@@ -273,7 +262,5 @@ def generate_timestamped_rows(rows, tz):
         assert is_aware
         epoch = local_datetime.timestamp()
         if not epoch.is_integer():
-            raise ValueError(
-                'Non-integer seconds in datetime {}'.format(row[0])
-            )
+            raise ValueError(f'Non-integer seconds in datetime {row[0]}')
         yield [int(epoch)] + row[1:]

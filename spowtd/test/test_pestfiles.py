@@ -1,6 +1,4 @@
-"""Test code for generating PEST files
-
-"""
+"""Test code for generating PEST files"""
 
 import io
 
@@ -114,7 +112,8 @@ transmissivity:
     - @K_knot_2                @
     - @K_knot_3                @
     - @K_knot_4                @
-  minimum_transmissivity_m2_d: @T_min                   @  # Minimum transmissivity, m2 /d""",
+  minimum_transmissivity_m2_d: @T_min                   @"""
+    '  # Minimum transmissivity, m2 /d',
 }
 
 
@@ -136,7 +135,9 @@ def test_generate_rise_tpl(
     """Generation of template files for rise curve calibration"""
     outfile = io.StringIO()
     with open(
-        conftest.get_parameter_file_path(parameterization), 'rt'
+        conftest.get_parameter_file_path(parameterization),
+        'rt',
+        encoding='utf-8',
     ) as parameter_file:
         pestfiles_mod.generate_rise_pestfiles(
             classified_connection,
@@ -145,9 +146,7 @@ def test_generate_rise_tpl(
             configuration_file=None,
             outfile=outfile,
         )
-    assert (
-        outfile.getvalue().splitlines() == reference_file_contents.splitlines()
-    )
+    assert outfile.getvalue().splitlines() == reference_file_contents.splitlines()
 
 
 def test_generate_rise_ins(classified_connection):
@@ -169,6 +168,7 @@ def test_generate_rise_ins(classified_connection):
         # Parameterization doesn't matter for ins file
         conftest.get_parameter_file_path('peatclsm'),
         'rt',
+        encoding='utf-8',
     ) as parameter_file:
         pestfiles_mod.generate_rise_pestfiles(
             classified_connection,
@@ -178,7 +178,9 @@ def test_generate_rise_ins(classified_connection):
             outfile=outfile,
         )
     with open(
-        conftest.get_sample_file_path('rise_calibration', sample, 'ins'), 'rt'
+        conftest.get_sample_file_path('rise_calibration', sample, 'ins'),
+        'rt',
+        encoding='utf-8',
     ) as ref_file:
         assert outfile.getvalue().splitlines() == ref_file.read().splitlines()
 
@@ -199,7 +201,9 @@ def test_generate_rise_pst(classified_connection, parameterization):
     sample = SAMPLE_NUMBER[n_zeta]
     outfile = io.StringIO()
     with open(
-        conftest.get_parameter_file_path(parameterization), 'rt'
+        conftest.get_parameter_file_path(parameterization),
+        'rt',
+        encoding='utf-8',
     ) as parameter_file:
         pestfiles_mod.generate_rise_pestfiles(
             classified_connection,
@@ -210,9 +214,10 @@ def test_generate_rise_pst(classified_connection, parameterization):
         )
     with open(
         conftest.get_sample_file_path(
-            '{}_rise_calibration'.format(parameterization), sample, 'pst'
+            f'{parameterization}_rise_calibration', sample, 'pst'
         ),
         'rt',
+        encoding='utf-8',
     ) as ref_file:
         out_lines = outfile.getvalue().splitlines()
         ref_lines = ref_file.read().splitlines()
@@ -241,7 +246,9 @@ def test_generate_curves_tpl(
     """Generation of template files for master curves calibration"""
     outfile = io.StringIO()
     with open(
-        conftest.get_parameter_file_path(parameterization), 'rt'
+        conftest.get_parameter_file_path(parameterization),
+        'rt',
+        encoding='utf-8',
     ) as parameter_file:
         pestfiles_mod.generate_curves_pestfiles(
             classified_connection,
@@ -250,9 +257,7 @@ def test_generate_curves_tpl(
             configuration_file=None,
             outfile=outfile,
         )
-    assert (
-        outfile.getvalue().splitlines() == reference_file_contents.splitlines()
-    )
+    assert outfile.getvalue().splitlines() == reference_file_contents.splitlines()
 
 
 def test_generate_curves_ins(classified_connection):
@@ -275,6 +280,7 @@ def test_generate_curves_ins(classified_connection):
         # Parameterization doesn't matter for ins file
         conftest.get_parameter_file_path('peatclsm'),
         'rt',
+        encoding='utf-8',
     ) as parameter_file:
         pestfiles_mod.generate_curves_pestfiles(
             classified_connection,
@@ -286,6 +292,7 @@ def test_generate_curves_ins(classified_connection):
     with open(
         conftest.get_sample_file_path('curves_calibration', sample, 'ins'),
         'rt',
+        encoding='utf-8',
     ) as ref_file:
         assert outfile.getvalue().splitlines() == ref_file.read().splitlines()
 
@@ -310,10 +317,13 @@ def test_generate_curves_pst(classified_connection, parameterization):
     )
     n_recession_zeta = cursor.fetchone()[0]
     cursor.close()
+    assert n_recession_zeta > 0
     sample = SAMPLE_NUMBER[n_rise_zeta]
     outfile = io.StringIO()
     with open(
-        conftest.get_parameter_file_path(parameterization), 'rt'
+        conftest.get_parameter_file_path(parameterization),
+        'rt',
+        encoding='utf-8',
     ) as parameter_file:
         pestfiles_mod.generate_curves_pestfiles(
             classified_connection,
@@ -324,9 +334,10 @@ def test_generate_curves_pst(classified_connection, parameterization):
         )
     with open(
         conftest.get_sample_file_path(
-            '{}_curves_calibration'.format(parameterization), sample, 'pst'
+            f'{parameterization}_curves_calibration', sample, 'pst'
         ),
         'rt',
+        encoding='utf-8',
     ) as ref_file:
         out_lines = outfile.getvalue().splitlines()
         ref_lines = ref_file.read().splitlines()
@@ -355,8 +366,7 @@ def extract_observations(pestfile_lines):
     obs_start = pestfile_lines.index('* observation data')
     obs_end = pestfile_lines.index('* model command line')
     observation_rows = [
-        line.strip().split()
-        for line in pestfile_lines[obs_start + 1 : obs_end]
+        line.strip().split() for line in pestfile_lines[obs_start + 1 : obs_end]
     ]
     return (
         np.array([float(row[1]) for row in observation_rows], dtype='float64'),

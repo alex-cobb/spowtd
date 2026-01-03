@@ -58,6 +58,19 @@ For development, you may additionally want:
 
 ## Revision history
 
+Version 0.7.0 - 2026-01-03:
+ - Weighted rise curve fitting.
+ - Fix bugs and deprecation warnings created by upstream changes.
+ - Fix dist bugs.
+ - Fixtures for more efficient tests.
+ - Update contact information.
+ - Docs.
+
+Version 0.6.0 - 2023-10-27:
+ - Preliminary implementation of event weighting in rise curve assembly.
+ - Blacken sources (python-black).
+ - Refactoring.
+
 Version 0.5.0 - 2022-09-19:
  - Implement stable matching between storms and rises.
  - Update format of PEST files for consistency.
@@ -91,12 +104,10 @@ Version 0.1.0 - 2021-10-08:
 ## Contact information
 
 Alex Cobb</br>
-Singapore-MIT Alliance for Research and Technology</br>
-Center for Environmental Sensing and Modeling</br>
-1 CREATE Way, CREATE Tower #09-03</br>
-Singapore 138602</br>
-Singapore</br>
-tel.: +65 6516 6170</br>
-fax.: +65 6778 5654
+Asian School of the Environment</br>
+Nanyang Technological University</br>
+50 Nanyang Avenue</br>
+Singapore 639798</br>
+Singapore
 
-e-mail: alex.cobb@smart.mit.edu
+e-mail: alexander.cobb@ntu.edu.sg

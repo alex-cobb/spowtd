@@ -1,10 +1,10 @@
-"""User interface for Spowtd
-
-"""
+"""User interface for Spowtd"""
 
 import argparse
+import json
 import logging
 import os
+import pathlib
 import sqlite3
 import sys
 
@@ -39,17 +39,30 @@ def main(argv):
         parser.print_help()
         parser.exit()
 
-    set_up_logging(args.logfile, args.verbosity)
+    # Refactor to use a context handler?
+    logfile = (
+        open(args.logfile, 'wt') if isinstance(args.logfile, str) else args.logfile
+    )
+    set_up_logging(logfile=logfile, verbosity=args.verbosity)
+    del logfile
 
     if args.task == 'load':
-        with sqlite3.connect(args.db) as connection:
+        with (
+            sqlite3.connect(args.db) as connection,
+            open(args.precipitation, 'rt', encoding='utf-8-sig') as precipitation,
+            open(
+                args.evapotranspiration, 'rt', encoding='utf-8-sig'
+            ) as evapotranspiration,
+            open(args.water_level, 'rt', encoding='utf-8-sig') as water_level,
+        ):
             load_mod.load_data(
                 connection=connection,
-                precipitation_data_file=args.precipitation,
-                evapotranspiration_data_file=args.evapotranspiration,
-                water_level_data_file=args.water_level,
+                precipitation_data_file=precipitation,
+                evapotranspiration_data_file=evapotranspiration,
+                water_level_data_file=water_level,
                 time_zone_name=args.timezone,
             )
+            del connection, precipitation
     elif args.task == 'classify':
         with sqlite3.connect(args.db) as connection:
             classify_mod.classify_intervals(
@@ -71,8 +84,28 @@ def main(argv):
     elif args.task == 'rise':
         with sqlite3.connect(args.db) as connection:
             rise_mod.find_rise_offsets(
-                connection=connection, reference_zeta_mm=args.reference_zeta_mm
+                connection=connection,
+                reference_zeta_mm=args.reference_zeta_mm,
+                recharge_error_weight=args.recharge_error_weight,
             )
+            if args.dump_covariance and isinstance(args.dump_covariance, pathlib.Path):
+                with open(args.dump_covariance, 'wt', encoding='ascii') as dumpfile:
+                    json.dump(
+                        rise_mod.get_rise_covariance(
+                            connection,
+                            recharge_error_weight=args.recharge_error_weight,
+                        ).tolist(),
+                        dumpfile,
+                    )
+            elif args.dump_covariance:
+                json.dump(
+                    rise_mod.get_rise_covariance(
+                        connection,
+                        recharge_error_weight=args.recharge_error_weight,
+                    ).tolist(),
+                    args.dump_covariance,
+                )
+
     elif args.task == 'plot':
         if args.subtask is None:
             plot_parser.print_help()
@@ -103,7 +136,7 @@ def main(argv):
         with sqlite3.connect(args.db) as connection:
             pestfiles(connection=connection, args=args)
     else:
-        raise AssertionError('Bad task {}'.format(args.task))
+        raise AssertionError(f'Bad task {args.task}')
     return 0
 
 
@@ -205,98 +238,137 @@ def plot(connection, args):
             plot_evapotranspiration=args.plot_evapotranspiration,
         )
     elif args.subtask == 'recession':
-        recession_plot_mod.plot_recession(
-            connection=connection, parameters=args.parameters
-        )
+        with open(args.parameters, 'rt') as parameters:
+            recession_plot_mod.plot_recession(
+                connection=connection, parameters=parameters
+            )
+            del parameters
     elif args.subtask == 'rise':
-        rise_plot_mod.plot_rise(
-            connection=connection, parameters=args.parameters
-        )
+        with open(args.parameters, 'rt') as parameters:
+            rise_plot_mod.plot_rise(connection=connection, parameters=parameters)
+            del parameters
     elif args.subtask == 'specific-yield':
-        if args.dump is not None:
-            specific_yield_plot_mod.dump_specific_yield(
-                parameters=args.parameters,
-                water_level_min_cm=args.water_level_min_cm,
-                water_level_max_cm=args.water_level_max_cm,
-                n_points=args.n_points,
-                outfile=args.dump,
-            )
-        else:
-            specific_yield_plot_mod.plot_specific_yield(
-                parameters=args.parameters,
-                water_level_min_cm=args.water_level_min_cm,
-                water_level_max_cm=args.water_level_max_cm,
-                n_points=args.n_points,
-            )
+        with open(args.parameters, 'rt') as parameters:
+            if args.dump is not None:
+                with open(args.dump, 'wt') as outfile:
+                    specific_yield_plot_mod.dump_specific_yield(
+                        parameters=parameters,
+                        water_level_min_cm=args.water_level_min_cm,
+                        water_level_max_cm=args.water_level_max_cm,
+                        n_points=args.n_points,
+                        outfile=outfile,
+                    )
+                    del outfile
+            else:
+                specific_yield_plot_mod.plot_specific_yield(
+                    parameters=parameters,
+                    water_level_min_cm=args.water_level_min_cm,
+                    water_level_max_cm=args.water_level_max_cm,
+                    n_points=args.n_points,
+                )
+            del parameters
     elif args.subtask == 'conductivity':
         raise NotImplementedError
     elif args.subtask == 'transmissivity':
-        if args.dump is not None:
-            transmissivity_plot_mod.dump_transmissivity(
-                parameters=args.parameters,
-                water_level_min_cm=args.water_level_min_cm,
-                water_level_max_cm=args.water_level_max_cm,
-                n_points=args.n_points,
-                outfile=args.dump,
-            )
-        else:
-            transmissivity_plot_mod.plot_transmissivity(
-                parameters=args.parameters,
-                water_level_min_cm=args.water_level_min_cm,
-                water_level_max_cm=args.water_level_max_cm,
-                n_points=args.n_points,
-            )
+        with open(args.parameters, 'rt') as parameters:
+            if args.dump is not None:
+                with open(args.dump, 'wt') as outfile:
+                    transmissivity_plot_mod.dump_transmissivity(
+                        parameters=parameters,
+                        water_level_min_cm=args.water_level_min_cm,
+                        water_level_max_cm=args.water_level_max_cm,
+                        n_points=args.n_points,
+                        outfile=args.dump,
+                    )
+                    del outfile
+            else:
+                transmissivity_plot_mod.plot_transmissivity(
+                    parameters=parameters,
+                    water_level_min_cm=args.water_level_min_cm,
+                    water_level_max_cm=args.water_level_max_cm,
+                    n_points=args.n_points,
+                )
+        del parameters
     else:
-        raise AssertionError('Bad plot task {}'.format(args.subtask))
+        raise AssertionError(f'Bad plot task {args.subtask}')
 
 
 def set_curvature(connection, args):
     """Command-line interface to set curvature"""
-    set_curvature_mod.set_curvature(
-        connection, curvature_m_km2=args.curvature_m_km2
-    )
+    set_curvature_mod.set_curvature(connection, curvature_m_km2=args.curvature_m_km2)
 
 
 def simulate(connection, args):
     """Dispatch to simulation scripts"""
     if args.subtask == 'rise':
-        simulate_rise_mod.simulate_rise(
-            connection=connection,
-            parameters=args.parameters,
-            outfile=args.output,
-            observations_only=args.observations,
-        )
+        with open(args.parameters, 'rt') as parameters:
+            if isinstance(args.output, str):
+                with open(args.output, 'wt') as output:
+                    simulate_rise_mod.simulate_rise(
+                        connection=connection,
+                        parameters=parameters,
+                        outfile=output,
+                        observations_only=args.observations,
+                    )
+                    del output
+            else:
+                simulate_rise_mod.simulate_rise(
+                    connection=connection,
+                    parameters=parameters,
+                    outfile=output,
+                    observations_only=args.observations,
+                )
+            del parameters
     elif args.subtask == 'recession':
-        simulate_recession_mod.dump_simulated_recession(
-            connection=connection,
-            parameter_file=args.parameters,
-            outfile=args.output,
-            observations_only=args.observations,
-        )
+        if isinstance(args.output, str):
+            with open(args.output, 'wt') as output:
+                simulate_recession_mod.dump_simulated_recession(
+                    connection=connection,
+                    parameter_file=args.parameters,
+                    outfile=output,
+                    observations_only=args.observations,
+                )
+                del output
+        else:
+            simulate_recession_mod.dump_simulated_recession(
+                connection=connection,
+                parameter_file=args.parameters,
+                outfile=args.output,
+                observations_only=args.observations,
+            )
     else:
-        raise AssertionError('Bad simulate task {}'.format(args.subtask))
+        raise AssertionError(f'Bad simulate task {args.subtask}')
 
 
 def pestfiles(connection, args):
     """Dispatch to generate pestfile scripts"""
-    if args.subtask == 'rise':
-        pestfiles_mod.generate_rise_pestfiles(
-            connection=connection,
-            parameter_file=args.parameters,
-            outfile_type=args.outfile_type,
-            configuration_file=args.configuration,
-            outfile=args.output,
+    with (
+        open(args.parameters, 'rt') as parameters,
+        open(args.configuration, 'rt') as configuration,
+    ):
+        # Refactor to use a context handler?
+        outfile = (
+            open(args.output, 'wt') if isinstance(args.output, str) else args.output
         )
-    elif args.subtask == 'curves':
-        pestfiles_mod.generate_curves_pestfiles(
-            connection=connection,
-            parameter_file=args.parameters,
-            outfile_type=args.outfile_type,
-            configuration_file=args.configuration,
-            outfile=args.output,
-        )
-    else:
-        raise AssertionError('Bad simulate task {}'.format(args.subtask))
+        if args.subtask == 'rise':
+            pestfiles_mod.generate_rise_pestfiles(
+                connection=connection,
+                parameter_file=parameters,
+                outfile_type=args.outfile_type,
+                configuration_file=configuration,
+                outfile=outfile,
+            )
+        elif args.subtask == 'curves':
+            pestfiles_mod.generate_curves_pestfiles(
+                connection=connection,
+                parameter_file=parameters,
+                outfile_type=args.outfile_type,
+                configuration_file=configuration,
+                outfile=outfile,
+            )
+        else:
+            raise AssertionError(f'Bad simulate task {args.subtask}')
+        del parameters, configuration
 
 
 def add_shared_args(parser):
@@ -312,7 +384,6 @@ def add_shared_args(parser):
     parser.add_argument(
         '--logfile',
         metavar='FILE',
-        type=argparse.FileType('wt'),
         default=sys.stderr,
         help='File to write status messages, default stderr',
     )
@@ -325,21 +396,21 @@ def add_load_args(parser):
         '-p',
         '--precipitation',
         help='Precipitation data file',
-        type=argparse.FileType('rt', encoding='utf-8-sig'),
+        type=pathlib.Path,
         required=True,
     )
     parser.add_argument(
         '-e',
         '--evapotranspiration',
         help='Evapotranspiration data file',
-        type=argparse.FileType('rt', encoding='utf-8-sig'),
+        type=pathlib.Path,
         required=True,
     )
     parser.add_argument(
         '-z',
         '--water-level',
         help='Water level data file',
-        type=argparse.FileType('rt', encoding='utf-8-sig'),
+        type=pathlib.Path,
         required=True,
     )
     parser.add_argument(
@@ -400,10 +471,27 @@ def add_rise_args(parser):
         type=float,
         default=None,
     )
+    parser.add_argument(
+        '--recharge-error-weight',
+        help=(
+            'Relative weight for correlated errors from mismeasurement of '
+            'recharge depth. If provided, an estimated variance-covariance '
+            'matrix is assembled and used when fitting rise offsets.'
+        ),
+        type=float,
+        default=None,
+    )
+    parser.add_argument(
+        '--dump-covariance',
+        metavar='FILE',
+        help='Dump error covariance matrix as JSON to a file, default stdout',
+        type=pathlib.Path,
+        default=sys.stdout,
+    )
 
 
 def add_plot_args(parser):
-    """Add arguments for spowtd rise parser"""
+    """Add arguments for spowtd plotting parser"""
     plot_subparsers = parser.add_subparsers(
         help='plotting sub-command help', dest='subtask'
     )
@@ -425,7 +513,6 @@ def add_plot_args(parser):
         subparser.add_argument(
             'parameters',
             metavar='YAML',
-            type=argparse.FileType('rt'),
             help='YAML hydraulic parameters',
         )
         subparser.add_argument(
@@ -451,12 +538,11 @@ def add_plot_args(parser):
         subparser.add_argument(
             '-d',
             '--dump',
-            type=argparse.FileType('wt'),
             help='Do not plot; dump curve to file as delimited text',
         )
         del subparser
     del specific_yield_plot_parser
-    del (conductivity_plot_parser,)
+    del conductivity_plot_parser
     del transmissivity_plot_parser
 
     time_series_plot_parser = plot_subparsers.add_parser(
@@ -500,14 +586,11 @@ def add_plot_args(parser):
         '-p',
         '--parameters',
         metavar='YAML',
-        type=argparse.FileType('rt'),
         help='YAML hydraulic parameters',
     )
     del recession_plot_parser
 
-    rise_plot_parser = plot_subparsers.add_parser(
-        'rise', help='Plot master rise curve'
-    )
+    rise_plot_parser = plot_subparsers.add_parser('rise', help='Plot master rise curve')
     rise_plot_parser.add_argument(
         'db', metavar='SQLITE', help='Path to SQLite database'
     )
@@ -515,7 +598,6 @@ def add_plot_args(parser):
         '-p',
         '--parameters',
         metavar='YAML',
-        type=argparse.FileType('rt'),
         help='YAML hydraulic parameters',
     )
     del rise_plot_parser
@@ -536,16 +618,11 @@ def add_simulate_args(parser):
     simulate_subparsers = parser.add_subparsers(
         help='simulate sub-command help', dest='subtask'
     )
-    rise_parser = simulate_subparsers.add_parser(
-        'rise', help='Simulate rise curve'
-    )
-    rise_parser.add_argument(
-        'db', metavar='SQLITE', help='Path to SQLite database'
-    )
+    rise_parser = simulate_subparsers.add_parser('rise', help='Simulate rise curve')
+    rise_parser.add_argument('db', metavar='SQLITE', help='Path to SQLite database')
     rise_parser.add_argument(
         'parameters',
         metavar='YAML',
-        type=argparse.FileType('rt'),
         help='YAML hydraulic parameters',
     )
     rise_parser.add_argument(
@@ -553,7 +630,6 @@ def add_simulate_args(parser):
         '--output',
         metavar='FILE',
         help='Write output to file, default stdout',
-        type=argparse.FileType('wt'),
         default=sys.stdout,
     )
     rise_parser.add_argument(
@@ -571,7 +647,6 @@ def add_simulate_args(parser):
     recession_parser.add_argument(
         'parameters',
         metavar='YAML',
-        type=argparse.FileType('rt'),
         help='YAML hydraulic parameters',
     )
     recession_parser.add_argument(
@@ -579,7 +654,6 @@ def add_simulate_args(parser):
         '--output',
         metavar='FILE',
         help='Write output to file, default stdout',
-        type=argparse.FileType('wt'),
         default=sys.stdout,
     )
     recession_parser.add_argument(
@@ -598,13 +672,10 @@ def add_pestfiles_args(parser):
     rise_parser = subparsers.add_parser(
         'rise', help='Generate PEST files for calibration against rise curve'
     )
-    rise_parser.add_argument(
-        'db', metavar='SQLITE', help='Path to SQLite database'
-    )
+    rise_parser.add_argument('db', metavar='SQLITE', help='Path to SQLite database')
     rise_parser.add_argument(
         'parameters',
         metavar='YAML',
-        type=argparse.FileType('rt'),
         help='Initial parameter file',
     )
     rise_parser.add_argument(
@@ -617,7 +688,6 @@ def add_pestfiles_args(parser):
         '-c',
         '--configuration',
         metavar='YAML',
-        type=argparse.FileType('rt'),
         help='Configuration values to populate PEST files',
     )
     rise_parser.add_argument(
@@ -625,7 +695,6 @@ def add_pestfiles_args(parser):
         '--output',
         metavar='FILE',
         help='Write output to file, default stdout',
-        type=argparse.FileType('wt'),
         default=sys.stdout,
     )
     del rise_parser
@@ -633,13 +702,10 @@ def add_pestfiles_args(parser):
         'curves',
         help='Generate PEST files for calibration against master curves',
     )
-    curves_parser.add_argument(
-        'db', metavar='SQLITE', help='Path to SQLite database'
-    )
+    curves_parser.add_argument('db', metavar='SQLITE', help='Path to SQLite database')
     curves_parser.add_argument(
         'parameters',
         metavar='YAML',
-        type=argparse.FileType('rt'),
         help='Initial parameter file',
     )
     curves_parser.add_argument(
@@ -652,7 +718,6 @@ def add_pestfiles_args(parser):
         '-c',
         '--configuration',
         metavar='YAML',
-        type=argparse.FileType('rt'),
         help='Configuration values to populate PEST files',
     )
     curves_parser.add_argument(
@@ -660,7 +725,6 @@ def add_pestfiles_args(parser):
         '--output',
         metavar='FILE',
         help='Write output to file, default stdout',
-        type=argparse.FileType('wt'),
         default=sys.stdout,
     )
     del curves_parser
@@ -691,5 +755,5 @@ def get_verbosity(level_index):
 def get_version():
     """Get project version"""
     version_file_path = os.path.join(os.path.dirname(__file__), 'VERSION.txt')
-    with open(version_file_path) as version_file:
+    with open(version_file_path, mode='rt', encoding='utf-8') as version_file:
         return version_file.read().strip()

@@ -1,6 +1,4 @@
-"""Non-parametric 1D spline
-
-"""
+"""Non-parametric 1D spline"""
 
 import scipy.interpolate as interpolate_mod
 import numpy as np
@@ -13,10 +11,9 @@ splrep = interpolate_mod.splrep
 class Spline:
     """Spline with constant extrapolation
 
-    Splines are implemented using FITPACK, as wrapped in Scipy.
-    FITPACK's tck parameters for the coordinate are stored and used
-    for interpolation.  Outside the domain of the knots, constant
-    extrapolation is used.
+    Splines are implemented using FITPACK, as wrapped in Scipy.  FITPACK's tck
+    parameters for the coordinate are stored and used for interpolation.
+    Outside the domain of the knots, constant extrapolation is used.
 
     """
 
@@ -30,8 +27,8 @@ class Spline:
         * points are (x, y) pairs.
         * s is the FITPACK smoothing parameter; 0 is for interpolation
           (default)
-        * order is the order of the spline fit; 1 for linear
-          interpolation, 3 for a cubic spline
+        * order is the order of the spline fit; 1 for linear interpolation, 3
+          for a cubic spline
 
         """
         x, y = zip(*points)
@@ -51,19 +48,18 @@ class Spline:
     def __call__(self, x, der=0):
         """Evaluate der'th derivative of spline at x
 
-        If values in x lie outside the domain of the spline, they are
-        clamped to the smallest or largest knot (constant
-        extrapolation).
+        If values in x lie outside the domain of the spline, they are clamped
+        to the smallest or largest knot (constant extrapolation).
 
         """
-        x_clamped = np.minimum(
-            np.maximum(x, self._tck[0][0]), self._tck[0][-1]
-        )
+        x_clamped = np.minimum(np.maximum(x, self._tck[0][0]), self._tck[0][-1])
         return splev(x_clamped, self._tck, der=der)
 
     def integrate(self, a, b):
         """Evaluate a definite integral of the spline"""
         if a > b:
+            # Reverse arguments and negate integral
+            # pylint: disable=arguments-out-of-order
             return -self.integrate(b, a)
         if a == b:
             return 0.0

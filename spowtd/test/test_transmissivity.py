@@ -1,6 +1,4 @@
-"""Test code for transmissivity classes
-
-"""
+"""Test code for transmissivity classes"""
 
 import numpy as np
 
@@ -35,11 +33,13 @@ from spowtd.test import conftest
 )
 def test_transmissivity(T_type, expected_T):
     """Test transmissivity functions"""
-    with open(conftest.get_parameter_file_path(T_type), 'rt') as T_file:
+    with open(
+        conftest.get_parameter_file_path(T_type),
+        'rt',
+        encoding='utf-8',
+    ) as T_file:
         T_parameters = yaml.safe_load(T_file)['transmissivity']
-    transmissivity = transmissivity_mod.create_transmissivity_function(
-        T_parameters
-    )
+    transmissivity = transmissivity_mod.create_transmissivity_function(T_parameters)
     if T_type == 'spline':
         zeta_mm = np.linspace(-0.35, 0.2, 10) * 1000
         assert np.allclose(transmissivity(zeta_mm), expected_T)

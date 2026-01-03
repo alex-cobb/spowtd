@@ -1,6 +1,4 @@
-"""Determine recession curves
-
-"""
+"""Determine recession curves"""
 
 import logging
 
@@ -23,9 +21,9 @@ def find_recession_offsets(connection, reference_zeta_mm=None):
 def compute_offsets(cursor, reference_zeta_mm):
     """Compute time offsets to populate recession_zeta
 
-    If a reference zeta is provided, the crossing-time of this water
-    level is used as the origin of the axis.  Otherwise, the highest
-    water level in the longest assembled recession is used.
+    If a reference zeta is provided, the crossing-time of this water level is
+    used as the origin of the axis.  Otherwise, the highest water level in the
+    longest assembled recession is used.
 
     """
     (epoch, zeta_mm) = [
@@ -52,11 +50,11 @@ def compute_offsets(cursor, reference_zeta_mm):
         indices = np.argwhere(
             (epoch >= interval_start_epoch) & (epoch <= interval_thru_epoch)
         )[:, 0]
-        assert epoch[indices][0] == interval_start_epoch, '{} != {}'.format(
-            epoch[indices][0], interval_start_epoch
+        assert epoch[indices][0] == interval_start_epoch, (
+            f'{epoch[indices][0]} != {interval_start_epoch}'
         )
-        assert epoch[indices][-1] == interval_thru_epoch, '{} != {}'.format(
-            epoch[indices][-1], interval_thru_epoch
+        assert epoch[indices][-1] == interval_thru_epoch, (
+            f'{epoch[indices][-1]} != {interval_thru_epoch}'
         )
         series.append((epoch[indices], zeta_mm[indices]))
         del indices
@@ -70,21 +68,18 @@ def compute_offsets(cursor, reference_zeta_mm):
         ).fetchone()[0]
     except TypeError:
         raise ValueError(  # pylint:disable=raise-missing-from
-            "Discrete water level interval not yet set"
+            'Discrete water level interval not yet set'
         )
 
-    (indices, offsets, head_mapping) = get_series_time_offsets(
-        series, delta_z_mm
-    )
+    (indices, offsets, head_mapping) = get_series_time_offsets(series, delta_z_mm)
 
-    reference_zeta_off_grid = (
-        reference_zeta_mm is not None
-        and not np.allclose(reference_zeta_mm % delta_z_mm, 0)
+    reference_zeta_off_grid = reference_zeta_mm is not None and not np.allclose(
+        reference_zeta_mm % delta_z_mm, 0
     )
     if reference_zeta_off_grid:
         raise ValueError(
-            'Reference zeta {} mm not evenly divisible by '
-            'zeta step {} mm'.format(reference_zeta_mm, delta_z_mm)
+            f'Reference zeta {reference_zeta_mm} mm '
+            f'not evenly divisible by zeta step {delta_z_mm} mm'
         )
     if reference_zeta_mm is not None:
         reference_index = int(reference_zeta_mm / delta_z_mm)

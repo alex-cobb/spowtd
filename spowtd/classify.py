@@ -4,13 +4,13 @@ Match intervals of rapidly increasing water level (“rises”) to intervals of
 heavy rain (“storms”) in such a way that each storm is matched to no more than
 one rise and each rise is matched to no more than one storm. This matching is
 performed in two steps. First, all storms and rises that overlap in time are
-matched. This first step may result in matching from a single storm to multiple
-rises and vice versa. This step is followed by an arbitration step based on a
-variant of the Gale-Shapley deferred acceptance algorithm for the stable
-matching problem: it finds a set of matches between storms and rises that is
-stable in the sense that, by switching a pair of matches between storms and
-rises, one cannot improve the agreement in duration and start time for both
-matches.
+matched. This first step may result in matching from a single storm to
+multiple rises and vice versa. This step is followed by an arbitration step
+based on a variant of the Gale-Shapley deferred acceptance algorithm for the
+stable matching problem: it finds a set of matches between storms and rises
+that is stable in the sense that, by switching a pair of matches between
+storms and rises, one cannot improve the agreement in duration and start time
+for both matches.
 
 """
 
@@ -22,7 +22,7 @@ from collections import defaultdict
 import numpy as np
 
 
-LOG = logging.getLogger("spowtd.classify")
+LOG = logging.getLogger('spowtd.classify')
 
 
 def classify_intervals(
@@ -37,8 +37,8 @@ def classify_intervals(
     VALUES
       (:storm_rain_threshold_mm_h, :rising_jump_threshold_mm_h)""",
         {
-            "storm_rain_threshold_mm_h": storm_rain_threshold_mm_h,
-            "rising_jump_threshold_mm_h": rising_jump_threshold_mm_h,
+            'storm_rain_threshold_mm_h': storm_rain_threshold_mm_h,
+            'rising_jump_threshold_mm_h': rising_jump_threshold_mm_h,
         },
     )
     cursor.execute(
@@ -50,7 +50,7 @@ def classify_intervals(
     )
     data_intervals = [row[0] for row in cursor.fetchall()]
     if not data_intervals:
-        raise ValueError("No valid data intervals found")
+        raise ValueError('No valid data intervals found')
     for data_interval in data_intervals:
         populate_zeta_interval(
             cursor,
@@ -138,7 +138,7 @@ def classify_interstorms(cursor, data_interval, rising_jump_threshold_mm_h):
     series_indices = [indices for indices in series_indices if len(indices) > 1]
     del indices
 
-    LOG.info("%s series found", len(series_indices))
+    LOG.info('%s series found', len(series_indices))
 
     for indices in series_indices:
         cursor.execute(
@@ -148,9 +148,9 @@ def classify_interstorms(cursor, data_interval, rising_jump_threshold_mm_h):
         SELECT
           :start_epoch, :interval_type, :thru_epoch""",
             {
-                "interval_type": "interstorm",
-                "start_epoch": int(epoch[indices[0]]),
-                "thru_epoch": int(epoch[indices[-1]]),
+                'interval_type': 'interstorm',
+                'start_epoch': int(epoch[indices[0]]),
+                'thru_epoch': int(epoch[indices[-1]]),
             },
         )
     del hour, zeta_mm
@@ -206,9 +206,9 @@ def match_all_storms(
     is_storm = rainfall_intensity_mm_h > storm_rain_threshold_mm_h
     for i, (rain_start, rain_stop) in enumerate(rain_intervals):
         assert is_storm[rain_start:rain_stop].all(), (
-            "Storm interval [{}, {}] includes only raining time steps"
             # XXX Convert to datetime for error message?
-            .format(epoch[rain_start], epoch[rain_stop - 1])
+            f'Storm interval [{epoch[rain_start]}, {epoch[rain_stop - 1]}] '
+            'includes only raining time steps'
         )
         jump_start, jump_stop = jump_intervals[i]
         assert (np.diff(zeta_mm[jump_start:jump_stop]) > jump_delta_threshold).all()
@@ -232,20 +232,20 @@ def match_all_storms(
           WHERE start_epoch = :start_epoch
           AND thru_epoch = :thru_epoch
         )""",
-            {"start_epoch": storm_start_epoch, "thru_epoch": storm_thru_epoch},
+            {'start_epoch': storm_start_epoch, 'thru_epoch': storm_thru_epoch},
         ).fetchone()[0]
         assert not already_seen, (
-            f"Storm at {convert_epoch_to_datetime_text(storm_start_epoch)}"
-            f"--{convert_epoch_to_datetime_text(storm_thru_epoch)} UTC "
-            "matched with more than one rise"
+            f'Storm at {convert_epoch_to_datetime_text(storm_start_epoch)}'
+            f'--{convert_epoch_to_datetime_text(storm_thru_epoch)} UTC '
+            'matched with more than one rise'
         )
         cursor.execute(
             """
         INSERT INTO storm (start_epoch, thru_epoch)
         SELECT :start_epoch, :thru_epoch""",
             {
-                "start_epoch": storm_start_epoch,
-                "thru_epoch": storm_thru_epoch,
+                'start_epoch': storm_start_epoch,
+                'thru_epoch': storm_thru_epoch,
             },
         )
         cursor.execute(
@@ -255,9 +255,9 @@ def match_all_storms(
         VALUES
           (:start_epoch, :interval_type, :thru_epoch)""",
             {
-                "interval_type": "storm",
-                "start_epoch": jump_start_epoch,
-                "thru_epoch": jump_thru_epoch,
+                'interval_type': 'storm',
+                'start_epoch': jump_start_epoch,
+                'thru_epoch': jump_thru_epoch,
             },
         )
         cursor.execute(
@@ -267,9 +267,9 @@ def match_all_storms(
         VALUES
           (:interval_start_epoch, :interval_type, :storm_start_epoch)""",
             {
-                "interval_type": "storm",
-                "interval_start_epoch": jump_start_epoch,
-                "storm_start_epoch": storm_start_epoch,
+                'interval_type': 'storm',
+                'interval_start_epoch': jump_start_epoch,
+                'storm_start_epoch': storm_start_epoch,
             },
         )
 
@@ -277,21 +277,21 @@ def match_all_storms(
 def match_storms(rain, head, rain_threshold, jump_threshold):
     """Match intervals of increasing head with rainstorms
 
-    For contiguous intervals of head increasing faster than jump_threshold, look
-    for overlapping contiguous periods of rain above rain_threshold.  Then, use
-    a variant of the Gale-Shapley algorithm to find a set of matches between
-    storms and rises that is stable in the sense that, by switching a pair of
-    matches between storms and rises, one cannot improve the agreement in
-    duration and start time for both matches.
+    For contiguous intervals of head increasing faster than jump_threshold,
+    look for overlapping contiguous periods of rain above rain_threshold.
+    Then, use a variant of the Gale-Shapley algorithm to find a set of matches
+    between storms and rises that is stable in the sense that, by switching a
+    pair of matches between storms and rises, one cannot improve the agreement
+    in duration and start time for both matches.
 
-    Returns (rain_intervals, head_intervals), two sequences of equal
-    length containing the matching contiguous intervals.
+    Returns (rain_intervals, head_intervals), two sequences of equal length
+    containing the matching contiguous intervals.
 
     """
     is_raining = rain > rain_threshold
     rain_masks = list(get_true_interval_masks(is_raining))
     LOG.info(
-        "%s intervals of rain above threshold %s mm / h",
+        '%s intervals of rain above threshold %s mm / h',
         len(rain_masks),
         rain_threshold,
     )
@@ -322,7 +322,7 @@ def match_storms(rain, head, rain_threshold, jump_threshold):
     is_jump = head_increments > jump_threshold
     jump_masks = list(get_true_interval_masks(is_jump))
     LOG.info(
-        "%s intervals of water level increment above threshold %s mm",
+        '%s intervals of water level increment above threshold %s mm',
         len(jump_masks),
         jump_threshold,
     )
@@ -337,7 +337,12 @@ def match_storms(rain, head, rain_threshold, jump_threshold):
         assert -1 not in matching_storms, matching_storms
         for storm_index in matching_storms:
             rain_interval, head_interval = get_candidate_match_intervals(
-                head, jump_threshold, is_raining, rain_masks, jump_mask, storm_index
+                head,
+                jump_threshold,
+                is_raining,
+                rain_masks,
+                jump_mask,
+                storm_index,
             )
             rain_intervals.append(rain_interval)
             head_intervals.append(head_interval)
@@ -347,12 +352,12 @@ def match_storms(rain, head, rain_threshold, jump_threshold):
     assert_equal(
         len(set(rain_intervals)),
         len(rain_intervals),
-        "Rain intervals in matches not unique",
+        'Rain intervals in matches not unique',
     )
     assert_equal(
         len(set(head_intervals)),
         len(head_intervals),
-        "Head intervals in matches not unique",
+        'Head intervals in matches not unique',
     )
     return (rain_intervals, head_intervals)
 
@@ -360,33 +365,34 @@ def match_storms(rain, head, rain_threshold, jump_threshold):
 def get_candidate_match_intervals(
     head, jump_threshold, is_raining, rain_masks, jump_mask, storm_index
 ):
-    """Identify rain and head intervals corresponding to a match between jump and storms"""
+    """Identify rain and head intervals for a match between jump and storms"""
     rain_indices = np.nonzero(rain_masks[storm_index])[0]
-    assert is_raining[rain_indices].all(), "Storm includes only raining time steps"
+    assert is_raining[rain_indices].all(), 'Storm includes only raining time steps'
     rain_start = rain_indices[0]
     rain_stop = rain_indices[-1] + 1
-    assert (
-        rain_start == 0 or not is_raining[rain_start - 1]
-    ), "No heavy rain just before slice"
-    assert not is_raining[rain_stop], "No heavy rain at end of slice"
+    assert rain_start == 0 or not is_raining[rain_start - 1], (
+        'No heavy rain just before slice'
+    )
+    assert not is_raining[rain_stop], 'No heavy rain at end of slice'
     jump_indices = np.nonzero(jump_mask)[0]
     jump_start = jump_indices[0]
     jump_stop = jump_indices[-1] + 2
-    assert (
-        np.diff(head[jump_start:jump_stop]) > jump_threshold
-    ).all(), "Head pair [{}, {}) meets jump threshold {} mm".format(
-        jump_start, jump_stop, jump_threshold
+    assert (np.diff(head[jump_start:jump_stop]) > jump_threshold).all(), (
+        f'Head pair [{jump_start}, {jump_stop}) '
+        f'meets jump threshold {jump_threshold} mm'
     )
     assert (
         jump_start == 0 or head[jump_start] - head[jump_start - 1] <= jump_threshold
-    ), "Jump <= {} starts at jump_start: {}, {}".format(
-        jump_threshold, jump_start, head[jump_start] - head[jump_start - 1]
+    ), (
+        f'Jump <= {jump_threshold} starts at jump_start: '
+        f'{jump_start}, {head[jump_start] - head[jump_start - 1]}'
     )
     assert (
         jump_stop == len(head)
         or head[jump_stop] - head[jump_stop - 1] <= jump_threshold
-    ), "Jump > {} ends at jump_stop: {}, {}".format(
-        jump_threshold, jump_stop, head[jump_stop] - head[jump_stop - 1]
+    ), (
+        f'Jump > {jump_threshold} ends at jump_stop: '
+        f'{jump_stop}, {head[jump_stop] - head[jump_stop - 1]}'
     )
     # At a minimum, all intervals include 1 rainfall intensity
     # value and 2 head values (note that these correspond to the
@@ -399,18 +405,18 @@ def get_candidate_match_intervals(
 def disambiguate_matching(rain_intervals, jump_intervals):
     """Disambiguate matching between rain and jump intervals
 
-    The input sequences of (start, stop) intervals for rain and head
-    are of the same length, and in general constitute a many-to-many
-    relation between rain intervals and jump intervals.  This function
-    finds a stable one-to-one matching between rain intervals and jump
-    intervals, returning them in the same data structure.
+    The input sequences of (start, stop) intervals for rain and head are of
+    the same length, and in general constitute a many-to-many relation between
+    rain intervals and jump intervals.  This function finds a stable
+    one-to-one matching between rain intervals and jump intervals, returning
+    them in the same data structure.
 
     Start and stop are integers.
 
     """
     assert len(rain_intervals) == len(jump_intervals)
-    storm_stops = {rain_start: rain_stop for rain_start, rain_stop in rain_intervals}
-    jump_stops = {jump_start: jump_stop for jump_start, jump_stop in jump_intervals}
+    storm_stops = dict(rain_intervals)
+    jump_stops = dict(jump_intervals)
     candidate_matches = [
         (rain_start, jump_start)
         for (rain_start, _), (jump_start, _) in zip(rain_intervals, jump_intervals)
@@ -438,7 +444,9 @@ def disambiguate_matching(rain_intervals, jump_intervals):
             return -abs(duration_differences[(rain_start, jump_start)])
 
         candidates = sorted(jumps, key=absolute_duration_difference)
+        del jumps, absolute_duration_difference
         storm_candidates[rain_start] = candidates
+        del rain_start
 
     jump_preferences = {}
     for jump_start, rains in jumps_dict.items():
@@ -450,6 +458,8 @@ def disambiguate_matching(rain_intervals, jump_intervals):
         jump_preferences[jump_start] = {
             rain_start: -abs(time_offset(rain_start)) for rain_start in rains
         }
+        del time_offset, jump_start, rains
+
     # Mapping from jumps to storms
     jump_matches = find_stable_matching(storm_candidates, jump_preferences)
     unique_rain_intervals = []
@@ -465,15 +475,15 @@ def disambiguate_matching(rain_intervals, jump_intervals):
 def find_stable_matching(storm_candidates, jump_preferences):
     """Find a stable matching between storms and jumps
 
-    Uses a variant of the Gale-Shapley stable matching algorithm to
-    find a matching between storms and jumps such that swapping two
-    matches would not improve both matches.
+    Uses a variant of the Gale-Shapley stable matching algorithm to find a
+    matching between storms and jumps such that swapping two matches would not
+    improve both matches.
 
-    storms is a set of storms, each with the attribute "candidates"
-    giving a sequence of candidate jumps, from worst to best.
+    storms is a set of storms, each with the attribute "candidates" giving a
+    sequence of candidate jumps, from worst to best.
 
-    Each jump object has an attribute .preferences, which maps storms
-    to a "match quality" for that storm (higher is better).
+    Each jump object has an attribute .preferences, which maps storms to a
+    "match quality" for that storm (higher is better).
 
     Returns the stable matches as a dict mapping jumps to storms.
 
@@ -481,7 +491,7 @@ def find_stable_matching(storm_candidates, jump_preferences):
     matchable_storms = {
         storm for storm, candidates in storm_candidates.items() if candidates
     }
-    matches = dict()
+    matches = {}
     while matchable_storms:
         storm = matchable_storms.pop()
         # Inefficient but safe
@@ -506,30 +516,28 @@ def find_stable_matching(storm_candidates, jump_preferences):
 def check_for_uniform_time_steps(epoch):
     """Verify that time steps are uniform
 
-    Checks that time steps in sorted array epoch are uniform,
-    otherwise raising ValueError.
+    Checks that time steps in sorted array epoch are uniform, otherwise
+    raising ValueError.
 
-    Note that this may not work as expected for inexact datatypes
-    (floats).
+    Note that this may not work as expected for inexact datatypes (floats).
 
     """
     delta_t = np.diff(epoch)
     if delta_t.min() != delta_t.max():
-        raise ValueError("Nonuniform time steps in {}".format(sorted(set(delta_t))))
+        raise ValueError(f'Nonuniform time steps in {sorted(set(delta_t))}')
 
 
 def get_mystery_jump_mask(is_jump, is_raining):
     """Flag everything from a mystery jump until the next rain
 
-    A "mystery jump" is a jump in head with no rain.  The returned
-    mask has the same length as is_jump and is_raining, and is marked
-    True during intervals [jump with no rain, rain).  If it's raining,
-    at the time of the jump, nothing happens; if not, all time points
-    until (but not including) the next True value in is_raining are
-    flagged.  All times with jumps and no rain are flagged; all times
-    with rain and no jump are not flagged; and times with no rain and
-    no jump will be flagged if and only if they occur between a
-    "mystery jump" (jump with no rain) and a rain event.
+    A "mystery jump" is a jump in head with no rain.  The returned mask has
+    the same length as is_jump and is_raining, and is marked True during
+    intervals [jump with no rain, rain).  If it's raining, at the time of the
+    jump, nothing happens; if not, all time points until (but not including)
+    the next True value in is_raining are flagged.  All times with jumps and
+    no rain are flagged; all times with rain and no jump are not flagged; and
+    times with no rain and no jump will be flagged if and only if they occur
+    between a "mystery jump" (jump with no rain) and a rain event.
 
     """
     assert_equal(len(is_jump), len(is_raining))
@@ -559,15 +567,15 @@ def get_true_interval_masks(boolean_vector):
 
     """
     if not boolean_vector.dtype == bool:
-        raise ValueError("non-boolean input vector")
+        raise ValueError('non-boolean input vector')
     int_vector = boolean_vector.astype(np.int64)
     is_start = np.concatenate(([0], int_vector[1:] - int_vector[:-1])) > 0
     # Indices increment for each block of True values in input vector
     indices = np.cumsum(is_start.astype(np.int64))
     indices[~boolean_vector] = 0
-    assert (
-        indices.astype(bool) == boolean_vector
-    ).all(), "Non-zero indices correspond to True elements of input vector"
+    assert (indices.astype(bool) == boolean_vector).all(), (
+        'Non-zero indices correspond to True elements of input vector'
+    )
     unique_indices = sorted(set(indices))
     assert unique_indices[0] == 0
     del unique_indices[0]
@@ -576,10 +584,10 @@ def get_true_interval_masks(boolean_vector):
 
 def assert_equal(a, b, message=None):  # pylint:disable=invalid-name
     """Convenience function for checking equality"""
-    prefix = "{}: ".format(message) if message else ""
-    assert a == b, "{}{} != {}".format(prefix, a, b)
+    prefix = f'{message}: ' if message else ''
+    assert a == b, f'{prefix}{a} != {b}'
 
 
 def convert_epoch_to_datetime_text(epoch):
     """Convert UNIX epoch to ISO 8601 datetime text"""
-    return datetime.datetime.fromtimestamp(epoch).strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.datetime.fromtimestamp(epoch).strftime('%Y-%m-%d %H:%M:%S')

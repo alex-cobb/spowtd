@@ -1,6 +1,4 @@
-"""Populate water level grid
-
-"""
+"""Populate water level grid"""
 
 import math
 

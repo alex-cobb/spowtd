@@ -1,16 +1,10 @@
 #!/usr/bin/python3
 
-"""Plot master recession curve
-
-"""
+"""Plot master recession curve"""
 
 import itertools
 
 import matplotlib.pyplot as plt
-
-import numpy as np
-
-import yaml
 
 import spowtd.simulate_recession as simulate_recession_mod
 
@@ -39,9 +33,7 @@ def plot_recession(connection, parameters):
     WHERE interval_type = 'interstorm'
     ORDER BY start_epoch, elapsed_time_d"""
     )
-    for _, group in itertools.groupby(
-        cursor.fetchall(), key=lambda row: row[0]
-    ):
+    for _, group in itertools.groupby(cursor.fetchall(), key=lambda row: row[0]):
         (elapsed_time_d, zeta_cm) = zip(*((t, z) for _, t, z in group))
         axes.plot(elapsed_time_d, zeta_cm, '-', color='magenta')
 

@@ -1,6 +1,4 @@
-"""Test code for command-line interface
-
-"""
+"""Test code for command-line interface"""
 
 import os
 import tempfile
@@ -19,7 +17,9 @@ def test_get_version(capfd):
     assert exception.value.code == 0
     out, _ = capfd.readouterr()
     with open(
-        os.path.join(os.path.dirname(__file__), os.pardir, 'VERSION.txt'), 'rt'
+        os.path.join(os.path.dirname(__file__), os.pardir, 'VERSION.txt'),
+        'rt',
+        encoding='utf-8',
     ) as version_file:
         version = version_file.read()
     assert out == version
@@ -44,7 +44,7 @@ def test_load_help():
 def test_load():
     """'spowtd load' exits without error"""
     paths = {
-        key: os.path.join(conftest.SAMPLE_DATA_DIR, '{}_1.txt'.format(key))
+        key: os.path.join(conftest.SAMPLE_DATA_DIR, f'{key}_1.txt')
         for key in ('evapotranspiration', 'precipitation', 'water_level')
     }
     with tempfile.NamedTemporaryFile(suffix='.sqlite3') as db_file:
@@ -100,6 +100,14 @@ def test_plot_transmissivity_help():
     """Invoking spowtd plot specific-yield --help exits with code 0"""
     with pytest.raises(SystemExit) as exception:
         cli_mod.main(['plot', 'transmissivity', '--help'])
+    assert exception.type == SystemExit
+    assert exception.value.code == 0
+
+
+def test_rise_help():
+    """Invoking spowtd rise --help exits with code 0"""
+    with pytest.raises(SystemExit) as exception:
+        cli_mod.main(['rise', '--help'])
     assert exception.type == SystemExit
     assert exception.value.code == 0
 

@@ -1,12 +1,9 @@
 #!/usr/bin/python3
 
-"""Plot water level and precipitation time series
-
-"""
+"""Plot water level and precipitation time series"""
 
 from dataclasses import dataclass
 
-import matplotlib.dates as dates_mod
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -49,7 +46,7 @@ def plot_time_series(
     cursor = connection.cursor()
 
     if time_zone_name is None:
-        cursor.execute("SELECT source_time_zone FROM time_grid")
+        cursor.execute('SELECT source_time_zone FROM time_grid')
         time_zone_name = cursor.fetchone()[0]
     time_zone = pytz.timezone(time_zone_name)
 
@@ -106,7 +103,7 @@ def plot_time_series(
         columns = tuple(zip(*cursor))
         data_intervals.append(
             DataInterval(
-                mpl_time=dates_mod.epoch2num(columns[0]),
+                mpl_time=epoch2num(columns[0]),
                 zeta_cm=np.array(columns[1], dtype=float),
                 rain_mm_h=np.array(columns[2], dtype=float),
                 et_mm_h=np.array(columns[3], dtype=float),
@@ -124,7 +121,7 @@ def plot_time_series(
     FROM zeta_interval
     WHERE interval_type = 'interstorm'"""
     )
-    zeta_interstorm_intervals = [dates_mod.epoch2num(v) for v in zip(*cursor)]
+    zeta_interstorm_intervals = [epoch2num(v) for v in zip(*cursor)]
     cursor.execute(
         """
     SELECT start_epoch,
@@ -132,16 +129,18 @@ def plot_time_series(
     FROM zeta_interval
     WHERE interval_type = 'storm'"""
     )
-    zeta_storm_intervals = [dates_mod.epoch2num(v) for v in zip(*cursor)]
+    zeta_storm_intervals = [epoch2num(v) for v in zip(*cursor)]
     cursor.execute(
         """
     SELECT start_epoch,
            thru_epoch
     FROM storm"""
     )
-    rain_storm_intervals = [dates_mod.epoch2num(v) for v in zip(*cursor)]
+    rain_storm_intervals = [epoch2num(v) for v in zip(*cursor)]
 
     for series in data_intervals:
+        # PyLint false positive
+        # pylint: disable=modified-iterating-list
         zeta_axes.plot_date(series.mpl_time, series.zeta_cm, 'k-')
         del series
 
@@ -161,6 +160,8 @@ def plot_time_series(
         )
 
     for series in data_intervals:
+        # PyLint false positive
+        # pylint: disable=modified-iterating-list
         rain_axes.plot_date(
             series.mpl_time, series.rain_mm_h, 'k-', drawstyle='steps-post'
         )
@@ -175,6 +176,8 @@ def plot_time_series(
 
     if plot_evapotranspiration:
         for series in data_intervals:
+            # PyLint false positive
+            # pylint: disable=modified-iterating-list
             et_axes.plot_date(
                 series.mpl_time, series.et_mm_h, 'k-', drawstyle='steps-post'
             )
@@ -211,6 +214,8 @@ def plot_time_series(
             storm_rain = mask_from_list(
                 series.rain_mm_h, series.rain_mm_h >= storm_threshold_mm_h
             )
+            # PyLint false positive
+            # pylint: disable=modified-iterating-list
             rain_axes.plot_date(
                 series.mpl_time,
                 storm_rain,
@@ -229,12 +234,22 @@ def plot_time_series(
 def mask_from_list(array_to_mask, mask):
     """Mask a float array by setting value to NaN according to mask
 
-    mask is a boolean array, used to set values in array_to_mask to
-    NaN wherever mask_list is False.
+    mask is a boolean array, used to set values in array_to_mask to NaN
+    wherever mask_list is False.
 
     array_to_mask is unaltered; a copy is returned.
 
     """
     masked = array_to_mask[:]
-    masked[~mask] = np.NaN
+    masked[~mask] = np.nan
     return masked
+
+
+def epoch2num(timestamp):
+    """Convert UNIX timestamps to Matplotlib dates
+
+    Matplotlib dates are days since the "Proleptic Gregorian ordinal" (epoch
+    0001-01-01), 719163 days before the UNIX epoch (1970-01-01).
+
+    """
+    return (timestamp / 86400.0) + 719163

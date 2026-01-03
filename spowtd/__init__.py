@@ -1,3 +1,1 @@
-"""Spowtd - scalar parameterization of water table dynamics
-
-"""
+"""Spowtd - scalar parameterization of water table dynamics"""

@@ -1,11 +1,24 @@
+ - [X] Implement fixes for upstream API changes
+ - [ ] Fix deprecation warnings from argparse
+ - [ ] Format Python sources with Black
+ - [ ] Add a fancy header to the User Guide
+ - [ ] Enable use of l1 norm instead of l2 norm when fitting rise
+   curves
+   - Use Cholesky decomposition of covariance matrix to decorrelate.
+   - Then use cvxopt:
+     https://cvxopt.org/examples/mlbook/l1.html
+   - This module is not actually in the CVXOPT distribution; it is included as
+     an example module (which, at least on Fedora, is not really set up like a
+     module; there is a test problem that will be executed on import).
+ - [ ] Add deltaMu (vertical shift) as a peatclsm parameter
  - [ ] Resolve discrepancy in units between spline and Peatclsm
    transmissivity
  - [ ] Update man page
+ - [ ] Consider adding weighted rise curve assembly test cases to user guide (modify
+   preliminary figure panels to match test cases)
  - [ ] Simpler unit tests to verify functions
  - [ ] Trim test time series to short intervals
  - [ ] Don't create an SQLite db if it doesn't exist for commands for
    which this is inappropriate
  - [ ] Don't create SQLite db if load fails (create in memory, then
    dump)
- - [ ] Use fixtures to speed up tests that require assembly of rise
-   and recession curves

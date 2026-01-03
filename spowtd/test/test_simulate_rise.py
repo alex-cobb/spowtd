@@ -1,6 +1,4 @@
-"""Test code for simulating rise curves
-
-"""
+"""Test code for simulating rise curves"""
 
 import numpy as np
 
@@ -50,11 +48,11 @@ from spowtd.test import conftest
 )
 def test_compute_rise_curve(sy_type, expected_curve):
     """Test computation of rise curve"""
-    with open(conftest.get_parameter_file_path(sy_type), 'rt') as sy_file:
+    with open(
+        conftest.get_parameter_file_path(sy_type), 'rt', encoding='utf-8'
+    ) as sy_file:
         sy_parameters = yaml.safe_load(sy_file)['specific_yield']
-    specific_yield = specific_yield_mod.create_specific_yield_function(
-        sy_parameters
-    )
+    specific_yield = specific_yield_mod.create_specific_yield_function(sy_parameters)
     zeta_grid_mm = np.linspace(-865, 50, 10)
     mean_storage_mm = 7.0
     rise_curve = simulate_rise_mod.compute_rise_curve(

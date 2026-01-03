@@ -7,5 +7,5 @@ NAMES=`find ${PKG} -name '*.py' -not -path "${PKG}/.ropeproject/config.py" | sor
 echo "--------------------------- Running pylint ---------------------------"
 pylint-3 -E ${PKG}
 echo "--------------------------- Running tests ----------------------------"
-py.test-3
+pytest-3
 exit
