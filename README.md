@@ -58,6 +58,14 @@ For development, you may additionally want:
 
 ## Revision history
 
+Version 0.7.0 - 2026-01-03:
+ - Weighted rise curve fitting.
+ - Fix bugs and deprecation warnings created by upstream changes.
+ - Fix dist bugs.
+ - Fixtures for more efficient tests.
+ - Update contact information.
+ - Docs.
+
 Version 0.6.0 - 2023-10-27:
  - Preliminary implementation of event weighting in rise curve assembly.
  - Blacken sources (python-black).
