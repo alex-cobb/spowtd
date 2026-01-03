@@ -96,12 +96,10 @@ Version 0.1.0 - 2021-10-08:
 ## Contact information
 
 Alex Cobb</br>
-Singapore-MIT Alliance for Research and Technology</br>
-Center for Environmental Sensing and Modeling</br>
-1 CREATE Way, CREATE Tower #09-03</br>
-Singapore 138602</br>
-Singapore</br>
-tel.: +65 6516 6170</br>
-fax.: +65 6778 5654
+Asian School of the Environment</br>
+Nanyang Technological University</br>
+50 Nanyang Avenue</br>
+Singapore 639798</br>
+Singapore
 
-e-mail: alex.cobb@smart.mit.edu
+e-mail: alexander.cobb@ntu.edu.sg
