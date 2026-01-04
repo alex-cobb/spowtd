@@ -120,24 +120,24 @@ def assemble_rise_series(cursor):
         for v in zip(
             *cursor.execute(
                 """
-     SELECT epoch, zeta_mm FROM water_level
-     ORDER BY epoch"""
+            SELECT epoch, zeta_mm FROM water_level
+            ORDER BY epoch"""
             )
         )
     ]
     assert np.isfinite(zeta_mm).all()
     cursor.execute(
         """
-SELECT s.start_epoch,
-       s.thru_epoch,
-       zi.start_epoch,
-       zi.thru_epoch
-FROM storm AS s
-JOIN zeta_interval_storm AS zis
-  ON s.start_epoch = zis.storm_start_epoch
-JOIN zeta_interval AS zi
-  ON zi.start_epoch = zis.interval_start_epoch
-ORDER BY s.start_epoch"""
+    SELECT s.start_epoch,
+           s.thru_epoch,
+           zi.start_epoch,
+           zi.thru_epoch
+    FROM storm AS s
+    JOIN zeta_interval_storm AS zis
+      ON s.start_epoch = zis.storm_start_epoch
+    JOIN zeta_interval AS zi
+      ON zi.start_epoch = zis.interval_start_epoch
+    ORDER BY s.start_epoch"""
     )
     series = []
     rain_intervals = []
@@ -149,17 +149,16 @@ ORDER BY s.start_epoch"""
         zeta_thru_epoch,
     ) in cursor.fetchall():
         rain_start = np.argwhere(epoch == storm_start_epoch)[0, 0]
-        # Epoch associated with rainfall intensities are *start*
-        # epoch for the interval, so the time slice that *starts*
-        # at the storm thru_epoch is not included.
+        # Epoch associated with rainfall intensities are *start* epoch for the interval,
+        # so the time slice that *starts* at the storm thru_epoch is not included.
         rain_stop = np.argwhere(epoch == storm_thru_epoch)[0, 0]
         zeta_start = np.argwhere(epoch == zeta_start_epoch)[0, 0]
         zeta_thru = np.argwhere(epoch == zeta_thru_epoch)[0, 0]
         cursor.execute(
             """
-    SELECT total_depth_mm
-    FROM storm_total_rain_depth
-    WHERE storm_start_epoch = :storm_start_epoch""",
+        SELECT total_depth_mm
+        FROM storm_total_rain_depth
+        WHERE storm_start_epoch = :storm_start_epoch""",
             {'storm_start_epoch': storm_start_epoch},
         )
         total_depth = cursor.fetchone()[0]
