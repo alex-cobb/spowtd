@@ -20,41 +20,28 @@ $ spowtd
    recession curve if the recession curve has not been assembled yet.
 
 
-## Build and install
+## Installation for use
 
-Build:
-python3 setup.py build
+For end-use, install from local source or GitHub with pip:
 
-Test:
-./check_errors.sh
+```console
+pip install .
+```
+Or
+```console
+pip install git+https://github.com/alex-cobb/spowtd.git
+```
 
-Install:
-python3 setup.py install
-
-
-## Build dependencies
-
-Spowtd is built for Python 3.
-
-Use of the spowtd command-line tool or library requires:
+The installation will require:
  - python3
  - python3-matplotlib
  - python3-numpy
  - python3-pytz
 
-The following packages are required for the build and tests:
- - asciidoc
- - pdflatex
- - python3
- - pylint-3 (python3-pylint)
- - pytest-3 (python3-pytest)
- - python3-scons
-
-For development, you may additionally want:
- - python3-pycodestyle
- - python3-coverage
- - python3-pytest-cov
-
+To test, run
+```console
+pytest spowtd
+```
 
 ## Revision history
 
