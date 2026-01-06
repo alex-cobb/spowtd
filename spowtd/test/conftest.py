@@ -29,9 +29,8 @@ for dirpath, dirnames, filenames in os.walk(os.path.dirname(__file__)):
 def persistent_loaded_connection(request):
     """Connection to in-memory database with loaded data
 
-    Each loaded connection is created once per test session by loading
-    data from a set of sample files (indexed by param).  Tests work
-    with copies.
+    Each loaded connection is created once per test session by loading data from a set
+    of sample files (indexed by param).  Tests work with copies.
 
     """
     with sqlite3.connect(':memory:') as persistent_connection:

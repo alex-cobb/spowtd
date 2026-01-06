@@ -356,10 +356,9 @@ def test_generate_curves_pst(classified_connection, parameterization):
 def extract_observations(pestfile_lines):
     """Extract observations from a PEST control file
 
-    Splits the observation section of a PEST control file and returns
-    a Numpy array of floating-point observation values and a list of
-    lists of whitespace-separated items from each row in the
-    observation section (excluding the observation values), in that
+    Splits the observation section of a PEST control file and returns a Numpy array of
+    floating-point observation values and a list of lists of whitespace-separated items
+    from each row in the observation section (excluding the observation values), in that
     order.
 
     """

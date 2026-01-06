@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
-"""Installation script for spowtd
-
-"""
+"""Installation script for spowtd"""
 
 from distutils.core import setup
 import glob
@@ -25,9 +23,7 @@ def build_docs():
 
 def get_version():
     """Get project version"""
-    version_file_path = os.path.join(
-        os.path.dirname(__file__), 'spowtd', 'VERSION.txt'
-    )
+    version_file_path = os.path.join(os.path.dirname(__file__), 'spowtd', 'VERSION.txt')
     with open(version_file_path) as version_file:
         version_string = version_file.read().strip()
     version_string_re = re.compile('[0-9.]+')
@@ -53,8 +49,7 @@ setup(
     package_data={
         'spowtd': ['VERSION.txt', 'schema.sql'],
         'spowtd/test': [
-            f'sample_data/*.{suffix}'
-            for suffix in ('ins', 'pst', 'txt', 'yml')
+            f'sample_data/*.{suffix}' for suffix in ('ins', 'pst', 'txt', 'yml')
         ]
         + ['*.R'],
     },

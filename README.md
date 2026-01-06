@@ -58,6 +58,13 @@ For development, you may additionally want:
 
 ## Revision history
 
+Version 0.8.0 - 2026-01-06:
+ - Apply isolated changes for rise event stretching and outlier detection
+   from doi:10.1002/hyp.70209.
+   - Note that *16 tests raise an error* in rise curve assembly.
+ - Blacken sources.
+ - Rewrap docstrings and comments for smaller diffs.
+
 Version 0.7.0 - 2026-01-03:
  - Weighted rise curve fitting.
  - Fix bugs and deprecation warnings created by upstream changes.

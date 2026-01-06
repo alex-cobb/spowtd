@@ -85,7 +85,7 @@ def generate_rise_tpl_file(connection, parameters, configuration, outfile, preci
         lines += [
             '  type: peatclsm',
             f'  Ksmacz0: {parameters["transmissivity"]["Ksmacz0"]}  # m/s',
-            (f'  alpha: {parameters["transmissivity"]["alpha"]}  # dimensionless'),
+            f'  alpha: {parameters["transmissivity"]["alpha"]}  # dimensionless',
             f'  zeta_max_cm: {parameters["transmissivity"]["zeta_max_cm"]}',
         ]
     else:
@@ -189,10 +189,10 @@ def generate_rise_pst_file(connection, parameters, configuration, outfile, preci
         ]
         lines += [
             '* parameter data',
-            ('sd          none relative   NaN  0.0   2.0  sd         1.0  0.0 1'),
-            ('theta_s     none relative   NaN  0.01  1    theta_s    1.0  0.0 1'),
-            ('b           none relative   NaN  0.01  20.0 b          1.0  0.0 1'),
-            ('psi_s       none relative   NaN  -1.0  -0.01  psi_s      1.0  0.0 1'),
+            'sd          none relative   NaN  0.0   2.0  sd         1.0  0.0 1',
+            'theta_s     none relative   NaN  0.01  1    theta_s    1.0  0.0 1',
+            'b           none relative   NaN  0.01  20.0 b          1.0  0.0 1',
+            'psi_s       none relative   NaN  -1.0  -0.01  psi_s      1.0  0.0 1',
         ]
     lines += ['* observation groups', 'storageobs']
     lines += ['* observation data']
@@ -316,8 +316,8 @@ def generate_curves_pst_file(connection, parameters, configuration, outfile, pre
     )
     avg_storage_mm = [row[0] for row in cursor.fetchall()]
     n_rise_zeta = len(avg_storage_mm)
-    # Sort from highest to lowest water level, to match the way
-    # recession curves are dumped and plotted.
+    # Sort from highest to lowest water level, to match the way recession curves are
+    # dumped and plotted.
     cursor.execute(
         """
     SELECT CAST(elapsed_time_s AS double precision)
@@ -369,7 +369,7 @@ def generate_curves_pst_file(connection, parameters, configuration, outfile, pre
             for i in range(n_T)
         ]
         lines += [
-            ('T_min      log  factor    NaN  1.0e-04  1.0e+5  T_min    1.0  0.0  1')
+            'T_min      log  factor    NaN  1.0e-04  1.0e+5  T_min    1.0  0.0  1'
         ]
     else:
         lines += [
@@ -411,7 +411,7 @@ def generate_curves_pst_file(connection, parameters, configuration, outfile, pre
     lines += ['* observation groups', 'storageobs', 'timeobs']
     lines += ['* observation data']
     lines += [
-        (f'e{{}}    {{:0.{precision}g}}    1.0   storageobs'.format(i + 1, W))
+        f'e{{}}    {{:0.{precision}g}}    1.0   storageobs'.format(i + 1, W)
         for i, W in enumerate(avg_storage_mm)
     ]
     lines += [

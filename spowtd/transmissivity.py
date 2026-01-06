@@ -10,9 +10,9 @@ import spowtd.spline as spline_mod
 def create_transmissivity_function(parameters):
     """Create a transmissivity function
 
-    Returns a callable object that returns transmissivity at a given water
-    level.  The class of the object depends on the "type" field in the
-    parameters provided, and must be either "peatclsm" or "spline".
+    Returns a callable object that returns transmissivity at a given water level.  The
+    class of the object depends on the "type" field in the parameters provided, and must
+    be either "peatclsm" or "spline".
 
     """
     if 'type' not in parameters:
@@ -30,15 +30,13 @@ class SplineTransmissivity:
     zeta_knots_mm: Sequence of water levels in mm
     K_knots: Condutivity values at those water levels
 
-    Stores a set of knots representing hydraulic conductivity at water table
-    heights (relative to surface) zeta.  When called, takes a water table
-    height and returns a transmissivity obtained by linear interpolation of
-    log-conductivity.
+    Stores a set of knots representing hydraulic conductivity at water table heights
+    (relative to surface) zeta.  When called, takes a water table height and returns a
+    transmissivity obtained by linear interpolation of log-conductivity.
 
-    This is an extended value function that returns minimum_transmissivity
-    below min(zeta) and extrapolates exponentially or linearly above
-    max(zeta), according to whether the last two knots have the same or
-    different conductivity.
+    This is an extended value function that returns minimum_transmissivity below
+    min(zeta) and extrapolates exponentially or linearly above max(zeta), according to
+    whether the last two knots have the same or different conductivity.
 
     """
 

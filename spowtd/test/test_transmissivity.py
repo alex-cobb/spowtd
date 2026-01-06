@@ -45,10 +45,9 @@ def test_transmissivity(T_type, expected_T):
         assert np.allclose(transmissivity(zeta_mm), expected_T)
     else:
         assert T_type == 'peatclsm'
-        # In this case, expected_T is provided by an R script, and is
-        # large (201 values), so we load it from a file produced by
-        # the R script instead of including it in the pytest
-        # decorator.
+        # In this case, expected_T is provided by an R script, and is large (201
+        # values), so we load it from a file produced by the R script instead of
+        # including it in the pytest decorator.
         del expected_T
         T_table = conftest.peatclsm_transmissivity_table()
         zeta_m = np.linspace(-1.5, 0.0, 151)[::-1]

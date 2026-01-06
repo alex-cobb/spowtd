@@ -79,8 +79,8 @@ A_expected = {
 offsets_expected_u = {1: [-1, 0], 2: [-4, -2, 0], 3: [-2, 0], 4: [-2, 0]}
 offsets_expected = {
     1: [-1.19736842, 0],
-    # Note that this is the same as the unweighted solution. This is also the
-    # only case where the expected outcome is exact.
+    # Note that this is the same as the unweighted solution. This is also the only case
+    # where the expected outcome is exact.
     2: [-4, -2, 0],
     3: [-2.39716312, 0],
     4: [-1.43083486, 0],
@@ -276,8 +276,7 @@ def test_find_offsets_relabeled_unweighted(test_case):
     assert series_ids == [-sid * 2 for sid in series_ids_expected[test_case]][::-1]
     assert np.allclose(
         offsets,
-        # Order will be reversed, and reference series will instead by the
-        # first
+        # Order will be reversed, and reference series will instead by the first
         np.array(offsets_expected_u[test_case], dtype=float)[::-1]
         - offsets_expected_u[test_case][0],
     )
@@ -344,8 +343,7 @@ def test_find_offsets_relabeled_weighted(test_case):
     assert series_ids == [-sid * 2 for sid in series_ids_expected[test_case]][::-1]
     assert np.allclose(
         offsets,
-        # Order will be reversed, and reference series will instead by the
-        # first
+        # Order will be reversed, and reference series will instead by the first
         np.array(offsets_expected[test_case], dtype=float)[::-1]
         - offsets_expected[test_case][0],
     )

@@ -41,8 +41,7 @@ def load_data(
     precip_csv = csv_mod.reader(precipitation_data_file, delimiter=',')
     header = next(precip_csv)
     assert header[0].lower().startswith('datetime'), header
-    # Strategy: load into staging tables first, then establish time
-    # grid
+    # Strategy: load into staging tables first, then establish time grid
     cursor.executemany(
         """
     INSERT INTO rainfall_intensity_staging
@@ -93,8 +92,8 @@ def populate_water_level(cursor, time_grid):
     FROM water_level_staging"""
     )
     zeta_t, zeta_mm = zip(*cursor.fetchall())
-    # Label times in the time grid with valid data intervals, starting
-    # from 1.  Invalid times are left with a NULL data interval.
+    # Label times in the time grid with valid data intervals, starting from 1.  Invalid
+    # times are left with a NULL data interval.
     zeta_t = np.array(zeta_t)
     # Epoch is an integer
     assert np.issubdtype(time_grid.dtype, np.integer), time_grid.dtype
@@ -144,8 +143,8 @@ def populate_water_level(cursor, time_grid):
 def populate_grid_time(cursor, time_zone_name):
     """Determine and populate grid_time
 
-    Identifies interval with both precipitation and water level data, and
-    returns the time grid array and time step as a tuple.
+    Identifies interval with both precipitation and water level data, and returns the
+    time grid array and time step as a tuple.
 
     """
     time_grid = [
@@ -204,8 +203,8 @@ def populate_rainfall_intensity(cursor, time_grid, time_step):
 
 def populate_evapotranspiration(cursor, time_grid, time_step, tz):
     """Populate evapotranspiration on target grid"""
-    # Check that evapotranspiration is defined on same grid and same
-    # intervals as rainfall
+    # Check that evapotranspiration is defined on same grid and same intervals as
+    # rainfall
     cursor.execute(
         """
     SELECT epoch
@@ -246,12 +245,10 @@ def populate_evapotranspiration(cursor, time_grid, time_step, tz):
 def generate_timestamped_rows(rows, tz):
     """Generate rows with the first value replaced by a UNIX timestamp
 
-    The first item in each row is assumed to be a text datetime in ISO 8601
-    format.
+    The first item in each row is assumed to be a text datetime in ISO 8601 format.
 
-    The pytz object passed as the second argument is used to convert the
-    datetime to UTC (if necessary) and convert to a UNIX timestamp (seconds
-    since 1970-01-01 00:00:00).
+    The pytz object passed as the second argument is used to convert the datetime to UTC
+    (if necessary) and convert to a UNIX timestamp (seconds since 1970-01-01 00:00:00).
 
     """
     for row in rows:
