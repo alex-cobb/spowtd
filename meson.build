@@ -9,12 +9,14 @@ py = import('python').find_installation()
 py_dep = py.dependency()
 
 # Docs
+doc_dir = py.get_install_dir() / 'spowtd' / 'doc'
+
 install_data('doc/spowtd.1', 
-  install_dir: get_option('mandir') / 'man1'
+  install_dir: doc_dir
 )
 
 install_data('doc/user_guide.pdf', 
-  install_dir: get_option('datadir') / 'doc/spowtd'
+  install_dir: doc_dir
 )
 
 # Sources
