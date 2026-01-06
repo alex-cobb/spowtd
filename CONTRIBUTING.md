@@ -57,12 +57,12 @@ meson test -C builddir
 
 Before submitting a pull request, please ensure:
 
-1. Code is tested: Any bug fix or new functionality is tested.  Aim for coverage of 80%
-   or better.
+1. Code is tested: Any bug fix or new functionality is tested.  Check with `pytest-3
+   --cov=spowtd` and `coverage3 html`.  Aim for coverage of 80% or better.
 
 2. Tests pass: pytest shows no errors.
 
-3. Linting: pylint shows no errors.
+3. Linting: `pylint-3 spowtd` shows no errors or new style complaints.
 
 4. Documentation: Any new features include updates to the doc/user_guide.pdf or man
    pages if necessary.
