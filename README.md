@@ -45,6 +45,10 @@ pytest spowtd
 
 ## Revision history
 
+Version 0.10.0 - 2026-01-07:
+ - Use meson for build.
+ - Docs.
+
 Version 0.9.0 - 2026-01-06:
  - Revert outlier removal code in rise curve assembly
    - If this functionality is desired in the future, it is probably best
