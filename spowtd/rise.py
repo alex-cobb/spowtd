@@ -201,6 +201,9 @@ def compute_rise_offsets(cursor, reference_zeta_mm, recharge_error_weight=0):
                         for i in range(len(crossings)):
                             if index in crossings[i]:
                                 specific_yield = np.array([series_id, Sy])
+                # XXX specific_yield may be used before assignment.  Is this also a
+                # XXX semantic bug?
+                # pylint: disable=possibly-used-before-assignment
                 zeta_step_sy.append(specific_yield.copy())
             df = pd.DataFrame(
                 list(map(np.ravel, zeta_step_sy)), columns=['series_id', 'Sy']
