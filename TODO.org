@@ -1,6 +1,3 @@
- - [X] Implement fixes for upstream API changes
- - [ ] Fix deprecation warnings from argparse
- - [ ] Format Python sources with Black
  - [ ] Add a fancy header to the User Guide
  - [ ] Enable use of l1 norm instead of l2 norm when fitting rise
    curves
