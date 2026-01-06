@@ -58,6 +58,12 @@ For development, you may additionally want:
 
 ## Revision history
 
+Version 0.9.0 - 2026-01-06:
+ - Revert outlier removal code in rise curve assembly
+   - If this functionality is desired in the future, it is probably best
+     to write a fresh implementation controllable from the CLI.
+   - The original implementation will remain available in tag v0.8.0.
+
 Version 0.8.0 - 2026-01-06:
  - Apply isolated changes for rise event stretching and outlier detection
    from doi:10.1002/hyp.70209.
