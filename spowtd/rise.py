@@ -100,23 +100,6 @@ def compute_rise_offsets(cursor, reference_zeta_mm, recharge_error_weight=0):
         rain_intervals.append((rain_start, rain_stop))
         zeta_intervals.append((zeta_start, zeta_thru + 1))
 
-        # SA! added: to standardize events to same WL range in cm and adjust the
-        #            corresponding P with the same factor
-        # SA! added set the length (in mm) and turn on and off manually
-        stretch = 0
-        length = 100
-        if stretch == 1:
-            factor = (abs(final_zeta - initial_zeta)) / length
-            total_depth = total_depth / factor
-            initial_zeta_original = initial_zeta
-            final_zeta_original = final_zeta
-            initial_zeta = ((final_zeta_original + initial_zeta_original) / 2) - (
-                length / 2
-            )
-            final_zeta = ((final_zeta_original + initial_zeta_original) / 2) + (
-                length / 2
-            )
-
         series.append(
             (np.array((0, total_depth)), np.array((initial_zeta, final_zeta)))
         )
