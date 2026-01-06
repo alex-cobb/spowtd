@@ -1,0 +1,23 @@
+[build-system]
+build-backend = 'mesonpy'
+requires = ['meson-python', 'cython>=3.0', 'numpy']
+
+[project]
+name = "spowtd"
+dynamic = ["version"]
+description = "Scalar parameterization of water table dynamics"
+authors = [{name = "Alex Cobb", email = "alexander.cobb@ntu.edu.sg"}]
+readme = "README.md"
+license = {text = "BSD-2-Clause"}
+dependencies = [
+    "matplotlib",
+    "numpy",
+    "pytz",
+    "scipy",
+]
+
+[project.scripts]
+spowtd = "spowtd.main:main"
+
+# Include binary artifacts and docs in wheel
+[tool.meson-python]
