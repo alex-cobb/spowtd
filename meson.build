@@ -11,11 +11,11 @@ py_dep = py.dependency()
 # Docs
 doc_dir = py.get_install_dir() / 'spowtd' / 'doc'
 
-install_data('doc/spowtd.1', 
+install_data('doc/spowtd.1',
   install_dir: doc_dir
 )
 
-install_data('doc/user_guide.pdf', 
+install_data('doc/user_guide.pdf',
   install_dir: doc_dir
 )
 
@@ -72,32 +72,40 @@ install_subdir('spowtd/test/sample_data',
 # Testing
 pylint = find_program('pylint-3', required: false)
 if not pylint.found()
-  pylint = find_program('pylint', required: true)
+  pylint = find_program('pylint', required: false)
 endif
 
 pytest = find_program('pytest-3', required: false)
 if not pytest.found()
-  pytest = find_program('pytest', required: true)
+  pytest = find_program('pytest', required: false)
 endif
 
 # Add the source directory to PYTHONPATH so pytest sees the source folder
 envdata = environment()
 envdata.append('PYTHONPATH', meson.current_source_dir())
 
-test('pylint',
-  pylint,
-  args: ['-E', 'spowtd'],
-  env: envdata,
-  priority: 100,
-  suite: 'lint'
-)
+if pylint.found()
+  test('pylint',
+    pylint,
+    args: ['-E', 'spowtd'],
+    env: envdata,
+    priority: 100,
+    suite: 'lint'
+  )
+else
+  message('Pylint not found, skipping')
+endif
 
-test('python-tests', 
-  pytest, 
-  args: [meson.current_source_dir() / 'spowtd/test'],
-  env: envdata,
-  timeout: 100
-)
+if pytest.found()
+  test('python-tests',
+    pytest,
+    args: [meson.current_source_dir() / 'spowtd/test'],
+    env: envdata,
+    timeout: 100
+  )
+else
+  message('Pytest not found, skipping')
+endif
 
 # Cython Extension Module t.c.
 # py.extension_module(
