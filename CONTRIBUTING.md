@@ -38,12 +38,18 @@ When you modify a .pyx or .c file, you must trigger a rebuild with
 ```console
 pip install --no-build-isolation -e .
 ```
+If the interface to the function has changed, the interface (.pyi) file needs to be
+updated to match.
 
 *Annotations*: Use `cython -a spowtd/foo.pyx` to generate an HTML file showing which
 lines of code are interacting with the Python interpreter (yellow highlights). Aim for
 white lines in performance-critical loops.
 
 *Header files*: If adding a new C function, declare it in a .pxd file.
+
+When new modules are added, they need to be added to `python_sources` (pure Python
+package files), `test_sources` (test scripts), or as new `py.extension_module`s
+in `src/spowtd/meson.build`.
 
 ## Testing
 Tests require `pylint` and `pytest`.  You may additionally want `python3-coverage` and
