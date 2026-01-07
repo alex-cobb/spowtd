@@ -45,6 +45,10 @@ pytest spowtd
 
 ## Revision history
 
+Version 0.11.1 - 2026-01-07:
+ - Set up cibuildwheel and fix tests for MacOS and Windows.
+ - Skip certain tests depending on environment.
+
 Version 0.11.0 - 2026-01-07:
  - Add a prototype Cython function.
  - Switch to src layout.
