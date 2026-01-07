@@ -4,7 +4,7 @@ import numpy as np
 
 import scipy.integrate as integrate_mod
 
-import spowtd.spline as spline_mod
+import spowtd.fpspline as spline_mod
 
 
 def create_transmissivity_function(parameters):

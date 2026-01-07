@@ -4,7 +4,7 @@ import numpy as np
 
 import scipy.stats
 
-import spowtd.spline as spline_mod
+import spowtd.fpspline as spline_mod
 
 
 def create_specific_yield_function(parameters):
