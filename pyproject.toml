@@ -1,6 +1,14 @@
 [build-system]
 build-backend = 'mesonpy'
-requires = ['meson-python', 'meson', 'ninja', 'cython>=3.1.0', 'numpy']
+requires = [
+  'meson-python',
+  'meson>=1.2.0',
+  'ninja',
+  'cython>=3.1.0',
+  'numpy>=1.25',
+  # On Windows
+  "delvewheel; sys_platform == 'win32'"
+]
 
 [project]
 name = "spowtd"
@@ -28,5 +36,31 @@ spowtd = "spowtd.main:main"
 [tool.meson-python]
 
 [tool.cibuildwheel]
-# Ensure numpy is available to run_command() in meson.build
-before-build = "pip install numpy"
+before-all = """
+if command -v yum >/dev/null; then
+    yum install -y gsl-devel
+elif command -v dnf >/dev/null; then
+    dnf install -y gsl-devel
+elif command -v apt >/dev/null; then
+   apt-get libgsl-dev
+elif command -v apk >/dev/null; then
+    apk add gsl-dev
+fi
+"""
+before-build = "pip install meson meson-python ninja numpy cython scipy-openblas64"
+test-command = "pytest --pyargs spowtd"
+test-requires = "pylint pytest numpy PyYAML psutil"
+
+[tool.cibuildwheel.linux]
+repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
+
+[tool.cibuildwheel.macos]
+before-all = "brew install gsl libomp"
+environment = { MACOSX_DEPLOYMENT_TARGET = "15.0" }
+repair-wheel-command = "delocate-listdeps {wheel} && delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}"
+
+[tool.cibuildwheel.windows]
+before-all = "vcpkg install gsl:x64-windows"
+before-build = "pip install meson meson-python ninja numpy cython scipy-openblas64 delvewheel"
+environment = { PKG_CONFIG_PATH = "C:/vcpkg/installed/x64-windows/lib/pkgconfig", CMAKE_PREFIX_PATH = "C:/vcpkg/installed/x64-windows" }
+repair-wheel-command = 'delvewheel repair --add-path "C:/vcpkg/installed/x64-windows/bin;%PYTHON_SITEPACKAGES%/scipy_openblas/lib" -w {dest_dir} {wheel}'

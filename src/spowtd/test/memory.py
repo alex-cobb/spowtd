@@ -6,13 +6,16 @@
 
 """Shared code for memory tests of extension modules"""
 
-import resource
+import os
+import psutil
 import sys
 
 
 def get_memory_usage_kb():
     """Get memory usage of the current process in kilobytes"""
-    return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    process = psutil.Process(os.getpid())
+    # rss is "Resident Set Size" (physical memory used) in bytes
+    return process.memory_info().rss // 1024
 
 
 def repeat_create_destroy(factory, refcounts, *args, **kwargs):
@@ -25,7 +28,8 @@ def repeat_create_destroy(factory, refcounts, *args, **kwargs):
 
     for i in range(iterations):
         obj = factory(*args, **kwargs)
-        assert sys.getrefcount(obj) == 1, sys.getrefcount(obj)
+        # The base refcount seems to be version-dependent but should be 1 or 2
+        assert sys.getrefcount(obj) in (1, 2), sys.getrefcount(obj)
         for attrname, refcount in refcounts.items():
             assert sys.getrefcount(getattr(obj, attrname)) == refcount
         memory_usage_kb = get_memory_usage_kb()

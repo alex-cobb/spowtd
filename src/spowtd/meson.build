@@ -57,30 +57,56 @@ install_subdir('test/sample_data',
 )
 
 # Cython extension modules
-# 1. Specify dependencies
+# Specify dependencies
 py_dep = py.dependency()
+cc = meson.get_compiler('c')
 
+numpy_dep = dependency('numpy')
+
+# Find BLAS
+# Search for system BLAS
 blas_dep = dependency('flexiblas', required: false)
 if not blas_dep.found()
   blas_dep = dependency('openblas', required: false)
 endif
 if not blas_dep.found()
-  blas_dep = dependency('blas', required: true)
+  blas_dep = dependency('blas', required: false)
+endif
+if not blas_dep.found()
+  # Search for scipy-openblas (Windows/macOS)
+  message('No system BLAS found, searching for scipy-openblas...')
+  check_scipy_blas = run_command(py, [
+    '-c', 'import scipy_openblas; print("scipy-openblas found")'
+  ], check: false)
+  if check_scipy_blas.returncode() == 0
+  message('scipy-openblas found, extracting paths...')
+    sciblas_paths = run_command(py, [
+      '-c',
+      'import scipy_openblas; print(scipy_openblas.get_include()); print(scipy_openblas.get_libdir()); print(scipy_openblas.get_library())'
+    ], check: true).stdout().strip().split('\n')
+    sciblas_inc = sciblas_paths[0]
+    sciblas_libdir = sciblas_paths[1]
+    sciblas_name = sciblas_paths[2]
+    blas_dep = declare_dependency(
+      include_directories: include_directories(sciblas_inc),
+      dependencies: cc.find_library(sciblas_name, dirs: sciblas_libdir)
+    )
+  endif
 endif
 
-gsl_dep = dependency('gsl')
+gsl_dep = dependency('gsl', required: false)
 
 scalar_function_ext = py.extension_module(
   '_scalar_function',
   '_scalar_function.pyx',
-  dependencies: [py_dep, gsl_dep, blas_dep],
+  dependencies: [py_dep, numpy_dep, gsl_dep, blas_dep],
   install: true,
   subdir: 'spowtd'
 )
 spline_ext = py.extension_module(
   '_spline',
   '_spline.pyx',
-  dependencies: [py_dep, gsl_dep, blas_dep],
+  dependencies: [py_dep, numpy_dep, gsl_dep, blas_dep],
   install: true,
   subdir: 'spowtd'
 )
