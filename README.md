@@ -45,6 +45,11 @@ pytest spowtd
 
 ## Revision history
 
+Version 0.11.0 - 2026-01-07:
+ - Add a prototype Cython function.
+ - Switch to src layout.
+ - Docs.
+
 Version 0.10.0 - 2026-01-07:
  - Use meson for build.
  - Docs.
