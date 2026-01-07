@@ -43,6 +43,11 @@ To test, run
 pytest spowtd
 ```
 
+## License
+
+The source code is [LICENSE-BSD.txt](BSD-licensed), but compiled distributions are
+[LICENSE-GPL.txt](GPL-3.0-or-later) due to the GSL dependency.
+
 ## Revision history
 
 Version 0.11.1 - 2026-01-07:

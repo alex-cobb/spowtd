@@ -9,7 +9,11 @@ dynamic = ["version"]
 description = "Scalar parameterization of water table dynamics"
 authors = [{name = "Alex Cobb", email = "alexander.cobb@ntu.edu.sg"}]
 readme = "README.md"
-license = {text = "BSD-2-Clause"}
+license = "BSD-2-Clause AND GPL-3.0-or-later"
+license-files = [
+    "LICENSE-BSD.txt",
+    "LICENSE-GPL.txt"
+]
 dependencies = [
     "matplotlib",
     "numpy",
@@ -22,3 +26,7 @@ spowtd = "spowtd.main:main"
 
 # Include binary artifacts and docs in wheel
 [tool.meson-python]
+
+[tool.cibuildwheel]
+# Ensure numpy is available to run_command() in meson.build
+before-build = "pip install numpy"

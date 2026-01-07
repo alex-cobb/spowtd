@@ -10,9 +10,9 @@ for distribution.
 Work on the Cython extensions requires a C compiler and the Meson build system.
 
 ### 1. System Dependencies
-* **C Compiler:** `gcc` or `clang`
-* **Build Tools:** `ninja-build`, `pkg-config`
-* **Libraries:** `sundials` and `gsl`
+* **C compiler:** `gcc` or `clang`
+* **Build tools:** `ninja-build`, `pkg-config`
+* **Libraries and headers:** `gsl`, `flexiblas`, `openblas` or `blas`
 
 ### 2. Python Environment
 A virtual environment and a "no-build-isolation" editable install is recommended. This

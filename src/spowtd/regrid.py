@@ -1,3 +1,9 @@
+# Copyright (C) 2026 Alex Cobb
+# Licensed under the BSD 2-Clause License (see LICENSE-BSD.txt)
+#
+# NOTE: This file is part of the spowtd project. When distributed as a compiled binary
+# linked against the GSL, the resulting work is licensed under the GPL-3.0-or-later.
+
 """Regrid x, y points so that they are uniformly spaced on y"""
 
 import numpy as np
@@ -48,16 +54,3 @@ def regrid(x, y, y_step, interpolant='linear'):
         for y_target in targets:
             x_target = brentq(lambda x, y=y_target: spline(x) - y, x[i], x[i + 1])
             yield (y_target, x_target)
-
-
-if __name__ == '__main__':
-    ys = np.array([2.0, 5.2, -1.3, -1.2, 10.0])
-    xs = list(range(len(ys)))
-    ys_step = 1.0
-    new_points = list(regrid(xs, ys, ys_step, interpolant='nearest'))
-    import matplotlib.pyplot as plt
-
-    plt.plot(xs, ys, 'bo-')
-    yp, xp = list(zip(*new_points))
-    plt.plot(xp, yp, 'ro-')
-    plt.show()

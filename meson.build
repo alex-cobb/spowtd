@@ -7,7 +7,6 @@ project('spowtd', 'c', 'cython',
 )
 
 py = import('python').find_installation(pure: false)
-py_dep = py.dependency()
 
 subdir('src/spowtd')
 
