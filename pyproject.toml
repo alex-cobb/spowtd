@@ -1,9 +1,10 @@
 [build-system]
 build-backend = 'mesonpy'
-requires = ['meson-python', 'cython>=3.0', 'numpy']
+requires = ['meson-python', 'meson', 'ninja', 'cython>=3.1.0', 'numpy']
 
 [project]
 name = "spowtd"
+requires-python = ">=3.12"
 dynamic = ["version"]
 description = "Scalar parameterization of water table dynamics"
 authors = [{name = "Alex Cobb", email = "alexander.cobb@ntu.edu.sg"}]

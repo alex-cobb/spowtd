@@ -10,28 +10,43 @@ on:
       - 'v*'
 
 jobs:
+  static_error_check:
+    name: Static error check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install pylint pytest numpy PyYAML scipy matplotlib pytz
+      - run: pylint -E src/
+
   build_wheels:
+    # Don't build if static checker finds errors (pylint -E)
+    needs: static_error_check
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         # Build for Linux, macOS, and Windows
         os: [ubuntu-latest, macos-latest, windows-latest]
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.22.0
         env:
-          # Only support modern CPython
-          CIBW_SKIP: "cp36-* cp37-* pp*"
+          # No PyPy
+          CIBW_SKIP: "pp*"
           # Run tests inside the wheel environment
-          CIBW_TEST_COMMAND: "pytest {project}/spowtd"
-          CIBW_TEST_REQUIRES: "pylint pytest numpy"
+          CIBW_TEST_COMMAND: "pytest --pyargs spowtd"
+          CIBW_TEST_REQUIRES: "pylint pytest numpy PyYAML"
+          # Ensure 64-bit platform
+          CIBW_ARCHS_WINDOWS: "AMD64"
+          # This could be relaxed in the future but might require QEMU
+          CIBW_ARCHS_LINUX: "x86_64"
           # Ensure Ninja is present (required for Meson)
-          CIBW_BEFORE_BUILD: "pip install meson ninja pylint pytest"
-
+          CIBW_BEFORE_BUILD: "pip install meson meson-python ninja cython numpy"
       - uses: actions/upload-artifact@v4
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
