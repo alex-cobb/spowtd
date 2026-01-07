@@ -47,7 +47,9 @@ def test_load():
         key: os.path.join(conftest.SAMPLE_DATA_DIR, f'{key}_1.txt')
         for key in ('evapotranspiration', 'precipitation', 'water_level')
     }
-    with tempfile.NamedTemporaryFile(suffix='.sqlite3') as db_file:
+    with tempfile.NamedTemporaryFile(
+        suffix='.sqlite3', delete=False, delete_on_close=True
+    ) as db_file:
         cli_mod.main(
             [
                 'load',

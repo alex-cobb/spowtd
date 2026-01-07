@@ -9,7 +9,7 @@ import numpy as np
 import spowtd.pestfiles as pestfiles_mod
 import spowtd.recession as recession_mod
 import spowtd.rise as rise_mod
-from spowtd.test import conftest
+from spowtd.test import conftest, markers
 
 
 reference_text = {
@@ -297,6 +297,7 @@ def test_generate_curves_ins(classified_connection):
         assert outfile.getvalue().splitlines() == ref_file.read().splitlines()
 
 
+@markers.linux_only
 @pytest.mark.parametrize('parameterization', ['peatclsm', 'spline'])
 def test_generate_curves_pst(classified_connection, parameterization):
     """Generation of control files for curves curve calibration"""

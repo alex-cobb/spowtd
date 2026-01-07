@@ -49,7 +49,10 @@ def test_transmissivity(T_type, expected_T):
         # values), so we load it from a file produced by the R script instead of
         # including it in the pytest decorator.
         del expected_T
-        T_table = conftest.peatclsm_transmissivity_table()
+        try:
+            T_table = conftest.peatclsm_transmissivity_table()
+        except FileNotFoundError:
+            pytest.skip('Rscript not found')
         zeta_m = np.linspace(-1.5, 0.0, 151)[::-1]
         zeta_m_ref, expected_T = zip(*T_table)
         assert np.allclose(zeta_m, zeta_m_ref)

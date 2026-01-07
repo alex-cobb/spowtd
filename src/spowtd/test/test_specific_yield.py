@@ -47,7 +47,10 @@ def test_specific_yield(sy_type, expected_sy):
         # values), so we load it from a file produced by the R script instead of
         # including it in the pytest decorator.
         del expected_sy
-        sy_table = conftest.peatclsm_specific_yield_table()
+        try:
+            sy_table = conftest.peatclsm_specific_yield_table()
+        except FileNotFoundError:
+            pytest.skip('Rscript not found')
         zeta_m = np.linspace(-0.995, 1.005, 201)
         zeta_m_ref, expected_sy = zip(*sy_table)
         assert np.allclose(zeta_m, zeta_m_ref)

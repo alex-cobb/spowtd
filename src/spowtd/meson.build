@@ -1,6 +1,3 @@
-# Docs
-doc_dir = py.get_install_dir() / 'spowtd' / 'doc'
-
 # Python sources
 python_sources = [
   '__init__.py',
@@ -33,6 +30,7 @@ py.install_sources(python_sources, subdir: 'spowtd')
 test_sources = [
   'test/__init__.py',
   'test/conftest.py',
+  'test/markers.py',
   'test/peatclsm_hydraulic_functions.R',
   'test/test_classify.py',
   'test/test_cli.py',
@@ -60,7 +58,7 @@ install_subdir('test/sample_data',
 hello_ext = py.extension_module(
     'hello',
     'hello.pyx',  # Path to source
-#     dependencies: [py_dep],
+     dependencies: [py_dep],
     install: true,
     subdir: 'spowtd'  # Destination in package
 )

@@ -11,6 +11,9 @@ py_dep = py.dependency()
 
 subdir('src/spowtd')
 
+# Docs
+doc_dir = py.get_install_dir() / 'spowtd' / 'doc'
+
 install_data('doc/spowtd.1',
   install_dir: doc_dir
 )
