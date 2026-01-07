@@ -37,7 +37,6 @@ test_sources = [
   'test/test_classify.py',
   'test/test_cli.py',
   'test/test_fit_offsets.py',
-  'test/test_hello.py',
   'test/test_load.py',
   'test/test_pestfiles.py',
   'test/test_recession.py',
@@ -71,13 +70,6 @@ endif
 
 gsl_dep = dependency('gsl')
 
-hello_ext = py.extension_module(
-    'hello',
-    'hello.pyx',  # Path to source
-     dependencies: [py_dep],
-    install: true,
-    subdir: 'spowtd'  # Destination in package
-)
 scalar_function_ext = py.extension_module(
   '_scalar_function',
   '_scalar_function.pyx',
@@ -92,8 +84,7 @@ spline_ext = py.extension_module(
   install: true,
   subdir: 'spowtd'
 )
-exts = [hello_ext, spline_ext, scalar_function_ext]
-
+exts = [spline_ext, scalar_function_ext]
 
 # Testing
 pylint = find_program('pylint', required: false)
