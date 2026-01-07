@@ -1,1 +1,1 @@
-spowtd/VERSION.txt
+src/spowtd/VERSION.txt

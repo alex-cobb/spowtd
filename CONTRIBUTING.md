@@ -24,7 +24,9 @@ python -m venv .venv
 source .venv/bin/activate
 
 # Install development dependencies
-pip install meson-python meson ninja cython pytest pylint numpy
+pip install meson-python meson ninja cython pytest pylint numpy PyYAML
+
+meson setup build
 
 # Install spowtd in editable mode
 pip install --no-build-isolation -e .
@@ -49,9 +51,23 @@ Tests require `pylint` and `pytest`.  You may additionally want `python3-coverag
 
 To test, run:
 ```console
-meson setup builddir
-meson test -C builddir
+meson compile -C build
+meson test -C build
 ```
+
+For convenient test-driven development, a sequence like this works well:
+```console
+pip install --no-build-isolation -e . --quiet && \
+meson setup --reconfigure build && \
+meson compile -C build && ]
+meson test -C build -v --num-processes 1 --no-rebuild --print-errorlogs
+```
+
+By default, `meson test` both checks for errors with `pylint -E` and
+runs tests with `pytest`.  The linting step can be run alone with
+`meson test --suite lint`, and linting can be skipped with
+`meson test --no-suite lint`.
+
 
 ## Pull requests
 
@@ -64,10 +80,10 @@ Before submitting a pull request, please ensure:
 
 3. Linting: `pylint-3 spowtd` shows no errors or new style complaints.
 
-4. Documentation: Any new features include updates to the doc/user_guide.pdf or man
-   pages if necessary.
+4. Documentation: Any new features include updates to `doc/user_guide.pdf` or the man
+   page if necessary.
 
-5. Git Tracking: You have git add-ed any new files. Meson will not include untracked
+5. Git Tracking: You have `git add`-ed any new files. Meson will not include untracked
    files in the build.
    
 6. Continuous integration: If `cibuildwheel` fails on any platform, check the logs for
