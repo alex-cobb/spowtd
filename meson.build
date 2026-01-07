@@ -5,7 +5,7 @@ project('spowtd', 'c', 'cython',
   version: run_command('cat', 'VERSION.txt', check: true).stdout().strip(),
 )
 
-py = import('python').find_installation()
+py = import('python').find_installation(pure: false)
 py_dep = py.dependency()
 
 # Docs
@@ -19,7 +19,14 @@ install_data('doc/user_guide.pdf',
   install_dir: doc_dir
 )
 
-# Sources
+py.extension_module(
+    'hello',
+    'src/hello.pyx',  # Path to source
+    install: true,
+    subdir: 'spowtd'  # Destination in package
+)
+
+# Python sources
 python_sources = [
   'spowtd/__init__.py',
   'spowtd/classify.py',
@@ -49,6 +56,7 @@ python_sources = [
   'spowtd/test/test_classify.py',
   'spowtd/test/test_cli.py',
   'spowtd/test/test_fit_offsets.py',
+  'spowtd/test/test_hello.py',
   'spowtd/test/test_load.py',
   'spowtd/test/test_pestfiles.py',
   'spowtd/test/test_recession.py',
@@ -58,6 +66,7 @@ python_sources = [
   'spowtd/test/test_simulate_rise.py',
   'spowtd/test/test_specific_yield.py',
   'spowtd/test/test_transmissivity.py',
+  'spowtd/test/test_version.py',
   'spowtd/VERSION.txt',
 ]
 py.install_sources(python_sources, subdir: 'spowtd')
