@@ -8,12 +8,10 @@
 
 import numpy as np
 
-import scipy.integrate as integrate_mod
-
-import spowtd.fpspline as spline_mod
+from spowtd.functions._transmissivity import TransmissivityNearSurface
 
 
-def create_transmissivity_function(parameters):
+def create_transmissivity_function(**parameters):
     """Create a transmissivity function
 
     Returns a callable object that returns transmissivity at a given water level.  The
@@ -23,11 +21,11 @@ def create_transmissivity_function(parameters):
     """
     if 'type' not in parameters:
         raise ValueError(f'"type" field is required in parameters; got {parameters}')
-    sy_type = parameters.pop('type', None)
+    T_type = parameters.pop('type', None)
     return {
         'peatclsm': PeatclsmTransmissivity,
         'spline': SplineTransmissivity,
-    }[sy_type](**parameters)
+    }[T_type](**parameters)
 
 
 class SplineTransmissivity:
@@ -46,47 +44,25 @@ class SplineTransmissivity:
 
     """
 
-    __slots__ = [
-        'zeta_knots_mm',
-        'K_knots_km_d',
-        'minimum_transmissivity_m2_d',
-        '_spline',
-    ]
+    # Use has-a rather than is-a to enable graceful handling of both positional and
+    # keyword arguments on init
+    __slots__ = ['_T']
 
-    def __init__(self, zeta_knots_mm, K_knots_km_d, minimum_transmissivity_m2_d):
-        self.zeta_knots_mm = np.asarray(zeta_knots_mm, dtype='float64')
-        self.K_knots_km_d = np.asarray(K_knots_km_d, dtype='float64')
-        self.minimum_transmissivity_m2_d = minimum_transmissivity_m2_d
-        log_K_knots = np.log(K_knots_km_d)
-        self._spline = spline_mod.Spline.from_points(
-            zip(zeta_knots_mm, log_K_knots), order=1
+    def __init__(self, zeta_knots_mm, K_knots_km_d, minimum_transmissivity_m2_d=0.0):
+        self._T = TransmissivityNearSurface(
+            np.asarray(zeta_knots_mm, dtype='float64'),
+            np.asarray(K_knots_km_d, dtype='float64'),
+            minimum_transmissivity_m2_d,
         )
 
     def conductivity(self, water_level_mm):
         """Compute conductivity for a scalar argument"""
-        assert water_level_mm >= self.zeta_knots_mm.min()
-        if water_level_mm >= self.zeta_knots_mm.max():
-            raise NotImplementedError('Extrapolation above highest knot')
-        return np.exp(self._spline(water_level_mm))
+        return self._T.conductivity(water_level_mm)
 
     def __call__(self, water_level_mm):
         if np.isscalar(water_level_mm):
-            return self.call_scalar(water_level_mm)
-        return np.array(
-            [self.call_scalar(value) for value in water_level_mm],
-            dtype='float64',
-        )
-
-    def call_scalar(self, water_level_mm):
-        """Compute transmissivity for a scalar argument"""
-        if water_level_mm <= self.zeta_knots_mm.min():
-            return self.minimum_transmissivity_m2_d
-        return (
-            self.minimum_transmissivity_m2_d
-            + integrate_mod.quad(
-                self.conductivity, self.zeta_knots_mm.min(), water_level_mm
-            )[0]
-        )
+            return self._T(water_level_mm)
+        return np.array([self._T(value) for value in water_level_mm], dtype='float64')
 
 
 class PeatclsmTransmissivity:

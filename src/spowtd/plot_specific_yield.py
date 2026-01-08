@@ -12,7 +12,7 @@ import numpy as np
 
 import yaml
 
-import spowtd.specific_yield as specific_yield_mod
+import spowtd.functions.specific_yield as specific_yield_mod
 
 
 def dump_specific_yield(
@@ -48,7 +48,7 @@ def plot_specific_yield(parameters, water_level_min_cm, water_level_max_cm, n_po
 def grid_specific_yield(parameters, water_level_min_cm, water_level_max_cm, n_points):
     """Compute specific yield on a grid"""
     sy_parameters = yaml.safe_load(parameters)['specific_yield']
-    specific_yield = specific_yield_mod.create_specific_yield_function(sy_parameters)
+    specific_yield = specific_yield_mod.create_specific_yield_function(**sy_parameters)
     water_level_cm = np.linspace(
         water_level_min_cm, water_level_max_cm, n_points, dtype=float
     )

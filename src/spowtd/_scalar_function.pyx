@@ -6,9 +6,9 @@
 
 """Scalar function objects
 
-Uniform interface for different scalar functions used for recharge and
-boundary conditions in dynamic simulations.  The independent variable
-is called "time" but could be anything.
+Uniform interface for different scalar functions used for recharge and boundary
+conditions in dynamic simulations.  The independent variable is called "time" but could
+be anything.
 
 """
 
@@ -116,9 +116,9 @@ cdef class PeriodicBoxcarFunction(ScalarFunction):
         # Boxes start at i * period + phase, and end at
         #                i * period + phase + box_width
         # for all integers i.
-        # After we subtract off phase from start_time and
-        # end_time, boxes start at i * period and end at
-        #                          i * period + box_width
+        # After we subtract off phase from start_time and end_time,
+        # boxes start at i * period and end at
+        #                i * period + box_width
         # for all integers i.
         cdef:
             double time = NAN
@@ -129,8 +129,7 @@ cdef class PeriodicBoxcarFunction(ScalarFunction):
             size_t start_i = -1
             size_t end_i = -1
         if end_time <= start_time:
-            raise ValueError('Not implemented: '
-                             'end time {} <= start time {}'
+            raise ValueError('Not implemented: end time {} <= start time {}'
                              .format(end_time, start_time))
         # Remove phase
         start_time -= phase
@@ -257,8 +256,8 @@ cdef class PiecewiseConstantFunction(ScalarFunction):
     cdef size_t find_bin(self, double time) except -1:
         """Find index i in time grid such that t[i] <= time < t[i + 1]
 
-        If time lies before first grid time, Value Error is raised.
-        If time lies after last grid time t[n - 1], n - 1 is returned.
+        If time lies before first grid time, Value Error is raised.  If time lies after
+        last grid time t[n - 1], n - 1 is returned.
 
         """
         cdef:
@@ -288,9 +287,8 @@ cdef class PiecewiseConstantFunction(ScalarFunction):
     def next_discontinuity(self, double time):
         """Get the next time of a discontinuity, and a continuation
 
-        Returns the time of the next discontinuity, if any, and a
-        value for smooth continuation of the function at the
-        discontinuity.
+        Returns the time of the next discontinuity, if any, and a value for smooth
+        continuation of the function at the discontinuity.
 
         If no further discontinuities will occur, returns (inf, nan).
 

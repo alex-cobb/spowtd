@@ -4,9 +4,7 @@
 # NOTE: This file is part of the spowtd project. When distributed as a compiled binary
 # linked against the GSL, the resulting work is licensed under the GPL-3.0-or-later.
 
-"""Scalar functions for simulations of water table and peat surface
-
-"""
+"""Scalar functions for simulations"""
 
 cdef class ScalarFunction:
     cdef double call(self, double time) except? -42

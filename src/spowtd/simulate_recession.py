@@ -12,8 +12,8 @@ import scipy.integrate as integrate_mod
 
 import yaml
 
-import spowtd.specific_yield as specific_yield_mod
-import spowtd.transmissivity as transmissivity_mod
+import spowtd.functions.specific_yield as specific_yield_mod
+import spowtd.functions.transmissivity as transmissivity_mod
 
 
 def dump_simulated_recession(connection, parameter_file, outfile, observations_only):
@@ -92,7 +92,7 @@ def simulate_recession(connection, parameter_file):
     # XXX Hack for PEATCLSM parameterization, which gives transmissivity in m2 / s
     if parameters['transmissivity']['type'] == 'peatclsm':
         transmissivity_m2_s = transmissivity_mod.create_transmissivity_function(
-            parameters['transmissivity']
+            **parameters['transmissivity']
         )
 
         def transmissivity_m2_d(zeta_mm):
@@ -105,13 +105,13 @@ def simulate_recession(connection, parameter_file):
 
     else:
         transmissivity_m2_d = transmissivity_mod.create_transmissivity_function(
-            parameters['transmissivity']
+            **parameters['transmissivity']
         )
 
     elapsed_time_d = compute_recession_curve(
         specific_yield=(
             specific_yield_mod.create_specific_yield_function(
-                parameters['specific_yield']
+                **parameters['specific_yield']
             )
         ),
         transmissivity_m2_d=transmissivity_m2_d,

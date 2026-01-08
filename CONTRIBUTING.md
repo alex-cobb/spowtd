@@ -72,7 +72,7 @@ For convenient test-driven development, a sequence like this works well:
 ```console
 pip install --no-build-isolation -e . --quiet && \
 meson setup --reconfigure build && \
-meson compile -C build && ]
+meson compile -C build && \
 meson test -C build -v --num-processes 1 --no-rebuild --print-errorlogs
 ```
 

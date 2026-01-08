@@ -11,7 +11,7 @@ import gc
 
 import pytest
 
-from numpy import allclose, arange, linspace, nan, sin
+from numpy import arange, linspace, nan, sin
 
 from scipy.integrate import quad
 
@@ -19,6 +19,7 @@ import spowtd._scalar_function as func_mod
 from spowtd._spline import Interpolant, spline_to_tolerance
 from spowtd.exceptions import OutOfDomainError
 from spowtd.test.memory import repeat_create_destroy
+from spowtd.test.utils import assert_close
 
 
 x = arange(5, dtype='float64')
@@ -42,7 +43,7 @@ class TestLinearSpline:
     def test_call(self):
         """Verify that values match at nodes"""
         yp = [self.spline(xv) for xv in x]
-        assert allclose(y, yp), '{} not close to {}'.format(y, yp)
+        assert_close(y, yp), '{} not close to {}'.format(y, yp)
 
     def test_integrate(self):
         """Verify integrate method gives same result as quadrature"""
@@ -50,8 +51,9 @@ class TestLinearSpline:
         quad_integrals = [
             quad(self.spline, x[i], x[i + 1])[0] for i in range(len(x) - 1)
         ]
-        assert allclose(integrals, quad_integrals), '{} not close to {}'.format(
-            integrals, quad_integrals
+        (
+            assert_close(integrals, quad_integrals),
+            '{} not close to {}'.format(integrals, quad_integrals),
         )
 
     def test_find_bin(self):

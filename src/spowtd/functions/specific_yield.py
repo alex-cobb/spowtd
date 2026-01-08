@@ -10,10 +10,11 @@ import numpy as np
 
 import scipy.stats
 
-import spowtd.fpspline as spline_mod
+import spowtd._spline as spline_mod
+from spowtd.functions._specific_yield import SpecificYield as _SpecificYield
 
 
-def create_specific_yield_function(parameters):
+def create_specific_yield_function(**parameters):
     """Create a specific yield function
 
     Returns a callable object that returns specific yield at a given water level.  The
@@ -29,25 +30,7 @@ def create_specific_yield_function(parameters):
     )
 
 
-class SpecificYield:
-    """Base class for specific yield"""
-
-    def __init__(self, spline):
-        self._spline = spline
-
-    def __call__(self, water_level_mm):
-        return self._spline(water_level_mm)
-
-    def integrate(self, lo_water_level_mm, hi_water_level_mm):
-        """Integrate the specific yield between two water levels
-
-        This produces the rise curve.
-
-        """
-        return self._spline.integrate(lo_water_level_mm, hi_water_level_mm)
-
-
-class SplineSpecificYield(SpecificYield):
+class SplineSpecificYield:
     """Cubic spline representing specific yield
 
     zeta_knots_mm: Sequence of water levels in mm
@@ -55,18 +38,33 @@ class SplineSpecificYield(SpecificYield):
 
     """
 
-    __slots__ = ['zeta_knots_mm', 'sy_knots', '_spline']
+    __slots__ = ['zeta_knots_mm', 'sy_knots', '_Sy']
 
     def __init__(self, zeta_knots_mm, sy_knots):
         self.zeta_knots_mm = zeta_knots_mm
         self.sy_knots = sy_knots
-        SpecificYield.__init__(
-            self,
-            spline_mod.Spline.from_points(zip(zeta_knots_mm, sy_knots), order=3),
+        self._Sy = _SpecificYield(
+            np.asarray(zeta_knots_mm, dtype='float64'),
+            np.asarray(sy_knots, dtype='float64'),
+        )
+
+    def __call__(self, water_level_mm):
+        if np.isscalar(water_level_mm):
+            return self._Sy(water_level_mm)
+        return np.array([self._Sy(value) for value in water_level_mm], dtype='float64')
+
+    def integrate(self, lo_water_level_mm, hi_water_level_mm):
+        """Integrate the specific yield between two water levels
+
+        This produces the rise curve.
+
+        """
+        return self._Sy.shallow_storage(hi_water_level_mm) - self._Sy.shallow_storage(
+            lo_water_level_mm
         )
 
 
-class PeatclsmSpecificYield(SpecificYield):
+class PeatclsmSpecificYield:
     """Specific yield function used in PEATCLSM
 
     sd:  standard deviation of microtopographic distribution, m
@@ -93,7 +91,22 @@ class PeatclsmSpecificYield(SpecificYield):
         self.psi_s = psi_s
         self.zeta_knots_mm = None
         self.sy_knots = None
-        SpecificYield.__init__(self, self._construct_spline())
+        self._spline = self._construct_spline()
+
+    def __call__(self, water_level_mm):
+        if np.isscalar(water_level_mm):
+            return self._spline(water_level_mm)
+        return np.array(
+            [self._spline(value) for value in water_level_mm], dtype='float64'
+        )
+
+    def integrate(self, lo_water_level_mm, hi_water_level_mm):
+        """Integrate the specific yield between two water levels
+
+        This produces the rise curve.
+
+        """
+        return self._spline.integrate(lo_water_level_mm, hi_water_level_mm)
 
     def _construct_spline(self):
         """Construct specific yield spline"""
@@ -108,10 +121,8 @@ class PeatclsmSpecificYield(SpecificYield):
         Sy1_surface = scipy.stats.norm.cdf(zeta_knots_m, loc=0, scale=self.sd)
         self.sy_knots = Sy1_soil + Sy1_surface
         self.zeta_knots_mm = zeta_knots_m * 1000
-        spline = spline_mod.Spline.from_points(
-            zip(self.zeta_knots_mm, self.sy_knots), order=1
-        )
-        assert np.allclose(spline(self.zeta_knots_mm), self.sy_knots)
+        spline = spline_mod.Interpolant(self.zeta_knots_mm, self.sy_knots, 1)
+        assert np.allclose(np.vectorize(spline)(self.zeta_knots_mm), self.sy_knots)
         return spline
 
     def get_Sy_soil(self, Sy_soil, zl_, zu_):

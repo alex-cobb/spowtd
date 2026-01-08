@@ -11,6 +11,7 @@ import numpy as np
 import pytest
 
 import spowtd.fit_offsets as fo_mod
+from spowtd.test.utils import assert_close
 
 
 head_mapping_test_cases = {
@@ -232,10 +233,10 @@ def test_assemble_linear_system_unweighted(test_case):
     A_ref = np.array(A_expected_u[test_case], dtype=float)
     b_ref = np.array(b_expected_u[test_case], dtype=float)
     assert b.shape == b_ref.shape
-    assert np.allclose(b_ref, b)
+    assert_close(b_ref, b)
     assert A.shape == A_ref.shape
     for i, ref in enumerate(A_ref):
-        assert np.allclose(ref, A[i]), i
+        assert_close(ref, A[i]), i
 
 
 @pytest.mark.parametrize('test_case', [1, 2, 3, 4])
@@ -250,10 +251,10 @@ def test_assemble_weighted_linear_system(test_case):
     A_ref = np.array(A_expected[test_case], dtype=float)
     b_ref = np.array(b_expected[test_case], dtype=float)
     assert b.shape == b_ref.shape
-    assert np.allclose(b_ref, b)
+    assert_close(b_ref, b)
     assert A.shape == A_ref.shape
     for i, ref in enumerate(A_ref):
-        assert np.allclose(ref, A[i]), i
+        assert_close(ref, A[i]), i
     # XXX Check Omega
 
 
@@ -265,7 +266,7 @@ def test_find_offsets_unweighted(test_case):
     assert series_ids == series_ids_expected[test_case]
     assert isinstance(offsets, np.ndarray)
     assert offsets.shape == (len(series_ids),)
-    assert np.allclose(offsets, offsets_expected_u[test_case])
+    assert_close(offsets, offsets_expected_u[test_case])
 
 
 @pytest.mark.parametrize('test_case', [1, 2, 3, 4])
@@ -280,7 +281,7 @@ def test_find_offsets_relabeled_unweighted(test_case):
         relabeled_head_mapping, recharge_error_weight=0
     )
     assert series_ids == [-sid * 2 for sid in series_ids_expected[test_case]][::-1]
-    assert np.allclose(
+    assert_close(
         offsets,
         # Order will be reversed, and reference series will instead by the first
         np.array(offsets_expected_u[test_case], dtype=float)[::-1]
@@ -303,13 +304,13 @@ def test_weighted_mean_matrix(test_case):
     """Test construction of expanded weighted mean matrix"""
     M_ref = np.array(M_expected[test_case], dtype=float)
     for row in M_ref:
-        assert np.allclose(row.sum(), 1)
+        assert_close(row.sum(), 1)
     head_mapping = head_mapping_test_cases[test_case]
     M = fo_mod.assemble_weighted_mean_matrix(head_mapping, recharge_error_weight=1)
     assert M.shape == M_ref.shape
     for row in M:
-        assert np.allclose(row.sum(), 1)
-    assert np.allclose(M_ref, M)
+        assert_close(row.sum(), 1)
+    assert_close(M_ref, M)
 
 
 @pytest.mark.parametrize('test_case', [1, 2, 3, 4])
@@ -321,7 +322,7 @@ def test_FD_diag_r(test_case):
     series_indices = dict(zip(series_ids, range(len(series_ids))))
     FD_diag_r = fo_mod.assemble_FD_diag_r(head_mapping, series_indices)
     assert FD_diag_r.shape == FD_diag_r_ref.shape
-    assert np.allclose(FD_diag_r_ref, FD_diag_r)
+    assert_close(FD_diag_r_ref, FD_diag_r)
 
 
 @pytest.mark.parametrize('test_case', [1, 2, 3, 4])
@@ -332,7 +333,7 @@ def test_find_offsets_weighted(test_case):
     assert series_ids == series_ids_expected[test_case]
     assert isinstance(offsets, np.ndarray)
     assert offsets.shape == (len(series_ids),)
-    assert np.allclose(offsets, offsets_expected[test_case])
+    assert_close(offsets, offsets_expected[test_case])
 
 
 @pytest.mark.parametrize('test_case', [1, 2, 3, 4])
@@ -347,7 +348,7 @@ def test_find_offsets_relabeled_weighted(test_case):
         relabeled_head_mapping, recharge_error_weight=1
     )
     assert series_ids == [-sid * 2 for sid in series_ids_expected[test_case]][::-1]
-    assert np.allclose(
+    assert_close(
         offsets,
         # Order will be reversed, and reference series will instead by the first
         np.array(offsets_expected[test_case], dtype=float)[::-1]
