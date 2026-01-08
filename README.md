@@ -50,6 +50,13 @@ The source code is [LICENSE-BSD.txt](BSD-licensed), but compiled distributions a
 
 ## Revision history
 
+Version 0.12.0 - 2026-01-08:
+ - Add GSL spline extension module.
+ - Remove extension module prototype.
+ - Specify license terms for code vs. distributed wheels (BSD vs GPL 3+).
+ - Update cibuildwheel directives.
+ - Add dev docs.
+
 Version 0.11.1 - 2026-01-07:
  - Set up cibuildwheel and fix tests for MacOS and Windows.
  - Skip certain tests depending on environment.
