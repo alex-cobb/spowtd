@@ -4,11 +4,6 @@
 # NOTE: This file is part of the spowtd project. When distributed as a compiled binary
 # linked against the GSL, the resulting work is licensed under the GPL-3.0-or-later.
 
-"""Test code for recession module"""
+"""Typing stubs for _scalar_function"""
 
-import spowtd.recession as recession_mod
-
-
-def test_recession(classified_connection):
-    """Assemble recession curve"""
-    recession_mod.find_recession_offsets(classified_connection)
+class ScalarFunction: ...

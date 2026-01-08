@@ -19,7 +19,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-      - run: pip install pylint pytest numpy PyYAML scipy matplotlib pytz
+      - run: pip install pylint pytest numpy PyYAML scipy matplotlib pytz psutil
       - run: pylint -E src/
 
   build_wheels:
@@ -36,17 +36,12 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.22.0
         env:
-          # No PyPy
-          CIBW_SKIP: "pp*"
-          # Run tests inside the wheel environment
-          CIBW_TEST_COMMAND: "pytest --pyargs spowtd"
-          CIBW_TEST_REQUIRES: "pylint pytest numpy PyYAML"
+          # No PyPy or 32-bit
+          CIBW_SKIP: "*-win32 *-manylinux_i686 pp*"
           # Ensure 64-bit platform
           CIBW_ARCHS_WINDOWS: "AMD64"
           # This could be relaxed in the future but might require QEMU
           CIBW_ARCHS_LINUX: "x86_64"
-          # Ensure Ninja is present (required for Meson)
-          CIBW_BEFORE_BUILD: "pip install meson meson-python ninja cython numpy"
       - uses: actions/upload-artifact@v4
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}

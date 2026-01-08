@@ -1,10 +1,16 @@
+# Copyright (C) 2026 Alex Cobb
+# Licensed under the BSD 2-Clause License (see LICENSE-BSD.txt)
+#
+# NOTE: This file is part of the spowtd project. When distributed as a compiled binary
+# linked against the GSL, the resulting work is licensed under the GPL-3.0-or-later.
+
 """Transmissivity classes"""
 
 import numpy as np
 
 import scipy.integrate as integrate_mod
 
-import spowtd.spline as spline_mod
+import spowtd.fpspline as spline_mod
 
 
 def create_transmissivity_function(parameters):

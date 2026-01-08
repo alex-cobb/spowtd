@@ -2,7 +2,9 @@
 python_sources = [
   '__init__.py',
   'classify.py',
+  'exceptions.py',
   'fit_offsets.py',
+  'fpspline.py',
   'load.py',
   'pestfiles.py',
   'plot_recession.py',
@@ -18,7 +20,6 @@ python_sources = [
   'simulate_recession.py',
   'simulate_rise.py',
   'specific_yield.py',
-  'spline.py',
   'transmissivity.py',
   'user_interface.py',
   'zeta_grid.py',
@@ -31,11 +32,11 @@ test_sources = [
   'test/__init__.py',
   'test/conftest.py',
   'test/markers.py',
+  'test/memory.py',
   'test/peatclsm_hydraulic_functions.R',
   'test/test_classify.py',
   'test/test_cli.py',
   'test/test_fit_offsets.py',
-  'test/test_hello.py',
   'test/test_load.py',
   'test/test_pestfiles.py',
   'test/test_recession.py',
@@ -44,6 +45,7 @@ test_sources = [
   'test/test_simulate_recession.py',
   'test/test_simulate_rise.py',
   'test/test_specific_yield.py',
+  'test/test_spline.py',
   'test/test_transmissivity.py',
   'test/test_version.py',
 ]
@@ -55,15 +57,60 @@ install_subdir('test/sample_data',
 )
 
 # Cython extension modules
-hello_ext = py.extension_module(
-    'hello',
-    'hello.pyx',  # Path to source
-     dependencies: [py_dep],
-    install: true,
-    subdir: 'spowtd'  # Destination in package
-)
-exts = [hello_ext]
+# Specify dependencies
+py_dep = py.dependency()
+cc = meson.get_compiler('c')
 
+numpy_dep = dependency('numpy')
+
+# Find BLAS
+# Search for system BLAS
+blas_dep = dependency('flexiblas', required: false)
+if not blas_dep.found()
+  blas_dep = dependency('openblas', required: false)
+endif
+if not blas_dep.found()
+  blas_dep = dependency('blas', required: false)
+endif
+if not blas_dep.found()
+  # Search for scipy-openblas (Windows/macOS)
+  message('No system BLAS found, searching for scipy-openblas...')
+  check_scipy_blas = run_command(py, [
+    '-c', 'import scipy_openblas; print("scipy-openblas found")'
+  ], check: false)
+  if check_scipy_blas.returncode() == 0
+  message('scipy-openblas found, extracting paths...')
+    sciblas_paths = run_command(py, [
+      '-c',
+      'import scipy_openblas; print(scipy_openblas.get_include()); print(scipy_openblas.get_libdir()); print(scipy_openblas.get_library())'
+    ], check: true).stdout().strip().split('\n')
+    sciblas_inc = sciblas_paths[0]
+    sciblas_libdir = sciblas_paths[1]
+    sciblas_name = sciblas_paths[2]
+    blas_dep = declare_dependency(
+      include_directories: include_directories(sciblas_inc),
+      dependencies: cc.find_library(sciblas_name, dirs: sciblas_libdir)
+    )
+  endif
+endif
+
+gsl_dep = dependency('gsl', required: false)
+
+scalar_function_ext = py.extension_module(
+  '_scalar_function',
+  '_scalar_function.pyx',
+  dependencies: [py_dep, numpy_dep, gsl_dep, blas_dep],
+  install: true,
+  subdir: 'spowtd'
+)
+spline_ext = py.extension_module(
+  '_spline',
+  '_spline.pyx',
+  dependencies: [py_dep, numpy_dep, gsl_dep, blas_dep],
+  install: true,
+  subdir: 'spowtd'
+)
+exts = [spline_ext, scalar_function_ext]
 
 # Testing
 pylint = find_program('pylint', required: false)

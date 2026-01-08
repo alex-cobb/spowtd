@@ -1,3 +1,4 @@
+ - [ ] Add a Cython spline module that uses GSL splines
  - [ ] Add a fancy header to the User Guide
  - [ ] Enable use of l1 norm instead of l2 norm when fitting rise
    curves

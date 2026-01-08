@@ -10,9 +10,9 @@ for distribution.
 Work on the Cython extensions requires a C compiler and the Meson build system.
 
 ### 1. System Dependencies
-* **C Compiler:** `gcc` or `clang`
-* **Build Tools:** `ninja-build`, `pkg-config`
-* **Libraries:** `sundials` and `gsl`
+* **C compiler:** `gcc` or `clang`
+* **Build tools:** `ninja-build`, `pkg-config`
+* **Libraries and headers:** `gsl`, `flexiblas`, `openblas` or `blas`
 
 ### 2. Python Environment
 A virtual environment and a "no-build-isolation" editable install is recommended. This
@@ -24,7 +24,7 @@ python -m venv .venv
 source .venv/bin/activate
 
 # Install development dependencies
-pip install meson-python meson ninja cython pytest pylint numpy PyYAML
+pip install meson-python meson ninja cython pytest pylint numpy PyYAML psutil
 
 meson setup build
 
@@ -38,12 +38,25 @@ When you modify a .pyx or .c file, you must trigger a rebuild with
 ```console
 pip install --no-build-isolation -e .
 ```
+If the Python interface of the module has changed, the interface (.pyi) file needs
+to be updated to match; refer to [PEP 484](https://peps.python.org/pep-0484/) and
+[the typing guide to writing stubs](https://typing.python.org/en/latest/guides/writing_stubs.html)
+for details.
 
 *Annotations*: Use `cython -a spowtd/foo.pyx` to generate an HTML file showing which
 lines of code are interacting with the Python interpreter (yellow highlights). Aim for
 white lines in performance-critical loops.
 
 *Header files*: If adding a new C function, declare it in a .pxd file.
+
+When new modules are added, they need to be added to `python_sources` (pure Python
+package files), `test_sources` (test scripts), or as new `py.extension_module`s
+in `src/spowtd/meson.build`.
+
+If new library dependencies are added to `meson.build`, in most cases it is
+appropriate to continue even if the library is not found (for example:
+`dependency('foo', required: false)`) so that a sdist build can be completed without
+the binary build dependencies.
 
 ## Testing
 Tests require `pylint` and `pytest`.  You may additionally want `python3-coverage` and
@@ -68,6 +81,14 @@ runs tests with `pytest`.  The linting step can be run alone with
 `meson test --suite lint`, and linting can be skipped with
 `meson test --no-suite lint`.
 
+## GitHub Actions
+
+Build of wheels by [cibuildwheel](https://github.com/pypa/cibuildwheel) is configured in
+`pyproject.toml` and `.github/workflows/wheels.yml`.
+[Options](https://cibuildwheel.pypa.io/en/stable/options/) in this file override what is
+in `pyproject.toml`.  Try to set variables in `pyproject.toml` to describe the
+requirements for builds as broadly as possible, and limit `wheels.yml` to just
+configuring the GitHub Action jobs.
 
 ## Pull requests
 
@@ -85,7 +106,7 @@ Before submitting a pull request, please ensure:
 
 5. Git Tracking: You have `git add`-ed any new files. Meson will not include untracked
    files in the build.
-   
+
 6. Continuous integration: If `cibuildwheel` fails on any platform, check the logs for
    compiler-specific warnings or missing header errors.
 
