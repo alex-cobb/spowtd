@@ -54,6 +54,8 @@ test_sources = [
 ]
 # Test suite and sample data
 py.install_sources(test_sources, subdir: 'spowtd/test')
+# Test subdir
+py.install_sources(['test/test_dynamic_0d/__init__.py'], subdir: 'spowtd/test/test_dynamic_0d')
 install_subdir('test/sample_data',
   install_dir: py.get_install_dir() / 'spowtd/test',
   strip_directory: false
@@ -123,6 +125,7 @@ cumulant_ext = py.extension_module(
 
 inc = include_directories('.')  # For cimport access to .pxds in this dir
 subdir('functions')
+subdir('dynamic_0d')
 
 exts = [
   spline_ext,
@@ -130,7 +133,9 @@ exts = [
   cumulant_ext,
   specific_yield_ext,
   transmissivity_ext,
-  peat_growth_ext
+  peat_growth_ext,
+  state_0d_ext,
+  stepper_0d_ext
 ]
 
 # Testing
