@@ -81,6 +81,10 @@ runs tests with `pytest`.  The linting step can be run alone with
 `meson test --suite lint`, and linting can be skipped with
 `meson test --no-suite lint`.
 
+## Documentation
+
+Rebuild the user guide and man page in `doc/` with `scons -f src/doc/SConstruct`.
+
 ## GitHub Actions
 
 Build of wheels by [cibuildwheel](https://github.com/pypa/cibuildwheel) is configured in
