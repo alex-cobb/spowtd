@@ -55,7 +55,10 @@ test_sources = [
 # Test suite and sample data
 py.install_sources(test_sources, subdir: 'spowtd/test')
 # Test subdir
-py.install_sources(['test/test_dynamic_0d/__init__.py'], subdir: 'spowtd/test/test_dynamic_0d')
+py.install_sources(
+  ['test/test_dynamic_0d/__init__.py', 'test/test_dynamic_0d/test_surface_simulator.py'],
+  subdir: 'spowtd/test/test_dynamic_0d'
+)
 install_subdir('test/sample_data',
   install_dir: py.get_install_dir() / 'spowtd/test',
   strip_directory: false
@@ -135,7 +138,8 @@ exts = [
   transmissivity_ext,
   peat_growth_ext,
   state_0d_ext,
-  stepper_0d_ext
+  stepper_0d_ext,
+  simulator_0d_ext
 ]
 
 # Testing
