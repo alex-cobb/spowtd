@@ -1,4 +1,6 @@
- - [ ] Add a Cython spline module that uses GSL splines
+ - [X] Add a Cython spline module that uses GSL splines
+ - [ ] Refactor specific yield and transmissivity spline functions to use spline
+   extension module
  - [ ] Add a fancy header to the User Guide
  - [ ] Enable use of l1 norm instead of l2 norm when fitting rise
    curves

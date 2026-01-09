@@ -1,2 +1,7 @@
---ignore-directory=is:.ropeproject
---ignore-file=match:/_flymake.py$/
+--type-add=pyx:ext:pyx,pxd,pyi
+--type=pyx
+--type=python
+--type=json
+--type=sql
+--type=svg
+--type=tex

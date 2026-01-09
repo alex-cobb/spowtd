@@ -12,8 +12,9 @@ import pytest
 
 import yaml
 
-import spowtd.specific_yield as specific_yield_mod
+import spowtd.functions.specific_yield as specific_yield_mod
 from spowtd.test import conftest
+from spowtd.test.utils import assert_close
 
 
 @pytest.mark.parametrize(
@@ -28,10 +29,10 @@ from spowtd.test import conftest
                 0.1358,
                 0.1358,
                 0.1358,
-                0.13794492,
-                0.16751247,
-                0.21664407,
-                0.26417862,
+                0.13682463,
+                0.16887489,
+                0.21551511,
+                0.34021963,
                 0.6857,
             ],
         ),
@@ -43,10 +44,14 @@ def test_specific_yield(sy_type, expected_sy):
         conftest.get_parameter_file_path(sy_type), 'rt', encoding='utf-8'
     ) as sy_file:
         sy_parameters = yaml.safe_load(sy_file)['specific_yield']
-    specific_yield = specific_yield_mod.create_specific_yield_function(sy_parameters)
+    specific_yield = specific_yield_mod.create_specific_yield_function(**sy_parameters)
     if sy_type == 'spline':
+        # Check at knots
+        assert_close(
+            specific_yield(sy_parameters['zeta_knots_mm']), sy_parameters['sy_knots']
+        )
         zeta_mm = np.linspace(-0.9, 0.2, 10) * 1000
-        assert np.allclose(specific_yield(zeta_mm), expected_sy)
+        assert_close(specific_yield(zeta_mm), expected_sy)
     else:
         assert sy_type == 'peatclsm'
         # In this case, expected_sy is provided by an R script, and is large (201
@@ -59,5 +64,5 @@ def test_specific_yield(sy_type, expected_sy):
             pytest.skip('Rscript not found')
         zeta_m = np.linspace(-0.995, 1.005, 201)
         zeta_m_ref, expected_sy = zip(*sy_table)
-        assert np.allclose(zeta_m, zeta_m_ref)
-        assert np.allclose(specific_yield(zeta_m * 1000), expected_sy)
+        assert_close(zeta_m, zeta_m_ref)
+        assert_close(specific_yield(zeta_m * 1000), expected_sy)

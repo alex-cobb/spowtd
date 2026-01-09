@@ -14,10 +14,11 @@ import yaml
 
 import spowtd.recession as recession_mod
 import spowtd.simulate_recession as simulate_recession_mod
-import spowtd.specific_yield as specific_yield_mod
+import spowtd.functions.specific_yield as specific_yield_mod
 import spowtd.set_curvature as set_curvature_mod
-import spowtd.transmissivity as transmissivity_mod
+import spowtd.functions.transmissivity as transmissivity_mod
 from spowtd.test import conftest
+from spowtd.test.utils import assert_close
 
 
 @pytest.mark.parametrize('parameterization_type', ['peatclsm', 'spline'])
@@ -57,16 +58,16 @@ def test_simulate_recession_curve(classified_connection, parameterization_type):
             33.436654,
         ],
         ('spline', 388): [
-            10.20150277,
-            12.76083539,
-            14.84755905,
-            16.70785659,
-            18.49795906,
-            20.26995933,
-            21.9681307,
-            23.46717728,
-            24.91539903,
-            26.36362078,
+            10.24100329,
+            12.79745897,
+            14.87692191,
+            16.74909081,
+            18.5564347,
+            20.30350164,
+            21.92615134,
+            23.4015907,
+            24.84981245,
+            26.2980342,
         ],
         ('peatclsm', 287): [
             0.54318592,
@@ -81,16 +82,16 @@ def test_simulate_recession_curve(classified_connection, parameterization_type):
             33.436654,
         ],
         ('spline', 287): [
-            10.20150277,
-            12.76083539,
-            14.84755905,
-            16.70785659,
-            18.49795906,
-            20.26995933,
-            21.9681307,
-            23.46717728,
-            24.91539903,
-            26.36362078,
+            10.24100329,
+            12.79745897,
+            14.87692191,
+            16.74909081,
+            18.5564347,
+            20.30350164,
+            21.92615134,
+            23.4015907,
+            24.84981245,
+            26.2980342,
         ],
     }[(parameterization_type, n_zeta)]
 
@@ -101,10 +102,10 @@ def test_simulate_recession_curve(classified_connection, parameterization_type):
     ) as parameter_file:
         parameters = yaml.safe_load(parameter_file)
     specific_yield = specific_yield_mod.create_specific_yield_function(
-        parameters['specific_yield']
+        **parameters['specific_yield']
     )
     transmissivity_m2_d = transmissivity_mod.create_transmissivity_function(
-        parameters['transmissivity']
+        **parameters['transmissivity']
     )
     # Transmissivity parameters have a ceiling at 1 cm
     zeta_grid_mm = np.linspace(0, -400, 10)
@@ -116,5 +117,5 @@ def test_simulate_recession_curve(classified_connection, parameterization_type):
         curvature_km=curvature_m_km2 * 1e-3,
         et_mm_d=et_mm_d,
     )
-    assert np.allclose(recession_curve.mean(), mean_elapsed_time_d)
-    assert np.allclose(recession_curve, expected_curve)
+    assert_close(recession_curve.mean(), mean_elapsed_time_d)
+    assert_close(recession_curve, expected_curve)

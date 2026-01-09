@@ -16,6 +16,7 @@ import spowtd.pestfiles as pestfiles_mod
 import spowtd.recession as recession_mod
 import spowtd.rise as rise_mod
 from spowtd.test import conftest, markers
+from spowtd.test.utils import assert_close
 
 
 reference_text = {
@@ -236,7 +237,7 @@ def test_generate_rise_pst(classified_connection, parameterization):
         (ref_obs_values, ref_obs_lines) = extract_observations(ref_lines)
         (out_obs_values, out_obs_lines) = extract_observations(out_lines)
         assert ref_obs_lines == out_obs_lines
-        assert np.allclose(ref_obs_values, out_obs_values)
+        assert_close(ref_obs_values, out_obs_values)
 
 
 @pytest.mark.parametrize(
@@ -357,7 +358,7 @@ def test_generate_curves_pst(classified_connection, parameterization):
         (ref_obs_values, ref_obs_lines) = extract_observations(ref_lines)
         (out_obs_values, out_obs_lines) = extract_observations(out_lines)
         assert ref_obs_lines == out_obs_lines
-        assert np.allclose(ref_obs_values, out_obs_values)
+        assert_close(ref_obs_values, out_obs_values)
 
 
 def extract_observations(pestfile_lines):

@@ -4,7 +4,6 @@ python_sources = [
   'classify.py',
   'exceptions.py',
   'fit_offsets.py',
-  'fpspline.py',
   'load.py',
   'pestfiles.py',
   'plot_recession.py',
@@ -19,8 +18,6 @@ python_sources = [
   'set_curvature.py',
   'simulate_recession.py',
   'simulate_rise.py',
-  'specific_yield.py',
-  'transmissivity.py',
   'user_interface.py',
   'zeta_grid.py',
   'VERSION.txt',
@@ -33,6 +30,7 @@ test_sources = [
   'test/conftest.py',
   'test/markers.py',
   'test/memory.py',
+  'test/utils.py',
   'test/peatclsm_hydraulic_functions.R',
   'test/test_classify.py',
   'test/test_cli.py',
@@ -45,8 +43,10 @@ test_sources = [
   'test/test_simulate_recession.py',
   'test/test_simulate_rise.py',
   'test/test_specific_yield.py',
+  'test/test_specific_yield_ext.py',
   'test/test_spline.py',
   'test/test_transmissivity.py',
+  'test/test_transmissivity_ext.py',
   'test/test_version.py',
 ]
 # Test suite and sample data
@@ -110,7 +110,11 @@ spline_ext = py.extension_module(
   install: true,
   subdir: 'spowtd'
 )
-exts = [spline_ext, scalar_function_ext]
+
+inc = include_directories('.')  # For cimport access to .pxds in this dir
+subdir('functions')
+
+exts = [spline_ext, scalar_function_ext, specific_yield_ext]
 
 # Testing
 pylint = find_program('pylint', required: false)

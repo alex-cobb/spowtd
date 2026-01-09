@@ -59,7 +59,7 @@
 \begin{document}
 \lstset{language=bash}
 
-{\huge User Guide for Spowtd v0.6.0}\\[2ex]
+{\huge User Guide for Spowtd v0.13.0}\\[2ex]
 {\large Alex Cobb}\\[0ex]
 
 \renewcommand{\baselinestretch}{1.18}\normalsize
@@ -309,6 +309,22 @@ sets the site curvature to $1~\text{m}/\text{km}/\text{km}$, whereafter
   spowtd simulate recession ekolongouma.sqlite3 parameters.yml
 \end{lstlisting}
 simulates the water table recession.
+
+\subsection{A note on specific yield splines}
+Starting with version 0.13 of Spowtd, the spline parameterization of specific yield uses
+the cubic spline implementation in the GNU Scientific Library instead of cubic splines
+from \texttt{splrep} in SciPy.  This results in identical behavior (within rounding
+error) for transmissivity objects, which use linear interpolation.  Specific yield
+objects, however, use cubic splines.  Interpolation of specific yield between knots is
+therefore different from previous versions because \texttt{splrep} (in SciPy) uses a
+not-a-knot condition to determine spline coefficients (third derivative continuous at
+first and last internal knots), whereas \verb|gsl_interp_cspline| in GSL uses natural
+cubic splines (second derivative 0 at endpoints).  The same specific yield knots will
+therefore yield different values between knots (but are the same below the lowest knot
+at the knots, and above the highest knot) in this and future versions (using GSL)
+compared to earlier versions (using \texttt{splrep} from SciPy).  In practice, this
+means that specific yield functions obtained by calibrating to the same data will have
+different spline parameters in spowtd versions before 0.13.
 
 \section{Calibration with PEST}
 The simulation scripts make it possible to calibrate the specific

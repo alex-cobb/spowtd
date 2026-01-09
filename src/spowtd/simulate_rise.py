@@ -10,13 +10,13 @@ import numpy as np
 
 import yaml
 
-import spowtd.specific_yield as specific_yield_mod
+import spowtd.functions.specific_yield as specific_yield_mod
 
 
 def simulate_rise(connection, parameters, outfile, observations_only):
     """Simulate master rise curve"""
     sy_parameters = yaml.safe_load(parameters)['specific_yield']
-    specific_yield = specific_yield_mod.create_specific_yield_function(sy_parameters)
+    specific_yield = specific_yield_mod.create_specific_yield_function(**sy_parameters)
     cursor = connection.cursor()
     cursor.execute(
         """

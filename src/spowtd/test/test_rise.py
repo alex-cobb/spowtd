@@ -12,6 +12,7 @@ import numpy as np
 
 import spowtd.rise as rise_mod
 import spowtd.test
+from spowtd.test.utils import assert_close
 
 
 omega_expected = {2: []}
@@ -37,7 +38,7 @@ def test_rise_covariance(classified_connection, request):
         encoding='utf-8',
     ) as f:
         omega_ref = np.loadtxt(f)
-    assert np.allclose(omega_ref, omega)
+    assert_close(omega_ref, omega)
 
 
 def test_rise_with_covariance(classified_connection):

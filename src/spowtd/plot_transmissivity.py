@@ -12,7 +12,7 @@ import numpy as np
 
 import yaml
 
-import spowtd.transmissivity as transmissivity_mod
+import spowtd.functions.transmissivity as transmissivity_mod
 
 
 def dump_transmissivity(
@@ -49,7 +49,7 @@ def plot_transmissivity(parameters, water_level_min_cm, water_level_max_cm, n_po
 def grid_transmissivity(parameters, water_level_min_cm, water_level_max_cm, n_points):
     """Compute specific yield on a grid"""
     T_parameters = yaml.safe_load(parameters)['transmissivity']
-    transmissivity = transmissivity_mod.create_transmissivity_function(T_parameters)
+    transmissivity = transmissivity_mod.create_transmissivity_function(**T_parameters)
     water_level_cm = np.linspace(
         water_level_min_cm, water_level_max_cm, n_points, dtype=float
     )
