@@ -38,6 +38,7 @@ test_sources = [
   'test/test_cumulants.py',
   'test/test_fit_offsets.py',
   'test/test_load.py',
+  'test/test_peat_growth.py',
   'test/test_pestfiles.py',
   'test/test_recession.py',
   'test/test_rise.py',
@@ -123,7 +124,14 @@ cumulant_ext = py.extension_module(
 inc = include_directories('.')  # For cimport access to .pxds in this dir
 subdir('functions')
 
-exts = [spline_ext, scalar_function_ext, cumulant_ext, specific_yield_ext, transmissivity_ext]
+exts = [
+  spline_ext,
+  scalar_function_ext,
+  cumulant_ext,
+  specific_yield_ext,
+  transmissivity_ext,
+  peat_growth_ext
+]
 
 # Testing
 pylint = find_program('pylint', required: false)
