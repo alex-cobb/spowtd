@@ -2,6 +2,7 @@
 python_sources = [
   '__init__.py',
   'classify.py',
+  'elapsed_time.py',
   'exceptions.py',
   'fit_offsets.py',
   'load.py',
