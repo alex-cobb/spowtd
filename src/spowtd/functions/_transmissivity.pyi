@@ -6,6 +6,8 @@
 
 """Typing stubs for _transmissivity"""
 
-class TransmissivityNearSurface:
+class Transmissivity: ...
+
+class TransmissivityNearSurface(Transmissivity):
     def __call__(self, zeta: float) -> float: ...
     def conductivity(self, zeta: float) -> float: ...

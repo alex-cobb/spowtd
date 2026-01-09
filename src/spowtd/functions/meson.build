@@ -2,6 +2,7 @@
 python_sources = [
   '__init__.py',
   'peat_growth.py',
+  'peat_properties.py',
   'recharge.py',
   'specific_yield.py',
   'transmissivity.py',
