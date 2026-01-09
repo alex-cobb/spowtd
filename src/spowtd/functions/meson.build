@@ -1,6 +1,7 @@
 # Python sources
 python_sources = [
   '__init__.py',
+  'recharge.py',
   'specific_yield.py',
   'transmissivity.py'
 ]
