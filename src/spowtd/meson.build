@@ -34,6 +34,7 @@ test_sources = [
   'test/peatclsm_hydraulic_functions.R',
   'test/test_classify.py',
   'test/test_cli.py',
+  'test/test_cumulants.py',
   'test/test_fit_offsets.py',
   'test/test_load.py',
   'test/test_pestfiles.py',
@@ -110,11 +111,18 @@ spline_ext = py.extension_module(
   install: true,
   subdir: 'spowtd'
 )
+cumulant_ext = py.extension_module(
+  '_cumulant',
+  '_cumulant.pyx',
+  dependencies: [py_dep, numpy_dep],
+  install: true,
+  subdir: 'spowtd'
+)
 
 inc = include_directories('.')  # For cimport access to .pxds in this dir
 subdir('functions')
 
-exts = [spline_ext, scalar_function_ext, specific_yield_ext]
+exts = [spline_ext, scalar_function_ext, cumulant_ext, specific_yield_ext, transmissivity_ext]
 
 # Testing
 pylint = find_program('pylint', required: false)
