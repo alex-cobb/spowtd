@@ -46,9 +46,16 @@ pytest spowtd
 ## License
 
 The source code is [LICENSE-BSD.txt](BSD-licensed), but compiled distributions are
-[LICENSE-GPL.txt](GPL-3.0-or-later) due to the GSL dependency.
+[LICENSE-GPL.txt](GPL-3.0-or-later) due to the GNU Scientific Library (GSL) dependency.
 
 ## Revision history
+
+Version 0.13.0 - 2026-01-09:
+ - Specific yield and transmissivity extension modules.
+   - This will results in different behavior of specific yield splines between knots
+     than in previous versions because of the different boundary conditions used for
+     cubic splines in `splrep` (not-a-knot; older versions) and in GSL (natural; this
+     and later version).  See the user guide for more.
 
 Version 0.12.0 - 2026-01-08:
  - Add GSL spline extension module.
