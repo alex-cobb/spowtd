@@ -14,7 +14,7 @@ state_0d_ext = py.extension_module(
     '-X', 'boundscheck=False',
     '-X', 'wraparound=False'
   ],
-  dependencies: [py_dep, numpy_dep],
+  dependencies: [py_dep, numpy_dep, gsl_dep, blas_dep],
   install: true,
   subdir: 'spowtd/dynamic_0d'
 )
@@ -27,7 +27,7 @@ stepper_0d_ext = py.extension_module(
     '-X', 'boundscheck=False',
     '-X', 'wraparound=False'
   ],
-  dependencies: [py_dep, numpy_dep],
+  dependencies: [py_dep, numpy_dep, gsl_dep, blas_dep],
   install: true,
   subdir: 'spowtd/dynamic_0d'
 )
@@ -40,7 +40,7 @@ simulator_0d_ext = py.extension_module(
     '-X', 'boundscheck=False',
     '-X', 'wraparound=False'
   ],
-  dependencies: [py_dep, numpy_dep],
+  dependencies: [py_dep, numpy_dep, gsl_dep, blas_dep],
   install: true,
   subdir: 'spowtd/dynamic_0d'
 )
